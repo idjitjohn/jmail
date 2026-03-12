@@ -55,7 +55,7 @@
     animation: mail-dismiss 0.28s ease forwards;
   }
 
-  &:hover .item-content {
+  &:hover:not(.selected) .item-content {
     background: var(--color-bg-secondary);
   }
 

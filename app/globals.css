@@ -65,7 +65,7 @@
   --color-sidebar-item-hover: rgba(0, 0, 0, 0.06);
   --color-sidebar-item-active: rgba(0, 122, 255, 0.14);
 
-  --color-mail-selected: rgba(0, 122, 255, 0.1);
+  --color-mail-selected: #e8f1fe;
   --color-mail-unread-dot: #007aff;
 
   --shadow-xs: 0 0 0 1px rgba(0, 0, 0, 0.04);
@@ -110,7 +110,7 @@
   --color-sidebar-item-hover: rgba(255, 255, 255, 0.06);
   --color-sidebar-item-active: rgba(10, 132, 255, 0.2);
 
-  --color-mail-selected: rgba(10, 132, 255, 0.15);
+  --color-mail-selected: #1a3054;
   --color-mail-unread-dot: #0a84ff;
 
   --shadow-xs: 0 0 0 1px rgba(0, 0, 0, 0.3);
@@ -148,7 +148,7 @@
     --color-sidebar-bg: #161618;
     --color-sidebar-item-hover: rgba(255, 255, 255, 0.06);
     --color-sidebar-item-active: rgba(10, 132, 255, 0.2);
-    --color-mail-selected: rgba(10, 132, 255, 0.15);
+    --color-mail-selected: #1a3054;
     --color-mail-unread-dot: #0a84ff;
     --shadow-xs: 0 0 0 1px rgba(0, 0, 0, 0.3);
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
