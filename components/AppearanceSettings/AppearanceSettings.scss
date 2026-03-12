@@ -75,9 +75,14 @@
       position: absolute;
       top: 0.5em;
       right: 0.5em;
+      display: block;
       width: 1em;
       height: 1em;
-      color: var(--color-primary);
+      background-color: var(--color-primary);
+      mask-image: url('/icons/check.svg');
+      mask-size: contain;
+      mask-repeat: no-repeat;
+      mask-position: center;
     }
   }
 

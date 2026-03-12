@@ -21,8 +21,14 @@
       color: var(--color-primary);
 
       .brand-icon {
+        display: block;
         width: 1.125em;
         height: 1.125em;
+        background-color: currentColor;
+        mask-image: url('/icons/envelope.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
         flex-shrink: 0;
       }
 
@@ -78,21 +84,23 @@
         color: var(--color-primary);
         font-weight: 500;
 
-        .nav-icon { color: var(--color-primary); }
+        .nav-icon { background-color: var(--color-primary); }
       }
 
       .nav-icon {
-        display: flex;
-        align-items: center;
-        color: var(--color-text-tertiary);
+        display: block;
+        width: 0.9375em;
+        height: 0.9375em;
+        background-color: var(--color-text-tertiary);
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
         flex-shrink: 0;
-        transition: color var(--transition-fast);
-
-        svg {
-          width: 0.9375em;
-          height: 0.9375em;
-        }
+        transition: background-color var(--transition-fast);
       }
+
+      &[data-icon="dashboard"] .nav-icon { mask-image: url('/icons/dashboard.svg'); }
+      &[data-icon="accounts"] .nav-icon { mask-image: url('/icons/accounts.svg'); }
     }
   }
 
@@ -112,9 +120,16 @@
       text-decoration: none;
       transition: all var(--transition-fast);
 
-      svg {
+      &::before {
+        content: '';
+        display: block;
         width: 0.875em;
         height: 0.875em;
+        background-color: currentColor;
+        mask-image: url('/icons/arrow-left.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
         flex-shrink: 0;
       }
 

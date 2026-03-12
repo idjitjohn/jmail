@@ -20,9 +20,17 @@
       text-decoration: none;
       transition: background var(--transition-fast);
 
-      svg {
+      &::before {
+        content: '';
+        display: block;
         width: 1em;
         height: 1em;
+        background-color: currentColor;
+        mask-image: url('/icons/plus.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        flex-shrink: 0;
       }
 
       &:hover {

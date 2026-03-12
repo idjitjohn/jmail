@@ -19,8 +19,14 @@
       color: var(--color-text-muted);
 
       .placeholder-icon {
+        display: block;
         width: 3em;
         height: 3em;
+        background-color: currentColor;
+        mask-image: url('/icons/envelope.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
         opacity: 0.3;
       }
 
@@ -51,7 +57,18 @@
       padding: 0.3em 0.5em;
       border-radius: 0.4em;
 
-      svg { width: 0.875em; height: 0.875em; }
+      &::before {
+        content: '';
+        display: block;
+        width: 0.875em;
+        height: 0.875em;
+        background-color: currentColor;
+        mask-image: url('/icons/chevron-left.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        flex-shrink: 0;
+      }
     }
   }
 
@@ -245,7 +262,17 @@
               cursor: pointer;
               transition: all var(--transition-fast);
 
-              svg { width: 0.875em; height: 0.875em; }
+              &::before {
+                content: '';
+                display: block;
+                width: 0.875em;
+                height: 0.875em;
+                background-color: currentColor;
+                mask-size: contain;
+                mask-repeat: no-repeat;
+                mask-position: center;
+                flex-shrink: 0;
+              }
 
               &:hover {
                 background: var(--color-bg-secondary);
@@ -253,6 +280,9 @@
                 border-color: var(--color-border-default);
               }
             }
+
+            .reply-btn::before { mask-image: url('/icons/reply.svg'); }
+            .forward-btn::before { mask-image: url('/icons/forward.svg'); }
           }
         }
       }

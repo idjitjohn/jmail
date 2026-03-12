@@ -22,8 +22,14 @@
       color: var(--color-primary);
 
       .brand-icon {
+        display: block;
         width: 1.4em;
         height: 1.4em;
+        background-color: currentColor;
+        mask-image: url('/icons/jmail-brand.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
         flex-shrink: 0;
       }
 
@@ -46,9 +52,17 @@
       gap: 0.3em;
       font-size: 0.875em;
 
-      svg {
+      &::before {
+        content: '';
+        display: block;
         width: 1em;
         height: 1em;
+        background-color: currentColor;
+        mask-image: url('/icons/plus.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        flex-shrink: 0;
       }
     }
   }
@@ -98,9 +112,16 @@
       font-size: 0.8125em;
       transition: all var(--transition-fast);
 
-      svg {
+      &::before {
+        content: '';
+        display: block;
         width: 0.875em;
         height: 0.875em;
+        background-color: currentColor;
+        mask-image: url('/icons/gear.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
         flex-shrink: 0;
       }
 
@@ -125,9 +146,16 @@
       cursor: pointer;
       transition: all var(--transition-fast);
 
-      svg {
+      &::before {
+        content: '';
+        display: block;
         width: 0.875em;
         height: 0.875em;
+        background-color: currentColor;
+        mask-image: url('/icons/sign-out.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
         flex-shrink: 0;
       }
 

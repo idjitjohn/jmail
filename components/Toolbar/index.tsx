@@ -3,7 +3,7 @@ import './Toolbar.scss'
 interface ToolbarAction {
   id: string
   label: string
-  icon: React.ReactNode
+  icon: string
   onClick: () => void
   danger?: boolean
   disabled?: boolean
@@ -25,7 +25,7 @@ export default function Toolbar({ actions }: Props) {
           title={action.label}
           type="button"
         >
-          <span className="icon">{action.icon}</span>
+          <span className={`icon icon-${action.icon}`} />
           <span className="label">{action.label}</span>
         </button>
       ))}

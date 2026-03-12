@@ -22,18 +22,9 @@ export default function MailList({ folder, selectedThread, onSelect, onMobileBac
   return (
     <div className="MailList">
       <div className="header">
-        <button className="mobile-back" onClick={onMobileBack} type="button" aria-label="Back">
-          <svg viewBox="0 0 16 16" fill="currentColor">
-            <path fillRule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0" />
-          </svg>
-        </button>
+        <button className="mobile-back" onClick={onMobileBack} type="button" aria-label="Back" />
         <h2 className="title">{folderLabel}</h2>
-        <button className="refresh-btn" onClick={refresh} type="button" title="Refresh">
-          <svg viewBox="0 0 16 16" fill="currentColor">
-            <path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
-            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
-          </svg>
-        </button>
+        <button className="refresh-btn" onClick={refresh} type="button" title="Refresh" />
       </div>
 
       <div className="messages">
@@ -48,9 +39,7 @@ export default function MailList({ folder, selectedThread, onSelect, onMobileBac
           </div>
         ) : threads.length === 0 ? (
           <div className="empty-state">
-            <svg className="empty-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-            </svg>
+            <span className="empty-icon" />
             <p>No messages</p>
           </div>
         ) : (

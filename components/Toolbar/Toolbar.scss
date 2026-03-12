@@ -22,13 +22,19 @@
     transition: all var(--transition-fast);
 
     .icon {
-      display: flex;
-      align-items: center;
+      display: block;
+      width: 0.9375em;
+      height: 0.9375em;
+      background-color: currentColor;
+      mask-size: contain;
+      mask-repeat: no-repeat;
+      mask-position: center;
+      flex-shrink: 0;
 
-      svg {
-        width: 0.9375em;
-        height: 0.9375em;
-      }
+      &.icon-reply { mask-image: url('/icons/reply.svg'); }
+      &.icon-forward { mask-image: url('/icons/forward.svg'); }
+      &.icon-trash { mask-image: url('/icons/trash.svg'); }
+      &.icon-mark-unread { mask-image: url('/icons/mark-unread.svg'); }
     }
 
     .label {

@@ -17,8 +17,18 @@
     color: var(--color-text);
   }
 
-  .icon {
+  &::before {
+    content: '';
+    display: block;
     width: 1em;
     height: 1em;
+    background-color: currentColor;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
   }
+
+  &.theme-dark::before { mask-image: url('/icons/moon.svg'); }
+  &.theme-light::before { mask-image: url('/icons/sun.svg'); }
+  &.theme-system::before { mask-image: url('/icons/system.svg'); }
 }

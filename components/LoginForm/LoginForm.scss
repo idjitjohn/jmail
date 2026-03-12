@@ -38,8 +38,15 @@
       color: var(--color-primary);
 
       .logo-icon {
+        display: block;
         width: 2em;
         height: 2em;
+        background-color: currentColor;
+        mask-image: url('/icons/envelope.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        flex-shrink: 0;
       }
 
       .logo-name {

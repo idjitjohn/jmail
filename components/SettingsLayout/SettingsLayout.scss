@@ -61,9 +61,16 @@
         text-decoration: none;
         transition: color var(--transition-fast);
 
-        svg {
+        &::before {
+          content: '';
+          display: block;
           width: 0.8125em;
           height: 0.8125em;
+          background-color: currentColor;
+          mask-image: url('/icons/chevron-left.svg');
+          mask-size: contain;
+          mask-repeat: no-repeat;
+          mask-position: center;
           flex-shrink: 0;
         }
 
@@ -90,18 +97,27 @@
         text-decoration: none;
         transition: all var(--transition-fast);
 
-        svg {
+        .nav-icon {
+          display: block;
           width: 0.875em;
           height: 0.875em;
+          background-color: currentColor;
+          mask-size: contain;
+          mask-repeat: no-repeat;
+          mask-position: center;
           flex-shrink: 0;
           opacity: 0.7;
         }
+
+        &[data-icon="person"] .nav-icon { mask-image: url('/icons/person.svg'); }
+        &[data-icon="appearance"] .nav-icon { mask-image: url('/icons/appearance.svg'); }
+        &[data-icon="gear"] .nav-icon { mask-image: url('/icons/gear.svg'); }
 
         &:hover {
           background: var(--color-sidebar-item-hover);
           color: var(--color-text);
 
-          svg { opacity: 1; }
+          .nav-icon { opacity: 1; }
         }
 
         &.active {
@@ -109,7 +125,7 @@
           color: var(--color-primary);
           font-weight: 500;
 
-          svg { opacity: 1; }
+          .nav-icon { opacity: 1; }
         }
       }
     }
@@ -147,9 +163,16 @@
         transition: all var(--transition-fast);
         text-align: left;
 
-        svg {
+        &::before {
+          content: '';
+          display: block;
           width: 0.875em;
           height: 0.875em;
+          background-color: currentColor;
+          mask-image: url('/icons/sign-out.svg');
+          mask-size: contain;
+          mask-repeat: no-repeat;
+          mask-position: center;
           flex-shrink: 0;
         }
 

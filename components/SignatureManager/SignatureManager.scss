@@ -54,7 +54,17 @@
         cursor: pointer;
         transition: all var(--transition-fast);
 
-        svg { width: 0.875em; height: 0.875em; }
+        &::before {
+          content: '';
+          display: block;
+          width: 0.875em;
+          height: 0.875em;
+          background-color: currentColor;
+          mask-image: url('/icons/close.svg');
+          mask-size: contain;
+          mask-repeat: no-repeat;
+          mask-position: center;
+        }
 
         &:hover {
           background: var(--color-border-default);
@@ -139,6 +149,22 @@
               }
             }
           }
+        }
+      }
+
+      .new-sig-btn {
+        &::before {
+          content: '';
+          display: block;
+          width: 0.875em;
+          height: 0.875em;
+          background-color: currentColor;
+          mask-image: url('/icons/plus.svg');
+          mask-size: contain;
+          mask-repeat: no-repeat;
+          mask-position: center;
+          flex-shrink: 0;
+          margin-right: 0.25em;
         }
       }
     }

@@ -25,23 +25,28 @@
     color: var(--color-primary);
     font-weight: 500;
 
-    .icon {
-      color: var(--color-primary);
-    }
+    .icon { background-color: var(--color-primary); }
   }
 
   .icon {
-    display: flex;
-    align-items: center;
+    display: block;
+    width: 0.9375em;
+    height: 0.9375em;
+    background-color: var(--color-text-tertiary);
+    mask-image: url('/icons/folder-default.svg');
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
     flex-shrink: 0;
-    color: var(--color-text-tertiary);
-    transition: color var(--transition-fast);
-
-    svg {
-      width: 0.9375em;
-      height: 0.9375em;
-    }
+    transition: background-color var(--transition-fast);
   }
+
+  &[data-folder="INBOX"] .icon { mask-image: url('/icons/folder-inbox.svg'); }
+  &[data-folder="Sent"] .icon { mask-image: url('/icons/folder-sent.svg'); }
+  &[data-folder="Drafts"] .icon { mask-image: url('/icons/folder-drafts.svg'); }
+  &[data-folder="Trash"] .icon { mask-image: url('/icons/trash.svg'); }
+  &[data-folder="Spam"] .icon { mask-image: url('/icons/warning.svg'); }
+  &[data-folder="Archive"] .icon { mask-image: url('/icons/folder-archive.svg'); }
 
   .name {
     flex: 1;

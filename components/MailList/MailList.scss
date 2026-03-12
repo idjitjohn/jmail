@@ -30,7 +30,17 @@
       flex-shrink: 0;
       margin-right: 0.25em;
 
-      svg { width: 1em; height: 1em; }
+      &::before {
+        content: '';
+        display: block;
+        width: 1em;
+        height: 1em;
+        background-color: currentColor;
+        mask-image: url('/icons/chevron-left.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+      }
     }
 
     .title {
@@ -53,9 +63,16 @@
       cursor: pointer;
       transition: all var(--transition-fast);
 
-      svg {
+      &::before {
+        content: '';
+        display: block;
         width: 0.875em;
         height: 0.875em;
+        background-color: currentColor;
+        mask-image: url('/icons/refresh.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
       }
 
       &:hover {
@@ -83,8 +100,14 @@
       color: var(--color-text-muted);
 
       .empty-icon {
+        display: block;
         width: 2.5em;
         height: 2.5em;
+        background-color: currentColor;
+        mask-image: url('/icons/envelope.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
         opacity: 0.4;
       }
 
