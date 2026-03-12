@@ -3,7 +3,7 @@ import { verifySession } from '@/lib/auth'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   const token = req.cookies.get('session')?.value
 
