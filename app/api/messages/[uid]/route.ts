@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { simpleParser } from 'mailparser'
 import { getSession, unauthorized } from '@/lib/auth'
 import { createImapClient } from '@/lib/mail'
 import sanitizeHtml from 'sanitize-html'
@@ -33,9 +34,11 @@ export async function GET(req: NextRequest, { params }: Params) {
       if (!env) continue
       const from = env.from?.[0]
 
-      // Parse raw source to extract HTML/text
-      const raw = msg.source ? Buffer.from(msg.source).toString('utf-8') : ''
-      const { html, text } = parseBody(raw)
+      // Parse raw MIME source
+      const rawBuf = msg.source ? Buffer.from(msg.source) : Buffer.alloc(0)
+      const parsed = rawBuf.length ? await simpleParser(rawBuf) : null
+      const html = parsed?.html || undefined
+      const text = parsed?.text || undefined
 
       message = {
         uid: msg.uid,
@@ -163,13 +166,3 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   },
 }
 
-// Basic MIME body parser — extracts HTML and text parts
-function parseBody(raw: string): { html?: string; text?: string } {
-  const htmlMatch = raw.match(/Content-Type: text\/html[^\n]*\n(?:[^\n]+\n)*?\n([\s\S]+?)(?=--|\z)/i)
-  const textMatch = raw.match(/Content-Type: text\/plain[^\n]*\n(?:[^\n]+\n)*?\n([\s\S]+?)(?=--|\z)/i)
-
-  return {
-    html: htmlMatch?.[1]?.trim(),
-    text: textMatch?.[1]?.trim(),
-  }
-}
