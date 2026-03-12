@@ -1,4 +1,4 @@
-import { DOMAINS } from '@/lib/admin'
+import { DOMAINS } from '@/lib/domains'
 import './AdminDashboard.scss'
 
 interface Props {

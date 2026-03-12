@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Input from '../Input'
 import Button from '../Button'
 import { useToast } from '../Toast'
-import { DOMAINS } from '@/lib/admin'
+import { DOMAINS } from '@/lib/domains'
 import './CreateAccountForm.scss'
 
 export default function CreateAccountForm() {
