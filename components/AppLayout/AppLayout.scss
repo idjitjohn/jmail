@@ -4,7 +4,27 @@
   overflow: hidden;
   background: var(--color-bg-default);
 
+  .resize-handle {
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    flex-shrink: 0;
+    background: transparent;
+    transition: background 0.15s;
+    position: relative;
+    z-index: 1;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0 -3px;
+    }
+
+    &:hover { background: var(--color-primary); }
+  }
+
   @media (max-width: 768px) {
+    .resize-handle { display: none; }
     position: relative;
 
     .Sidebar,

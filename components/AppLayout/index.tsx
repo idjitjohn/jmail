@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import Sidebar from '../Sidebar'
 import MailList from '../MailList'
 import MailViewer from '../MailViewer'
@@ -27,6 +27,25 @@ export default function AppLayout({ userEmail }: Props) {
   const [composeState, setComposeState] = useState<ComposeState>({ to: '', subject: '' })
   const [refreshKey, setRefreshKey] = useState(0)
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>('sidebar')
+  const [mailListWidth, setMailListWidth] = useState(352) // 22em default
+
+  const startResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startW = mailListWidth
+    const onMove = (ev: MouseEvent) =>
+      setMailListWidth(Math.max(180, Math.min(600, startW + ev.clientX - startX)))
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [mailListWidth])
 
   const handleCompose = () => {
     setComposeState({ to: '', subject: '' })
@@ -56,7 +75,10 @@ export default function AppLayout({ userEmail }: Props) {
   }
 
   return (
-    <div className={`AppLayout mobile-${mobilePanel}`}>
+    <div
+      className={`AppLayout mobile-${mobilePanel}`}
+      style={{ '--mail-list-w': `${mailListWidth}px` } as React.CSSProperties}
+    >
       <Sidebar
         activeFolder={activeFolder}
         onFolderChange={handleFolderChange}
@@ -71,6 +93,8 @@ export default function AppLayout({ userEmail }: Props) {
         onSelect={handleSelect}
         onMobileBack={() => setMobilePanel('sidebar')}
       />
+
+      <div className="resize-handle" onMouseDown={startResize} />
 
       <MailViewer
         uid={selectedUid}

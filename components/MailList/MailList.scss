@@ -1,8 +1,8 @@
 .MailList {
   display: flex;
   flex-direction: column;
-  width: 22em;
-  min-width: 22em;
+  width: var(--mail-list-w, 22em);
+  min-width: var(--mail-list-w, 22em);
   height: 100%;
   border-right: 1px solid var(--color-border-muted);
   background: var(--color-bg-default);

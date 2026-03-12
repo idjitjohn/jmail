@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import MailComposer from 'nodemailer/lib/mail-composer'
 import { getSession, unauthorized } from '@/lib/auth'
-import { createSmtpTransport } from '@/lib/mail'
+import { createSmtpTransport, createImapClient } from '@/lib/mail'
 import { getUserData } from '@/lib/userdata'
+
+function buildRaw(opts: ConstructorParameters<typeof MailComposer>[0]): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    new MailComposer(opts).compile().build((err, buf) => err ? reject(err) : resolve(buf))
+  })
+}
 
 export async function POST(req: NextRequest) {
   const session = await getSession()
@@ -18,19 +25,38 @@ export async function POST(req: NextRequest) {
     ? `"${name.trim()}" <${session.email}>`
     : session.email
 
+  const mailOpts = {
+    from,
+    to,
+    cc: cc || undefined,
+    subject,
+    text: body,
+    html: body ? `<pre style="font-family:inherit;white-space:pre-wrap">${body}</pre>` : undefined,
+    inReplyTo: inReplyTo || undefined,
+    references: inReplyTo || undefined,
+  }
+
   const transport = createSmtpTransport(session.email, session.password)
 
   try {
+    // Build raw message once — used for both sending and IMAP append
+    const raw = await buildRaw(mailOpts)
+
     await transport.sendMail({
-      from,
-      to,
-      cc: cc || undefined,
-      subject,
-      text: body,
-      html: body ? `<pre style="font-family:inherit;white-space:pre-wrap">${body}</pre>` : undefined,
-      inReplyTo: inReplyTo || undefined,
-      references: inReplyTo || undefined,
+      envelope: { from: session.email, to: [to, ...(cc ? cc.split(',').map((s: string) => s.trim()) : [])] },
+      raw,
     })
+
+    // Append copy to Sent folder (non-fatal)
+    const imap = createImapClient(session.email, session.password)
+    try {
+      await imap.connect()
+      for (const folder of ['Sent', 'INBOX.Sent', 'Sent Messages']) {
+        try { await imap.append(folder, raw, ['\\Seen']); break } catch { /* try next */ }
+      }
+    } catch { /* non-fatal */ } finally {
+      try { await imap.logout() } catch { /* ignore */ }
+    }
 
     return NextResponse.json({ ok: true })
   } catch (e) {
