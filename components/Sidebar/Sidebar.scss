@@ -92,7 +92,7 @@
 
       .user-email {
         font-size: 0.75em;
-        color: var(--color-text-tertiary);
+        color: var(--color-text-secondary);
         display: block;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -108,7 +108,7 @@
       padding: 0.4em 0.5em;
       border-radius: 0.4em;
       text-decoration: none;
-      color: var(--color-text-tertiary);
+      color: var(--color-text-secondary);
       font-size: 0.8125em;
       transition: all var(--transition-fast);
 
@@ -139,7 +139,7 @@
       padding: 0.4em 0.5em;
       border-radius: 0.4em;
       text-decoration: none;
-      color: var(--color-text-tertiary);
+      color: var(--color-text-secondary);
       font-size: 0.8125em;
       transition: all var(--transition-fast);
 
@@ -171,7 +171,7 @@
       border: none;
       border-radius: 0.4em;
       background: transparent;
-      color: var(--color-text-tertiary);
+      color: var(--color-text-secondary);
       font-size: 0.8125em;
       font-family: var(--font-sans);
       cursor: pointer;

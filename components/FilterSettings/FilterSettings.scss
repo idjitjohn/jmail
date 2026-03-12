@@ -1,0 +1,203 @@
+.FilterSettings {
+  padding: 2.5em 2em;
+  max-width: 35em;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    padding: 3em;
+  }
+
+  .section {
+    .section-head {
+      margin-bottom: 0.5em;
+      padding: 0 0.75em;
+
+      .section-title {
+        font-size: 0.8125em;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .section-subtitle {
+        font-size: 0.75em;
+        color: var(--color-text-tertiary);
+        margin-top: 0.125em;
+      }
+    }
+
+    .empty {
+      padding: 2em;
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: 0.875em;
+    }
+
+    .filter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5em;
+    }
+
+    .filter-card {
+      background: var(--color-bg-overlay);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 0.5px 0 0 rgba(255, 255, 255, 0.06) inset,
+        0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75em;
+      padding: 0.75em 1em;
+    }
+
+    .filter-toggle {
+      padding-top: 0.25em;
+      flex-shrink: 0;
+    }
+
+    .toggle {
+      position: relative;
+      width: 2.75em;
+      height: 1.625em;
+      border: none;
+      border-radius: 100em;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+      flex-shrink: 0;
+
+      &.on { background: var(--color-primary); }
+      &.off { background: var(--color-bg-tertiary); }
+
+      .thumb {
+        position: absolute;
+        top: 0.1875em;
+        left: 0.1875em;
+        width: 1.25em;
+        height: 1.25em;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform var(--transition-fast);
+        box-shadow: var(--shadow-sm);
+      }
+
+      &.on .thumb { transform: translateX(1.125em); }
+    }
+
+    .filter-fields {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5em;
+      min-width: 0;
+    }
+
+    .field-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+
+      .field-label {
+        font-size: 0.75em;
+        font-weight: 500;
+        color: var(--color-text-tertiary);
+        flex-shrink: 0;
+        min-width: 4em;
+      }
+    }
+
+    .field-input,
+    .field-select {
+      flex: 1;
+      padding: 0.375em 0.5em;
+      background: var(--color-input-bg);
+      border: 1px solid var(--color-input-border);
+      border-radius: var(--radius-md);
+      color: var(--color-input-text);
+      font-size: 0.8125em;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: border-color var(--transition-fast);
+      min-width: 0;
+
+      &::placeholder { color: var(--color-text-muted); }
+
+      &:focus {
+        border-color: var(--color-input-border-focus);
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+      }
+    }
+
+    .field-select {
+      cursor: pointer;
+      max-width: 7em;
+    }
+
+    .remove-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5em;
+      height: 1.5em;
+      border: none;
+      border-radius: 0.375em;
+      background: transparent;
+      color: var(--color-text-tertiary);
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 0.25em;
+      transition: all var(--transition-fast);
+
+      &::before {
+        content: '';
+        display: block;
+        width: 0.75em;
+        height: 0.75em;
+        background-color: currentColor;
+        mask-image: url('/icons/close.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+      }
+
+      &:hover {
+        background: var(--color-danger-light);
+        color: var(--color-danger);
+      }
+    }
+
+    .section-footer {
+      display: flex;
+      align-items: center;
+      gap: 0.625em;
+      margin-top: 0.75em;
+      padding: 0 0.25em;
+
+      .spacer { flex: 1; }
+
+      .msg {
+        font-size: 0.8125em;
+
+        &.error { color: var(--color-danger); }
+        &.success { color: var(--color-success); }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.5em 1em;
+
+    .filter-row {
+      flex-wrap: wrap;
+    }
+  }
+}

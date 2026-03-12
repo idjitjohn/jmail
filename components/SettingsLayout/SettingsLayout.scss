@@ -114,7 +114,7 @@
         border: none;
         border-radius: 0.375em;
         background: transparent;
-        color: var(--color-text-tertiary);
+        color: var(--color-text-secondary);
         cursor: pointer;
         transition: all var(--transition-fast);
 
@@ -152,27 +152,23 @@
           mask-repeat: no-repeat;
           mask-position: center;
           flex-shrink: 0;
-          opacity: 0.7;
         }
 
         &[data-icon="person"] .nav-icon { mask-image: url('/icons/person.svg'); }
         &[data-icon="appearance"] .nav-icon { mask-image: url('/icons/appearance.svg'); }
         &[data-icon="gear"] .nav-icon { mask-image: url('/icons/gear.svg'); }
+        &[data-icon="filter"] .nav-icon { mask-image: url('/icons/filter.svg'); }
         &[data-icon="dashboard"] .nav-icon { mask-image: url('/icons/dashboard.svg'); }
 
         &:hover {
           background: var(--color-sidebar-item-hover);
           color: var(--color-text);
-
-          .nav-icon { opacity: 1; }
         }
 
         &.active {
           background: var(--color-sidebar-item-active);
           color: var(--color-primary);
           font-weight: 500;
-
-          .nav-icon { opacity: 1; }
         }
       }
     }
@@ -187,7 +183,7 @@
 
       .user-email {
         font-size: 0.75em;
-        color: var(--color-text-tertiary);
+        color: var(--color-text-secondary);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -203,7 +199,7 @@
         border: none;
         border-radius: var(--radius-md);
         background: transparent;
-        color: var(--color-text-tertiary);
+        color: var(--color-text-secondary);
         font-size: 0.875em;
         font-family: var(--font-sans);
         cursor: pointer;

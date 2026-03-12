@@ -51,6 +51,7 @@
     }
 
     .search-btn,
+    .mark-all-read-btn,
     .refresh-btn {
       display: flex;
       align-items: center;
@@ -89,6 +90,7 @@
       }
     }
 
+    .mark-all-read-btn::before { mask-image: url('/icons/mark-all-read.svg'); }
     .refresh-btn::before { mask-image: url('/icons/refresh.svg'); }
   }
 

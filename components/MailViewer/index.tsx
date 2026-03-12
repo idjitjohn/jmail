@@ -17,7 +17,7 @@ interface Props {
 }
 
 export default function MailViewer({ thread, folder, onReply, onDelete, onMobileBack }: Props) {
-  const { expanded, fullMessages, loading, error, toggleExpand, deleteMessage, markRead } =
+  const { expanded, fullMessages, loading, error, toggleExpand, deleteMessage, markRead, toggleFlag } =
     useMailViewer(thread, folder)
 
   if (!thread) {
@@ -54,6 +54,13 @@ export default function MailViewer({ thread, folder, onReply, onDelete, onMobile
         to: '',
         subject: `Fwd: ${thread.subject}`,
       }),
+    },
+    {
+      id: 'star',
+      label: latest.isFlagged ? 'Unstar' : 'Star',
+      icon: latest.isFlagged ? 'star-filled' : 'star',
+      active: latest.isFlagged,
+      onClick: () => toggleFlag(latest.uid, !latest.isFlagged),
     },
     {
       id: 'mark-unread',

@@ -35,6 +35,8 @@
       &.icon-forward { mask-image: url('/icons/forward.svg'); }
       &.icon-trash { mask-image: url('/icons/trash.svg'); }
       &.icon-mark-unread { mask-image: url('/icons/mark-unread.svg'); }
+      &.icon-star { mask-image: url('/icons/star-outline.svg'); }
+      &.icon-star-filled { mask-image: url('/icons/star.svg'); }
     }
 
     .label {
@@ -49,6 +51,10 @@
     &.danger:hover:not(:disabled) {
       background: var(--color-danger-light);
       color: var(--color-danger);
+    }
+
+    &.active {
+      color: #f5a623;
     }
 
     &:disabled {

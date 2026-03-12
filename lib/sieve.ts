@@ -14,9 +14,19 @@ export interface SieveVacation {
   days: number
 }
 
+export interface SieveFilter {
+  id: string
+  field: 'from' | 'subject' | 'to'
+  contains: string
+  action: 'move'
+  destination: string
+  enabled: boolean
+}
+
 export interface SieveConfig {
   forwarding: SieveForwarding | null
   vacation: SieveVacation | null
+  filters?: SieveFilter[]
 }
 
 function getSievePath(email: string) {
@@ -39,7 +49,7 @@ export async function readSieveConfig(email: string): Promise<SieveConfig> {
     const content = await readFile(getConfigPath(email), 'utf-8')
     return JSON.parse(content)
   } catch {
-    return { forwarding: null, vacation: null }
+    return { forwarding: null, vacation: null, filters: [] }
   }
 }
 
@@ -49,20 +59,30 @@ export async function writeSieveConfig(email: string, config: SieveConfig): Prom
   // Persist config as source of truth
   await writeFile(getConfigPath(email), JSON.stringify(config), 'utf-8')
 
-  const { forwarding, vacation } = config
+  const { forwarding, vacation, filters = [] } = config
+  const enabledFilters = filters.filter(f => f.enabled)
 
-  if (!forwarding && !vacation) {
+  if (!forwarding && !vacation && enabledFilters.length === 0) {
     try { await unlink(getSievePath(email)) } catch { /* not found */ }
     return
   }
 
   // Build require list
   const requires: string[] = []
+  if (enabledFilters.length > 0) requires.push('fileinto')
   if (vacation) requires.push('vacation')
   if (forwarding?.keepCopy) requires.push('copy')
   if (forwarding) requires.push('redirect')
 
   let script = `require [${requires.map(r => `"${r}"`).join(', ')}];\n\n`
+
+  // Filter rules
+  for (const f of enabledFilters) {
+    const val = f.contains.replace(/"/g, '\\"')
+    const dest = f.destination.replace(/"/g, '\\"')
+    const header = f.field === 'from' ? 'From' : f.field === 'to' ? 'To' : 'Subject'
+    script += `if header :contains "${header}" "${val}" {\n  fileinto "${dest}";\n  stop;\n}\n\n`
+  }
 
   if (vacation) {
     const msg = vacation.message.replace(/"/g, '\\"')

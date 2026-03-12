@@ -124,6 +124,18 @@
         }
       }
 
+      .star-icon {
+        display: block;
+        width: 0.75em;
+        height: 0.75em;
+        flex-shrink: 0;
+        background-color: #f5a623;
+        mask-image: url('/icons/star.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+      }
+
       .date {
         font-size: 0.75em;
         color: var(--color-text-tertiary);

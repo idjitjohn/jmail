@@ -44,6 +44,7 @@ export default function SettingsLayout({ children, userEmail, isAdmin }: Props) 
         <nav className="nav">
           {navItem('/settings/profile', 'Profile', 'person')}
           {navItem('/settings/appearance', 'Appearance', 'appearance')}
+          {navItem('/settings/filters', 'Filters', 'filter')}
           {navItem('/settings/advanced', 'Advanced', 'gear')}
           {isAdmin && navItem('/admin', 'Admin', 'dashboard')}
         </nav>

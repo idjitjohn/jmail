@@ -77,5 +77,18 @@ export function useMailViewer(thread: MailThread | null, folder: string) {
     })
   }, [folder])
 
-  return { expanded, fullMessages, loading, error, toggleExpand, deleteMessage, markRead }
+  const toggleFlag = useCallback(async (uid: number, isFlagged: boolean) => {
+    await fetch(`/api/messages/${uid}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isFlagged, folder }),
+    })
+    setFullMessages(prev => {
+      const msg = prev.get(uid)
+      if (!msg) return prev
+      return new Map([...prev, [uid, { ...msg, isFlagged }]])
+    })
+  }, [folder])
+
+  return { expanded, fullMessages, loading, error, toggleExpand, deleteMessage, markRead, toggleFlag }
 }

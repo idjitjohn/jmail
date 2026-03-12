@@ -7,6 +7,7 @@ interface ToolbarAction {
   onClick: () => void
   danger?: boolean
   disabled?: boolean
+  active?: boolean
 }
 
 interface Props {
@@ -19,7 +20,7 @@ export default function Toolbar({ actions }: Props) {
       {actions.map(action => (
         <button
           key={action.id}
-          className={`action${action.danger ? ' danger' : ''}`}
+          className={`action${action.danger ? ' danger' : ''}${action.active ? ' active' : ''}`}
           onClick={action.onClick}
           disabled={action.disabled}
           title={action.label}

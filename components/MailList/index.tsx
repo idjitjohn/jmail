@@ -17,7 +17,7 @@ interface Props {
 }
 
 export default function MailList({ folder, selectedThread, onSelect, onMobileBack, onRefresh }: Props) {
-  const { threads, loading, error, hasMore, loadMore, refresh, searchQuery, search, searching } = useMailList(folder)
+  const { threads, loading, error, hasMore, loadMore, refresh, searchQuery, search, searching, markAllRead } = useMailList(folder)
 
   const handleSwipeDelete = async (thread: import('@/lib/types').MailThread) => {
     try {
@@ -62,6 +62,7 @@ export default function MailList({ folder, selectedThread, onSelect, onMobileBac
           type="button"
           title="Search"
         />
+        <button className="mark-all-read-btn" onClick={() => { markAllRead(); onRefresh?.() }} type="button" title="Mark all read" />
         <button className="refresh-btn" onClick={refresh} type="button" title="Refresh" />
       </div>
 

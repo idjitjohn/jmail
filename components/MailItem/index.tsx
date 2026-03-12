@@ -118,6 +118,7 @@ export default function MailItem({ thread, isSelected, onClick, onSwipeDelete }:
               {senderLabel}
               {messages.length > 1 && <span className="count">{messages.length}</span>}
             </span>
+            {latest.isFlagged && <span className="star-icon" aria-hidden="true" />}
             <span className="date">{formatDate(latest.date)}</span>
           </div>
           <p className="subject">{subject || '(no subject)'}</p>

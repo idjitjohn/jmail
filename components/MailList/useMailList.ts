@@ -73,7 +73,19 @@ export function useMailList(folder: string) {
     fetchMessages(1)
   }
 
+  const markAllRead = useCallback(async () => {
+    try {
+      const res = await fetch('/api/messages/mark-all-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      setMessages(prev => prev.map(m => ({ ...m, isRead: true })))
+    } catch { /* non-fatal */ }
+  }, [folder])
+
   const threads = useMemo(() => groupIntoThreads(messages), [messages])
 
-  return { messages, threads, loading, error, hasMore, loadMore, refresh, searchQuery, search, searching }
+  return { messages, threads, loading, error, hasMore, loadMore, refresh, searchQuery, search, searching, markAllRead }
 }

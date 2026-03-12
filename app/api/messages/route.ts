@@ -68,6 +68,7 @@ export async function GET(req: NextRequest) {
           date: (env.date ?? new Date()).toISOString(),
           preview,
           isRead: msg.flags?.has('\\Seen') ?? false,
+          isFlagged: msg.flags?.has('\\Flagged') ?? false,
           hasAttachments,
           folder,
           size: msg.size,

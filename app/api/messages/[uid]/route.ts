@@ -83,6 +83,7 @@ export async function GET(req: NextRequest, { params }: Params) {
         html: html ? sanitizeHtml(html, SANITIZE_OPTIONS) : undefined,
         text: text || undefined,
         isRead: msg.flags?.has('\\Seen') ?? false,
+        isFlagged: msg.flags?.has('\\Flagged') ?? false,
         hasAttachments: nonInlineAttachments.length > 0,
         attachments: nonInlineAttachments.length > 0 ? nonInlineAttachments : undefined,
         folder,
@@ -115,7 +116,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (!session) return unauthorized()
 
   const { uid } = await params
-  const { isRead, folder = 'INBOX' } = await req.json()
+  const { isRead, isFlagged, folder = 'INBOX' } = await req.json()
 
   const client = createImapClient(session.email, session.password)
 
@@ -123,10 +124,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     await client.connect()
     await client.mailboxOpen(folder)
 
-    if (isRead) {
-      await client.messageFlagsAdd(`${uid}`, ['\\Seen'], { uid: true })
-    } else {
-      await client.messageFlagsRemove(`${uid}`, ['\\Seen'], { uid: true })
+    if (typeof isRead === 'boolean') {
+      if (isRead) {
+        await client.messageFlagsAdd(`${uid}`, ['\\Seen'], { uid: true })
+      } else {
+        await client.messageFlagsRemove(`${uid}`, ['\\Seen'], { uid: true })
+      }
+    }
+
+    if (typeof isFlagged === 'boolean') {
+      if (isFlagged) {
+        await client.messageFlagsAdd(`${uid}`, ['\\Flagged'], { uid: true })
+      } else {
+        await client.messageFlagsRemove(`${uid}`, ['\\Flagged'], { uid: true })
+      }
     }
 
     await client.logout()

@@ -26,6 +26,7 @@ export interface MailMessage {
   html?: string
   text?: string
   isRead: boolean
+  isFlagged: boolean
   hasAttachments: boolean
   attachments?: MailAttachment[]
   folder: string
