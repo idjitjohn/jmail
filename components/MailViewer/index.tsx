@@ -4,13 +4,14 @@ import Avatar from '../Avatar'
 import Spinner from '../Spinner'
 import Toolbar from '../Toolbar'
 import { useMailViewer } from './useMailViewer'
-import { formatFullDate, formatAddress } from '@/lib/format'
+import { formatFullDate, formatDate, formatAddress } from '@/lib/format'
+import type { MailThread } from '@/lib/types'
 import './MailViewer.scss'
 
 interface Props {
-  uid: number | null
+  thread: MailThread | null
   folder: string
-  onReply: (message: { to: string; subject: string; inReplyTo?: string }) => void
+  onReply: (data: { to: string; subject: string; inReplyTo?: string }) => void
   onDelete: () => void
   onMobileBack?: () => void
 }
@@ -18,12 +19,6 @@ interface Props {
 const replyIcon = (
   <svg viewBox="0 0 16 16" fill="currentColor">
     <path d="M6.598 5.013a.144.144 0 0 1 .202.134V6.3a.5.5 0 0 0 .5.5c.667 0 2.013.005 3.3.822.984.624 1.99 1.76 2.595 3.876-1.02-.983-2.185-1.516-3.205-1.799a8.7 8.7 0 0 0-1.921-.306 7 7 0 0 0-.798.008h-.013l-.005.001h-.001L7.3 9.9l-.05-.498a.5.5 0 0 0-.45.498v1.153c0 .108-.11.176-.202.134L2.614 8.254a.503.503 0 0 0-.042-.028.147.147 0 0 1 0-.252.5.5 0 0 0 .042-.028z" />
-  </svg>
-)
-
-const replyAllIcon = (
-  <svg viewBox="0 0 16 16" fill="currentColor">
-    <path d="M8.098 5.013a.144.144 0 0 1 .202.134V6.3a.5.5 0 0 0 .5.5c.667 0 2.013.005 3.3.822.984.624 1.99 1.76 2.595 3.876-1.02-.983-2.185-1.516-3.205-1.799a8.7 8.7 0 0 0-1.921-.306 7 7 0 0 0-.798.008h-.013l-.005.001h-.001L8.8 9.9l-.05-.498a.5.5 0 0 0-.45.498v1.153c0 .108-.11.176-.202.134L4.614 8.254a.503.503 0 0 0-.042-.028.147.147 0 0 1 0-.252.5.5 0 0 0 .042-.028zM3.925 3.32a.5.5 0 0 0-.65.762l.05.043A6 6 0 0 1 5.198 6.5H4.5a.5.5 0 0 0 0 1h1.032a7 7 0 0 1-.14 1.025L4.57 9.2a.5.5 0 0 0 .861.504l.826-.796q.064.061.133.117L7.95 10.72a.144.144 0 0 0 .202-.134V9.432a.5.5 0 0 1 .45-.498l.05.498.5.001h-.001l.005-.001h.013a8 8 0 0 1 .798.008c.608.052 1.289.19 1.921.306 1.02.283 2.185.816 3.205 1.799-.605-2.116-1.611-3.252-2.595-3.876-1.287-.817-2.633-.822-3.3-.822a.5.5 0 0 1-.5-.5V5.147a.144.144 0 0 0-.202-.134z" />
   </svg>
 )
 
@@ -46,10 +41,11 @@ const markUnreadIcon = (
   </svg>
 )
 
-export default function MailViewer({ uid, folder, onReply, onDelete, onMobileBack }: Props) {
-  const { message, loading, error, markRead, deleteMessage } = useMailViewer(uid, folder)
+export default function MailViewer({ thread, folder, onReply, onDelete, onMobileBack }: Props) {
+  const { expanded, fullMessages, loading, error, toggleExpand, deleteMessage, markRead } =
+    useMailViewer(thread, folder)
 
-  if (!uid) {
+  if (!thread) {
     return (
       <div className="MailViewer empty">
         <div className="placeholder">
@@ -62,25 +58,19 @@ export default function MailViewer({ uid, folder, onReply, onDelete, onMobileBac
     )
   }
 
-  const toolbarActions = message ? [
+  // Toolbar uses the latest message in the thread
+  const latestFull = fullMessages.get(thread.latest.uid)
+  const latest = latestFull || thread.latest
+
+  const toolbarActions = [
     {
       id: 'reply',
       label: 'Reply',
       icon: replyIcon,
       onClick: () => onReply({
-        to: message.from.address,
-        subject: `Re: ${message.subject}`,
-        inReplyTo: message.messageId,
-      }),
-    },
-    {
-      id: 'reply-all',
-      label: 'Reply All',
-      icon: replyAllIcon,
-      onClick: () => onReply({
-        to: [message.from, ...(message.to || [])].map(a => a.address).join(', '),
-        subject: `Re: ${message.subject}`,
-        inReplyTo: message.messageId,
+        to: latest.from.address,
+        subject: `Re: ${thread.subject}`,
+        inReplyTo: latest.messageId,
       }),
     },
     {
@@ -89,14 +79,14 @@ export default function MailViewer({ uid, folder, onReply, onDelete, onMobileBac
       icon: forwardIcon,
       onClick: () => onReply({
         to: '',
-        subject: `Fwd: ${message.subject}`,
+        subject: `Fwd: ${thread.subject}`,
       }),
     },
     {
       id: 'mark-unread',
-      label: message.isRead ? 'Mark unread' : 'Mark read',
+      label: latest.isRead ? 'Mark unread' : 'Mark read',
       icon: markUnreadIcon,
-      onClick: () => markRead(!message.isRead),
+      onClick: () => markRead(latest.uid, !latest.isRead),
     },
     {
       id: 'delete',
@@ -104,11 +94,11 @@ export default function MailViewer({ uid, folder, onReply, onDelete, onMobileBac
       icon: trashIcon,
       danger: true,
       onClick: async () => {
-        await deleteMessage()
+        await deleteMessage(latest.uid)
         onDelete()
       },
     },
-  ] : []
+  ]
 
   return (
     <div className="MailViewer">
@@ -120,6 +110,7 @@ export default function MailViewer({ uid, folder, onReply, onDelete, onMobileBac
           Back
         </button>
       </div>
+
       <Toolbar actions={toolbarActions} />
 
       <div className="body">
@@ -131,48 +122,106 @@ export default function MailViewer({ uid, folder, onReply, onDelete, onMobileBac
           <div className="error">
             <p>{error}</p>
           </div>
-        ) : message ? (
+        ) : (
           <>
-            <div className="mail-header">
-              <h1 className="subject">{message.subject || '(no subject)'}</h1>
-              <div className="sender-row">
-                <Avatar name={message.from.name} email={message.from.address} size="lg" />
-                <div className="sender-info">
-                  <p className="sender-name">{message.from.name || message.from.address}</p>
-                  {message.from.name && (
-                    <p className="sender-email">{message.from.address}</p>
-                  )}
-                </div>
-                <time className="date">{formatFullDate(message.date)}</time>
-              </div>
-              <div className="recipients">
-                <span className="to-label">To:</span>
-                <span className="to-list">
-                  {message.to.map(formatAddress).join(', ')}
-                </span>
-                {message.cc && message.cc.length > 0 && (
-                  <>
-                    <span className="to-label">Cc:</span>
-                    <span className="to-list">
-                      {message.cc.map(formatAddress).join(', ')}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
+            <h1 className="thread-subject">{thread.subject || '(no subject)'}</h1>
 
-            <div className="mail-body">
-              {message.html ? (
-                <div
-                  className="html-content"
-                  dangerouslySetInnerHTML={{ __html: message.html }}
-                />
-              ) : (
-                <pre className="text-content">{message.text}</pre>
-              )}
+            <div className="thread-messages">
+              {thread.messages.map(msg => {
+                const full = fullMessages.get(msg.uid)
+                const isExpanded = expanded.has(msg.uid)
+
+                return (
+                  <div
+                    key={msg.uid}
+                    className={`thread-item${isExpanded ? ' expanded' : ''}`}
+                  >
+                    <button
+                      className="item-header"
+                      onClick={() => toggleExpand(msg.uid)}
+                      type="button"
+                    >
+                      <Avatar name={msg.from.name} email={msg.from.address} size="sm" />
+                      <div className="item-meta">
+                        <span className="item-sender">
+                          {msg.from.name || msg.from.address}
+                        </span>
+                        {!isExpanded && msg.preview && (
+                          <span className="item-preview">{msg.preview}</span>
+                        )}
+                      </div>
+                      <time className="item-date">
+                        {isExpanded ? formatFullDate(msg.date) : formatDate(msg.date)}
+                      </time>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="item-body">
+                        <div className="item-recipients">
+                          <span className="to-label">To:</span>
+                          <span className="to-list">
+                            {(full?.to || msg.to).map(formatAddress).join(', ')}
+                          </span>
+                          {full?.cc && full.cc.length > 0 && (
+                            <>
+                              <span className="to-label">Cc:</span>
+                              <span className="to-list">
+                                {full.cc.map(formatAddress).join(', ')}
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        <div className="item-content">
+                          {full ? (
+                            full.html ? (
+                              <div
+                                className="html-content"
+                                dangerouslySetInnerHTML={{ __html: full.html }}
+                              />
+                            ) : (
+                              <pre className="text-content">{full.text}</pre>
+                            )
+                          ) : (
+                            <div className="loading-inline">
+                              <Spinner size="sm" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="item-actions">
+                          <button
+                            className="reply-btn"
+                            type="button"
+                            onClick={() => onReply({
+                              to: msg.from.address,
+                              subject: `Re: ${thread.subject}`,
+                              inReplyTo: msg.messageId,
+                            })}
+                          >
+                            {replyIcon}
+                            Reply
+                          </button>
+                          <button
+                            className="forward-btn"
+                            type="button"
+                            onClick={() => onReply({
+                              to: '',
+                              subject: `Fwd: ${thread.subject}`,
+                            })}
+                          >
+                            {forwardIcon}
+                            Forward
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </>
-        ) : null}
+        )}
       </div>
     </div>
   )

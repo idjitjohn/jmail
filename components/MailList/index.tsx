@@ -4,17 +4,18 @@ import MailItem from '../MailItem'
 import Spinner from '../Spinner'
 import Button from '../Button'
 import { useMailList } from './useMailList'
+import type { MailThread } from '@/lib/types'
 import './MailList.scss'
 
 interface Props {
   folder: string
-  selectedUid: number | null
-  onSelect: (uid: number) => void
+  selectedThread: MailThread | null
+  onSelect: (thread: MailThread) => void
   onMobileBack?: () => void
 }
 
-export default function MailList({ folder, selectedUid, onSelect, onMobileBack }: Props) {
-  const { messages, loading, error, hasMore, loadMore, refresh } = useMailList(folder)
+export default function MailList({ folder, selectedThread, onSelect, onMobileBack }: Props) {
+  const { threads, loading, error, hasMore, loadMore, refresh } = useMailList(folder)
 
   const folderLabel = folder === 'INBOX' ? 'Inbox' : folder
 
@@ -36,7 +37,7 @@ export default function MailList({ folder, selectedUid, onSelect, onMobileBack }
       </div>
 
       <div className="messages">
-        {loading && messages.length === 0 ? (
+        {loading && threads.length === 0 ? (
           <div className="empty-state">
             <Spinner size="md" />
           </div>
@@ -45,7 +46,7 @@ export default function MailList({ folder, selectedUid, onSelect, onMobileBack }
             <p>{error}</p>
             <Button variant="secondary" size="sm" onClick={refresh}>Retry</Button>
           </div>
-        ) : messages.length === 0 ? (
+        ) : threads.length === 0 ? (
           <div className="empty-state">
             <svg className="empty-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
@@ -54,11 +55,11 @@ export default function MailList({ folder, selectedUid, onSelect, onMobileBack }
           </div>
         ) : (
           <>
-            {messages.map(msg => (
+            {threads.map(thread => (
               <MailItem
-                key={msg.uid}
-                message={msg}
-                isSelected={selectedUid === msg.uid}
+                key={thread.id}
+                thread={thread}
+                isSelected={selectedThread?.id === thread.id}
                 onClick={onSelect}
               />
             ))}

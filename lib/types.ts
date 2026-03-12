@@ -6,6 +6,7 @@ export interface MailAddress {
 export interface MailMessage {
   uid: number
   messageId?: string
+  inReplyTo?: string
   subject: string
   from: MailAddress
   to: MailAddress[]
@@ -19,6 +20,15 @@ export interface MailMessage {
   hasAttachments: boolean
   folder: string
   size?: number
+}
+
+export interface MailThread {
+  id: string              // normalized subject key
+  subject: string         // display subject (Re:/Fwd: stripped)
+  messages: MailMessage[] // oldest → newest
+  latest: MailMessage
+  unreadCount: number
+  participants: MailAddress[]
 }
 
 export interface MailFolder {
@@ -76,3 +86,11 @@ export const FOLDER_LABELS: Record<string, string> = {
   Spam: 'Spam',
   Archive: 'Archive',
 }
+
+export type SSEEvent =
+  | { type: 'connected' }
+  | { type: 'ping' }
+  | { type: 'new_mail'; folder: string; count: number }
+  | { type: 'flag_update'; folder: string; uid: number; isRead: boolean }
+  | { type: 'mail_expunged'; folder: string }
+  | { type: 'unread_counts'; counts: Record<string, number> }

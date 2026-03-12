@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { MailMessage } from '@/lib/types'
+import { groupIntoThreads } from '@/lib/threads'
 
 export function useMailList(folder: string) {
   const [messages, setMessages] = useState<MailMessage[]>([])
@@ -44,5 +45,7 @@ export function useMailList(folder: string) {
 
   const refresh = () => fetchMessages(1)
 
-  return { messages, loading, error, hasMore, loadMore, refresh }
+  const threads = useMemo(() => groupIntoThreads(messages), [messages])
+
+  return { messages, threads, loading, error, hasMore, loadMore, refresh }
 }

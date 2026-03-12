@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Sidebar from '../Sidebar'
 import MailList from '../MailList'
 import MailViewer from '../MailViewer'
 import ComposeModal from '../ComposeModal'
+import { useRealtimeSync } from '../useRealtimeSync'
+import type { MailThread } from '@/lib/types'
 import './AppLayout.scss'
 
 interface Props {
@@ -22,12 +24,20 @@ type MobilePanel = 'sidebar' | 'list' | 'message'
 
 export default function AppLayout({ userEmail }: Props) {
   const [activeFolder, setActiveFolder] = useState('INBOX')
-  const [selectedUid, setSelectedUid] = useState<number | null>(null)
+  const [selectedThread, setSelectedThread] = useState<MailThread | null>(null)
   const [composeOpen, setComposeOpen] = useState(false)
   const [composeState, setComposeState] = useState<ComposeState>({ to: '', subject: '' })
   const [refreshKey, setRefreshKey] = useState(0)
+  const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0)
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>('sidebar')
-  const [mailListWidth, setMailListWidth] = useState(352) // 22em default
+  const [mailListWidth, setMailListWidth] = useState(() => {
+    if (typeof window === 'undefined') return 352
+    return parseInt(localStorage.getItem('mailListWidth') || '352', 10)
+  })
+
+  useEffect(() => {
+    localStorage.setItem('mailListWidth', String(mailListWidth))
+  }, [mailListWidth])
 
   const startResize = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -59,17 +69,31 @@ export default function AppLayout({ userEmail }: Props) {
 
   const handleFolderChange = (folder: string) => {
     setActiveFolder(folder)
-    setSelectedUid(null)
+    setSelectedThread(null)
     setMobilePanel('list')
   }
 
-  const handleSelect = (uid: number) => {
-    setSelectedUid(uid)
+  const handleSelect = (thread: MailThread) => {
+    setSelectedThread(thread)
     setMobilePanel('message')
   }
 
+  useRealtimeSync({
+    onNewMail: (folder) => {
+      if (folder === activeFolder) setRefreshKey(k => k + 1)
+      setSidebarRefreshTrigger(k => k + 1)
+    },
+    onFlagUpdate: () => {
+      setSidebarRefreshTrigger(k => k + 1)
+    },
+    onMailExpunged: (folder) => {
+      if (folder === activeFolder) setRefreshKey(k => k + 1)
+      setSidebarRefreshTrigger(k => k + 1)
+    },
+  })
+
   const handleDelete = () => {
-    setSelectedUid(null)
+    setSelectedThread(null)
     setRefreshKey(k => k + 1)
     setMobilePanel('list')
   }
@@ -84,12 +108,13 @@ export default function AppLayout({ userEmail }: Props) {
         onFolderChange={handleFolderChange}
         onCompose={handleCompose}
         userEmail={userEmail}
+        refreshTrigger={sidebarRefreshTrigger}
       />
 
       <MailList
         key={`${activeFolder}-${refreshKey}`}
         folder={activeFolder}
-        selectedUid={selectedUid}
+        selectedThread={selectedThread}
         onSelect={handleSelect}
         onMobileBack={() => setMobilePanel('sidebar')}
       />
@@ -97,7 +122,7 @@ export default function AppLayout({ userEmail }: Props) {
       <div className="resize-handle" onMouseDown={startResize} />
 
       <MailViewer
-        uid={selectedUid}
+        thread={selectedThread}
         folder={activeFolder}
         onReply={handleReply}
         onDelete={handleDelete}

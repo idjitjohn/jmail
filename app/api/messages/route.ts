@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
         messages.push({
           uid: msg.uid,
           messageId: env.messageId ?? undefined,
+          inReplyTo: env.inReplyTo ?? undefined,
           subject: env.subject || '',
           from: {
             name: from?.name || undefined,
