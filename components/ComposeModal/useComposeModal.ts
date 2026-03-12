@@ -18,13 +18,25 @@ export function useComposeModal(onClose: () => void) {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
 
-  const init = (data: ComposeInit) => {
+  const init = async (data: ComposeInit) => {
     setTo(data.to || '')
     setSubject(data.subject || '')
-    setBody(data.body || '')
     setShowCc(false)
     setCc('')
     setError('')
+
+    if (!data.inReplyTo) {
+      try {
+        const res = await fetch('/api/settings/signature')
+        if (res.ok) {
+          const { signature } = await res.json()
+          setBody(signature ? `\n\n${signature}` : (data.body || ''))
+          return
+        }
+      } catch { /* use provided body */ }
+    }
+
+    setBody(data.body || '')
   }
 
   const handleSend = async () => {

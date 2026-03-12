@@ -34,14 +34,37 @@ export default function SettingsLayout({ children, userEmail }: Props) {
         <div className="nav-title">Settings</div>
 
         <nav className="nav">
-          <Link
-            href="/settings/forwarding"
-            className={`nav-item ${pathname === '/settings/forwarding' ? 'active' : ''}`}
-          >
+          <Link href="/settings/profile" className={`nav-item ${pathname === '/settings/profile' ? 'active' : ''}`}>
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z" />
+            </svg>
+            Profile
+          </Link>
+          <Link href="/settings/password" className={`nav-item ${pathname === '/settings/password' ? 'active' : ''}`}>
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2" />
+            </svg>
+            Password
+          </Link>
+          <Link href="/settings/signature" className={`nav-item ${pathname === '/settings/signature' ? 'active' : ''}`}>
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+              <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+            </svg>
+            Signature
+          </Link>
+          <Link href="/settings/forwarding" className={`nav-item ${pathname === '/settings/forwarding' ? 'active' : ''}`}>
             <svg viewBox="0 0 16 16" fill="currentColor">
               <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1zm13 2.383-4.708 2.825L15 11.105zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741M1 11.105l4.708-2.897L1 5.383z" />
             </svg>
             Forwarding
+          </Link>
+          <Link href="/settings/vacation" className={`nav-item ${pathname === '/settings/vacation' ? 'active' : ''}`}>
+            <svg viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z" />
+              <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0" />
+            </svg>
+            Vacation reply
           </Link>
         </nav>
 

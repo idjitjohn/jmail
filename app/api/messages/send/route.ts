@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, unauthorized } from '@/lib/auth'
 import { createSmtpTransport } from '@/lib/mail'
+import { getUserData } from '@/lib/userdata'
 
 export async function POST(req: NextRequest) {
   const session = await getSession()
@@ -12,11 +13,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'to and subject are required' }, { status: 400 })
   }
 
+  const { name } = await getUserData(session.email)
+  const from = name?.trim()
+    ? `"${name.trim()}" <${session.email}>`
+    : session.email
+
   const transport = createSmtpTransport(session.email, session.password)
 
   try {
     await transport.sendMail({
-      from: session.email,
+      from,
       to,
       cc: cc || undefined,
       subject,
