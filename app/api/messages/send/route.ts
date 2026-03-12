@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   const session = await getSession()
   if (!session) return unauthorized()
 
-  const { to, cc, subject, body, inReplyTo } = await req.json()
+  const { to, cc, subject, body, signatureHtml, inReplyTo } = await req.json()
 
   if (!to || !subject) {
     return NextResponse.json({ error: 'to and subject are required' }, { status: 400 })
@@ -31,7 +31,10 @@ export async function POST(req: NextRequest) {
     cc: cc || undefined,
     subject,
     text: body,
-    html: body ? `<pre style="font-family:inherit;white-space:pre-wrap">${body}</pre>` : undefined,
+    html: [
+      body ? `<pre style="font-family:inherit;white-space:pre-wrap">${body}</pre>` : '',
+      signatureHtml ? `<div class="signature" style="margin-top:1.5em;padding-top:1em;border-top:1px solid #e5e5ea">${signatureHtml}</div>` : '',
+    ].filter(Boolean).join('\n') || undefined,
     inReplyTo: inReplyTo || undefined,
     references: inReplyTo || undefined,
   }

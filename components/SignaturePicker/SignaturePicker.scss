@@ -1,0 +1,43 @@
+.SignaturePicker {
+  display: flex;
+  align-items: center;
+  gap: 0.375em;
+
+  .select {
+    padding: 0.3em 0.625em;
+    border: 1px solid var(--color-input-border);
+    border-radius: 0.4em;
+    background: var(--color-input-bg);
+    color: var(--color-input-text);
+    font-size: 0.8125em;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-input-border-focus);
+    }
+  }
+
+  .manage-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.625em;
+    height: 1.625em;
+    border: none;
+    border-radius: 0.375em;
+    background: transparent;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    svg { width: 0.8125em; height: 0.8125em; }
+
+    &:hover {
+      background: var(--color-sidebar-item-hover);
+      color: var(--color-text);
+    }
+  }
+}

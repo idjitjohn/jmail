@@ -14,29 +14,26 @@ export function useComposeModal(onClose: () => void) {
   const [cc, setCc] = useState('')
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
+  const [signatureId, setSignatureId] = useState<string | null>(null)
+  const [signatureHtml, setSignatureHtml] = useState<string | null>(null)
   const [showCc, setShowCc] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
 
-  const init = async (data: ComposeInit) => {
+  const init = (data: ComposeInit) => {
     setTo(data.to || '')
     setSubject(data.subject || '')
+    setBody(data.body || '')
     setShowCc(false)
     setCc('')
     setError('')
+    setSignatureId(null)
+    setSignatureHtml(null)
+  }
 
-    if (!data.inReplyTo) {
-      try {
-        const res = await fetch('/api/settings/signature')
-        if (res.ok) {
-          const { signature } = await res.json()
-          setBody(signature ? `\n\n${signature}` : (data.body || ''))
-          return
-        }
-      } catch { /* use provided body */ }
-    }
-
-    setBody(data.body || '')
+  const handleSignatureChange = (id: string | null, html: string | null) => {
+    setSignatureId(id)
+    setSignatureHtml(html)
   }
 
   const handleSend = async () => {
@@ -56,7 +53,7 @@ export function useComposeModal(onClose: () => void) {
       const res = await fetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to, cc, subject, body }),
+        body: JSON.stringify({ to, cc, subject, body, signatureHtml }),
       })
 
       const data = await res.json()
@@ -79,6 +76,8 @@ export function useComposeModal(onClose: () => void) {
     cc, setCc,
     subject, setSubject,
     body, setBody,
+    signatureId, signatureHtml,
+    handleSignatureChange,
     showCc, setShowCc,
     sending, error,
     handleSend,
