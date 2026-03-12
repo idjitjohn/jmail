@@ -35,11 +35,9 @@ export function extractDomain(email: string): string {
   return email.split('@')[1] || ''
 }
 
-// Helper: get session from cookie store
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
-
+// Server-only helpers (not used in proxy/edge)
 export async function getSession(): Promise<SessionPayload | null> {
+  const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
   const token = cookieStore.get('session')?.value
   if (!token) return null
@@ -47,5 +45,5 @@ export async function getSession(): Promise<SessionPayload | null> {
 }
 
 export function unauthorized() {
-  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  return Response.json({ error: 'Unauthorized' }, { status: 401 })
 }
