@@ -100,6 +100,37 @@
       }
     }
 
+    .admin-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      width: 100%;
+      padding: 0.4em 0.5em;
+      border-radius: 0.4em;
+      text-decoration: none;
+      color: var(--color-text-tertiary);
+      font-size: 0.8125em;
+      transition: all var(--transition-fast);
+
+      &::before {
+        content: '';
+        display: block;
+        width: 0.875em;
+        height: 0.875em;
+        background-color: currentColor;
+        mask-image: url('/icons/dashboard.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        flex-shrink: 0;
+      }
+
+      &:hover {
+        background: var(--color-sidebar-item-hover);
+        color: var(--color-text);
+      }
+    }
+
     .settings-btn {
       display: flex;
       align-items: center;

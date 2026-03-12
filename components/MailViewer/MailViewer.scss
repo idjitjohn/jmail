@@ -240,6 +240,77 @@
             }
           }
 
+          .item-attachments {
+            margin-top: 1.25em;
+            padding-top: 0.75em;
+            border-top: 1px solid var(--color-border-muted);
+
+            .attachments-label {
+              display: block;
+              font-size: 0.75em;
+              font-weight: 600;
+              color: var(--color-text-tertiary);
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              margin-bottom: 0.5em;
+            }
+
+            .attachments-list {
+              list-style: none;
+              margin: 0;
+              padding: 0;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 0.5em;
+            }
+
+            .attachment-chip {
+              .attachment-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.375em;
+                padding: 0.375em 0.75em;
+                border: 1px solid var(--color-border-default);
+                border-radius: 0.375em;
+                background: var(--color-bg-secondary);
+                text-decoration: none;
+                transition: all var(--transition-fast);
+
+                &:hover {
+                  background: var(--color-bg-tertiary);
+                  border-color: var(--color-primary);
+                }
+              }
+
+              .attachment-icon {
+                display: block;
+                width: 0.875em;
+                height: 0.875em;
+                background-color: var(--color-text-tertiary);
+                mask-image: url('/icons/attachment.svg');
+                mask-size: contain;
+                mask-repeat: no-repeat;
+                mask-position: center;
+                flex-shrink: 0;
+              }
+
+              .attachment-name {
+                font-size: 0.8125em;
+                color: var(--color-text);
+                max-width: 14em;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+
+              .attachment-size {
+                font-size: 0.75em;
+                color: var(--color-text-tertiary);
+                flex-shrink: 0;
+              }
+            }
+          }
+
           .item-actions {
             display: flex;
             gap: 0.5em;

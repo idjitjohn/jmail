@@ -6,11 +6,13 @@ import MailList from '../MailList'
 import MailViewer from '../MailViewer'
 import ComposeModal from '../ComposeModal'
 import { useRealtimeSync } from '../useRealtimeSync'
+import { useSwipe } from '@/lib/useSwipe'
 import type { MailThread } from '@/lib/types'
 import './AppLayout.scss'
 
 interface Props {
   userEmail?: string
+  isAdmin?: boolean
 }
 
 interface ComposeState {
@@ -22,7 +24,7 @@ interface ComposeState {
 
 type MobilePanel = 'sidebar' | 'list' | 'message'
 
-export default function AppLayout({ userEmail }: Props) {
+export default function AppLayout({ userEmail, isAdmin }: Props) {
   const [activeFolder, setActiveFolder] = useState('INBOX')
   const [selectedThread, setSelectedThread] = useState<MailThread | null>(null)
   const [composeOpen, setComposeOpen] = useState(false)
@@ -98,16 +100,37 @@ export default function AppLayout({ userEmail }: Props) {
     setMobilePanel('list')
   }
 
+  // Panel navigation swipe — only active on mobile (hook is cheap when not triggered)
+  const { ref: swipeRef, dragX, dragging } = useSwipe<HTMLDivElement>({
+    onSwipeRight: () => {
+      if (mobilePanel === 'list') setMobilePanel('sidebar')
+      else if (mobilePanel === 'message') setMobilePanel('list')
+    },
+    onSwipeLeft: () => {
+      if (mobilePanel === 'sidebar') setMobilePanel('list')
+      else if (mobilePanel === 'list' && selectedThread) setMobilePanel('message')
+    },
+  })
+
+  const swipingDir = dragging && dragX !== 0
+    ? (dragX > 0 ? 'right' : 'left')
+    : null
+
   return (
     <div
-      className={`AppLayout mobile-${mobilePanel}`}
-      style={{ '--mail-list-w': `${mailListWidth}px` } as React.CSSProperties}
+      ref={swipeRef}
+      className={`AppLayout mobile-${mobilePanel}${swipingDir ? ` swiping-${swipingDir}` : ''}`}
+      style={{
+        '--mail-list-w': `${mailListWidth}px`,
+        '--drag-x': `${dragX}px`,
+      } as React.CSSProperties}
     >
       <Sidebar
         activeFolder={activeFolder}
         onFolderChange={handleFolderChange}
         onCompose={handleCompose}
         userEmail={userEmail}
+        isAdmin={isAdmin}
         refreshTrigger={sidebarRefreshTrigger}
       />
 
@@ -117,6 +140,7 @@ export default function AppLayout({ userEmail }: Props) {
         selectedThread={selectedThread}
         onSelect={handleSelect}
         onMobileBack={() => setMobilePanel('sidebar')}
+        onRefresh={() => setRefreshKey(k => k + 1)}
       />
 
       <div className="resize-handle" onMouseDown={startResize} />

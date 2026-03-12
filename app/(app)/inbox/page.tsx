@@ -12,5 +12,7 @@ export default async function InboxPage() {
   const session = await verifySession(token)
   if (!session) redirect('/')
 
-  return <AppLayout userEmail={session.email} />
+  const isAdmin = session.email === (process.env.ADMIN_EMAIL || '')
+
+  return <AppLayout userEmail={session.email} isAdmin={isAdmin} />
 }

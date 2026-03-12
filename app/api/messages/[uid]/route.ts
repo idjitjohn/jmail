@@ -3,6 +3,7 @@ import { simpleParser } from 'mailparser'
 import { getSession, unauthorized } from '@/lib/auth'
 import { createImapClient } from '@/lib/mail'
 import sanitizeHtml from 'sanitize-html'
+import type { MailAttachment } from '@/lib/types'
 
 interface Params {
   params: Promise<{ uid: string }>
@@ -37,8 +38,30 @@ export async function GET(req: NextRequest, { params }: Params) {
       // Parse raw MIME source
       const rawBuf = msg.source ? Buffer.from(msg.source) : Buffer.alloc(0)
       const parsed = rawBuf.length ? await simpleParser(rawBuf) : null
-      const html = parsed?.html || undefined
+      let html = parsed?.html || undefined
       const text = parsed?.text || undefined
+
+      // Extract attachments metadata
+      const attachments: MailAttachment[] = (parsed?.attachments || []).map((att, i) => ({
+        filename: att.filename || `attachment-${i + 1}`,
+        contentType: att.contentType || 'application/octet-stream',
+        size: att.size,
+        partId: String(i),
+        contentId: att.contentId?.replace(/^<|>$/g, '') || undefined,
+        inline: att.contentDisposition === 'inline',
+      }))
+
+      // Replace cid: references with data URIs for inline images
+      if (html && parsed?.attachments) {
+        for (const att of parsed.attachments) {
+          if (!att.contentId) continue
+          const cid = att.contentId.replace(/^<|>$/g, '')
+          const dataUri = `data:${att.contentType};base64,${att.content.toString('base64')}`
+          html = html.replaceAll(`cid:${cid}`, dataUri)
+        }
+      }
+
+      const nonInlineAttachments = attachments.filter(a => !a.inline)
 
       message = {
         uid: msg.uid,
@@ -60,7 +83,8 @@ export async function GET(req: NextRequest, { params }: Params) {
         html: html ? sanitizeHtml(html, SANITIZE_OPTIONS) : undefined,
         text: text || undefined,
         isRead: msg.flags?.has('\\Seen') ?? false,
-        hasAttachments: false,
+        hasAttachments: nonInlineAttachments.length > 0,
+        attachments: nonInlineAttachments.length > 0 ? nonInlineAttachments : undefined,
         folder,
       }
     }
@@ -160,7 +184,7 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     'img': ['src', 'alt', 'width', 'height', 'style'],
     '*': ['style', 'class', 'align', 'valign', 'bgcolor', 'color', 'width', 'height'],
   },
-  allowedSchemes: ['http', 'https', 'mailto', 'cid'],
+  allowedSchemes: ['http', 'https', 'mailto', 'data'],
   transformTags: {
     'a': sanitizeHtml.simpleTransform('a', { target: '_blank', rel: 'noopener noreferrer' }),
   },

@@ -52,6 +52,9 @@ export async function GET(req: NextRequest) {
           preview = stripped.replace(/\s+/g, ' ').trim().slice(0, 120)
         }
 
+        // Detect attachments from body structure
+        const hasAttachments = checkHasAttachments(msg.bodyStructure)
+
         messages.push({
           uid: msg.uid,
           messageId: env.messageId ?? undefined,
@@ -65,7 +68,7 @@ export async function GET(req: NextRequest) {
           date: (env.date ?? new Date()).toISOString(),
           preview,
           isRead: msg.flags?.has('\\Seen') ?? false,
-          hasAttachments: false,
+          hasAttachments,
           folder,
           size: msg.size,
         })
@@ -86,4 +89,14 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function checkHasAttachments(structure: any): boolean {
+  if (!structure) return false
+  if (structure.disposition === 'attachment') return true
+  if (Array.isArray(structure.childNodes)) {
+    return structure.childNodes.some(checkHasAttachments)
+  }
+  return false
 }

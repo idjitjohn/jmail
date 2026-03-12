@@ -4,35 +4,62 @@
   overflow: hidden;
   background: var(--color-bg-default);
 
+  // ── Mobile layout ────────────────────────────────────
   @media (max-width: 768px) {
     flex-direction: column;
-    overflow-y: auto;
+    height: 100dvh;
+    overflow: hidden;
 
     .sidebar {
       width: 100%;
       min-width: unset;
       height: auto;
+      flex-shrink: 0;
       border-right: none;
       border-bottom: 1px solid var(--color-border-muted);
-      flex-shrink: 0;
+
+      .header {
+        padding: 0.75em 1em;
+        border-bottom: none;
+
+        .mobile-signout { display: flex; }
+      }
 
       .nav {
         flex-direction: row;
-        flex-wrap: wrap;
-        padding: 0 0.5em 0.5em;
-        gap: 0.25em;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 0 0.75em 0.75em;
+        gap: 0.375em;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar { display: none; }
+
+        .nav-item {
+          flex-shrink: 0;
+          font-size: 0.8125em;
+          padding: 0.375em 0.875em;
+          gap: 0.375em;
+
+          .nav-icon {
+            width: 0.8125em;
+            height: 0.8125em;
+          }
+        }
       }
 
-      .footer {
-        flex-direction: row;
-        align-items: center;
-        gap: 0.5em;
-      }
+      // Hide desktop footer on mobile — sign out is in header
+      .footer { display: none; }
     }
 
-    .content { overflow-y: unset; }
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
   }
 
+  // ── Desktop layout ───────────────────────────────────
   .sidebar {
     display: flex;
     flex-direction: column;
@@ -76,6 +103,25 @@
 
         &:hover { color: var(--color-text); }
       }
+
+      // Hidden on desktop, shown on mobile
+      .mobile-signout {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 2em;
+        height: 2em;
+        border: none;
+        border-radius: 0.375em;
+        background: transparent;
+        color: var(--color-text-tertiary);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+
+        svg { width: 0.9375em; height: 0.9375em; }
+
+        &:hover { background: var(--color-sidebar-item-hover); color: var(--color-text); }
+      }
     }
 
     .nav {
@@ -112,6 +158,7 @@
         &[data-icon="person"] .nav-icon { mask-image: url('/icons/person.svg'); }
         &[data-icon="appearance"] .nav-icon { mask-image: url('/icons/appearance.svg'); }
         &[data-icon="gear"] .nav-icon { mask-image: url('/icons/gear.svg'); }
+        &[data-icon="dashboard"] .nav-icon { mask-image: url('/icons/dashboard.svg'); }
 
         &:hover {
           background: var(--color-sidebar-item-hover);

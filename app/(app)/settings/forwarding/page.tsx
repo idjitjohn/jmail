@@ -14,7 +14,7 @@ export default async function ForwardingPage() {
   if (!session) redirect('/')
 
   return (
-    <SettingsLayout userEmail={session.email}>
+    <SettingsLayout userEmail={session.email} isAdmin={session.email === process.env.ADMIN_EMAIL}>
       <ForwardingSettings />
     </SettingsLayout>
   )

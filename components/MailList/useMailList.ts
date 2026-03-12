@@ -10,6 +10,8 @@ export function useMailList(folder: string) {
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searching, setSearching] = useState(false)
 
   const fetchMessages = useCallback(async (pg = 1) => {
     setLoading(true)
@@ -36,16 +38,42 @@ export function useMailList(folder: string) {
   }, [folder])
 
   useEffect(() => {
+    setSearchQuery('')
     fetchMessages(1)
   }, [fetchMessages])
+
+  const search = useCallback(async (q: string) => {
+    setSearchQuery(q)
+    if (!q.trim()) {
+      fetchMessages(1)
+      return
+    }
+    setSearching(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams({ q, folder })
+      const res = await fetch(`/api/messages/search?${params}`)
+      if (!res.ok) throw new Error('Search failed')
+      const data = await res.json()
+      setMessages(data.messages)
+      setHasMore(false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Search failed')
+    } finally {
+      setSearching(false)
+    }
+  }, [folder, fetchMessages])
 
   const loadMore = () => {
     if (!loading && hasMore) fetchMessages(page + 1)
   }
 
-  const refresh = () => fetchMessages(1)
+  const refresh = () => {
+    setSearchQuery('')
+    fetchMessages(1)
+  }
 
   const threads = useMemo(() => groupIntoThreads(messages), [messages])
 
-  return { messages, threads, loading, error, hasMore, loadMore, refresh }
+  return { messages, threads, loading, error, hasMore, loadMore, refresh, searchQuery, search, searching }
 }

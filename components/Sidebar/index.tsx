@@ -14,11 +14,12 @@ interface Props {
   onFolderChange: (folder: string) => void
   onCompose: () => void
   userEmail?: string
+  isAdmin?: boolean
   // Increment to trigger a folders refetch
   refreshTrigger?: number
 }
 
-export default function Sidebar({ activeFolder, onFolderChange, onCompose, userEmail, refreshTrigger }: Props) {
+export default function Sidebar({ activeFolder, onFolderChange, onCompose, userEmail, isAdmin, refreshTrigger }: Props) {
   const { folders, loading, refetch } = useSidebar()
 
   useEffect(() => {
@@ -69,7 +70,12 @@ export default function Sidebar({ activeFolder, onFolderChange, onCompose, userE
             <span className="user-email">{userEmail}</span>
           </div>
         )}
-        <Link href="/settings/forwarding" className="settings-btn">
+        {isAdmin && (
+          <Link href="/admin" className="admin-btn">
+            Admin
+          </Link>
+        )}
+        <Link href="/settings/profile" className="settings-btn">
           Settings
         </Link>
         <button className="logout-btn" onClick={handleLogout} type="button">

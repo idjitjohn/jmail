@@ -3,6 +3,15 @@ export interface MailAddress {
   address: string
 }
 
+export interface MailAttachment {
+  filename: string
+  contentType: string
+  size: number
+  partId: string
+  contentId?: string
+  inline?: boolean
+}
+
 export interface MailMessage {
   uid: number
   messageId?: string
@@ -18,6 +27,7 @@ export interface MailMessage {
   text?: string
   isRead: boolean
   hasAttachments: boolean
+  attachments?: MailAttachment[]
   folder: string
   size?: number
 }

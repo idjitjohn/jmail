@@ -1,22 +1,65 @@
 .MailItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75em;
+  display: block;
   width: 100%;
-  padding: 0.75em 1em;
   border: none;
   border-bottom: 1px solid var(--color-border-muted);
   background: var(--color-bg-default);
   cursor: pointer;
   text-align: left;
   position: relative;
+  overflow: hidden;
   transition: background var(--transition-fast);
 
-  &:hover {
+  // Swipe offset — default 0, set via inline style
+  --swipe-x: 0px;
+
+  // Red delete backdrop — revealed as item slides left
+  .delete-bg {
+    position: absolute;
+    inset: 0;
+    background: #e5392a;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 1.25em;
+    color: #fff;
+
+    svg {
+      width: 1.25em;
+      height: 1.25em;
+      flex-shrink: 0;
+    }
+  }
+
+  // Main content — slides with swipe
+  .item-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75em;
+    padding: 0.75em 1em;
+    background: var(--color-bg-default);
+    position: relative;
+    transform: translateX(var(--swipe-x));
+    transition: transform 0.22s ease;
+    will-change: transform;
+  }
+
+  // During active touch — disable transition for real-time tracking
+  &:active .item-content,
+  &[style*="--swipe-x"] .item-content {
+    transition: none;
+  }
+
+  // Dismissed — slide fully off then fade out
+  &.dismissed {
+    animation: mail-dismiss 0.28s ease forwards;
+  }
+
+  &:hover .item-content {
     background: var(--color-bg-secondary);
   }
 
-  &.selected {
+  &.selected .item-content {
     background: var(--color-mail-selected);
 
     &::before {
@@ -117,4 +160,10 @@
     background: var(--color-mail-unread-dot);
     flex-shrink: 0;
   }
+}
+
+@keyframes mail-dismiss {
+  0%   { max-height: 5em; opacity: 1; }
+  60%  { max-height: 5em; opacity: 0; }
+  100% { max-height: 0;   opacity: 0; padding: 0; border: none; }
 }

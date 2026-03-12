@@ -35,25 +35,59 @@
       width: 100%;
       min-width: unset;
       height: 100%;
-      transition: transform 0.22s ease, opacity 0.22s ease;
+      transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  opacity 0.28s ease;
     }
 
+    // ── Committed panel states ─────────────────────────
     &.mobile-sidebar {
-      .Sidebar { transform: translateX(0); opacity: 1; z-index: 2; }
-      .MailList { transform: translateX(100%); opacity: 0; z-index: 1; }
-      .MailViewer { transform: translateX(100%); opacity: 0; z-index: 1; }
+      .Sidebar   { transform: translateX(0);     opacity: 1; z-index: 2; }
+      .MailList  { transform: translateX(100%);  opacity: 0; z-index: 1; }
+      .MailViewer{ transform: translateX(100%);  opacity: 0; z-index: 1; }
     }
 
     &.mobile-list {
-      .Sidebar { transform: translateX(-100%); opacity: 0; z-index: 1; }
-      .MailList { transform: translateX(0); opacity: 1; z-index: 2; }
-      .MailViewer { transform: translateX(100%); opacity: 0; z-index: 1; }
+      .Sidebar   { transform: translateX(-100%); opacity: 0; z-index: 1; }
+      .MailList  { transform: translateX(0);     opacity: 1; z-index: 2; }
+      .MailViewer{ transform: translateX(100%);  opacity: 0; z-index: 1; }
     }
 
     &.mobile-message {
-      .Sidebar { transform: translateX(-100%); opacity: 0; z-index: 1; }
-      .MailList { transform: translateX(-100%); opacity: 0; z-index: 1; }
-      .MailViewer { transform: translateX(0); opacity: 1; z-index: 2; }
+      .Sidebar   { transform: translateX(-100%); opacity: 0; z-index: 1; }
+      .MailList  { transform: translateX(-100%); opacity: 0; z-index: 1; }
+      .MailViewer{ transform: translateX(0);     opacity: 1; z-index: 2; }
+    }
+
+    // ── Live drag — disable transitions ────────────────
+    &.swiping-right,
+    &.swiping-left {
+      .Sidebar, .MailList, .MailViewer {
+        transition: none;
+      }
+    }
+
+    // Swipe right on list → moving toward sidebar
+    &.mobile-list.swiping-right {
+      .MailList { transform: translateX(var(--drag-x)); opacity: 1; z-index: 2; }
+      .Sidebar  { transform: translateX(calc(-100% + var(--drag-x))); opacity: 1; z-index: 1; }
+    }
+
+    // Swipe left on list → moving toward message
+    &.mobile-list.swiping-left {
+      .MailList  { transform: translateX(var(--drag-x)); opacity: 1; z-index: 2; }
+      .MailViewer{ transform: translateX(calc(100% + var(--drag-x))); opacity: 1; z-index: 1; }
+    }
+
+    // Swipe right on message → moving toward list
+    &.mobile-message.swiping-right {
+      .MailViewer{ transform: translateX(var(--drag-x)); opacity: 1; z-index: 2; }
+      .MailList  { transform: translateX(calc(-100% + var(--drag-x))); opacity: 1; z-index: 1; }
+    }
+
+    // Swipe left on sidebar → moving toward list
+    &.mobile-sidebar.swiping-left {
+      .Sidebar  { transform: translateX(var(--drag-x)); opacity: 1; z-index: 2; }
+      .MailList { transform: translateX(calc(100% + var(--drag-x))); opacity: 1; z-index: 1; }
     }
   }
 }

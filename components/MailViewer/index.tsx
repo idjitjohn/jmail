@@ -4,8 +4,8 @@ import Avatar from '../Avatar'
 import Spinner from '../Spinner'
 import Toolbar from '../Toolbar'
 import { useMailViewer } from './useMailViewer'
-import { formatFullDate, formatDate, formatAddress } from '@/lib/format'
-import type { MailThread } from '@/lib/types'
+import { formatFullDate, formatDate, formatAddress, formatBytes } from '@/lib/format'
+import type { MailThread, MailAttachment } from '@/lib/types'
 import './MailViewer.scss'
 
 interface Props {
@@ -158,6 +158,29 @@ export default function MailViewer({ thread, folder, onReply, onDelete, onMobile
                             </div>
                           )}
                         </div>
+
+                        {full?.attachments && full.attachments.length > 0 && (
+                          <div className="item-attachments">
+                            <span className="attachments-label">
+                              {full.attachments.length} attachment{full.attachments.length > 1 ? 's' : ''}
+                            </span>
+                            <ul className="attachments-list">
+                              {full.attachments.map((att: MailAttachment) => (
+                                <li key={att.partId} className="attachment-chip">
+                                  <a
+                                    href={`/api/messages/${msg.uid}/attachments/${att.partId}?folder=${encodeURIComponent(folder)}`}
+                                    download={att.filename}
+                                    className="attachment-link"
+                                  >
+                                    <span className="attachment-icon" />
+                                    <span className="attachment-name">{att.filename}</span>
+                                    <span className="attachment-size">{formatBytes(att.size)}</span>
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
                         <div className="item-actions">
                           <button
