@@ -1,0 +1,41 @@
+.Avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: #fff;
+
+  .initials {
+    font-weight: 600;
+    line-height: 1;
+    user-select: none;
+  }
+
+  &.sm {
+    width: 1.75em;
+    height: 1.75em;
+
+    .initials {
+      font-size: 0.625em;
+    }
+  }
+
+  &.md {
+    width: 2.25em;
+    height: 2.25em;
+
+    .initials {
+      font-size: 0.75em;
+    }
+  }
+
+  &.lg {
+    width: 3em;
+    height: 3em;
+
+    .initials {
+      font-size: 1em;
+    }
+  }
+}

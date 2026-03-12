@@ -1,0 +1,10 @@
+.AppLayout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--color-bg-default);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}

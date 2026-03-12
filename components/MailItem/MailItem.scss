@@ -1,0 +1,101 @@
+.MailItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75em;
+  width: 100%;
+  padding: 0.75em 1em;
+  border: none;
+  border-bottom: 1px solid var(--color-border-muted);
+  background: var(--color-bg-default);
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-bg-secondary);
+  }
+
+  &.selected {
+    background: var(--color-mail-selected);
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--color-primary);
+      border-radius: 0 2px 2px 0;
+    }
+  }
+
+  &.unread {
+    .subject {
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .sender {
+      font-weight: 600;
+    }
+  }
+
+  .content {
+    flex: 1;
+    min-width: 0;
+
+    .meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5em;
+      margin-bottom: 0.2em;
+
+      .sender {
+        font-size: 0.875em;
+        color: var(--color-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+      }
+
+      .date {
+        font-size: 0.75em;
+        color: var(--color-text-tertiary);
+        flex-shrink: 0;
+      }
+    }
+
+    .subject {
+      font-size: 0.8125em;
+      color: var(--color-text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: 0.1em;
+    }
+
+    .preview {
+      font-size: 0.75em;
+      color: var(--color-text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .unread-dot {
+    position: absolute;
+    right: 0.75em;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.5em;
+    height: 0.5em;
+    border-radius: 50%;
+    background: var(--color-mail-unread-dot);
+    flex-shrink: 0;
+  }
+}

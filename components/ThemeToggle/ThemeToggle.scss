@@ -1,0 +1,24 @@
+.ThemeToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  height: 2em;
+  border: none;
+  border-radius: 0.5em;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--color-sidebar-item-hover);
+    color: var(--color-text);
+  }
+
+  .icon {
+    width: 1em;
+    height: 1em;
+  }
+}

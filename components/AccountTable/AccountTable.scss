@@ -1,0 +1,114 @@
+.AccountTable {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+
+    .search {
+      padding: 0.45em 0.75em;
+      border: 1px solid var(--color-input-border);
+      border-radius: 0.5em;
+      background: var(--color-input-bg);
+      color: var(--color-input-text);
+      font-size: 0.875em;
+      font-family: var(--font-sans);
+      width: 16em;
+      transition: border-color var(--transition-fast);
+
+      &::placeholder { color: var(--color-text-muted); }
+
+      &:focus {
+        outline: none;
+        border-color: var(--color-input-border-focus);
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+      }
+    }
+  }
+
+  .count {
+    font-size: 0.8125em;
+    color: var(--color-text-tertiary);
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--color-bg-default);
+    border-radius: 0.5em;
+    border: 1px solid var(--color-border-muted);
+    overflow: hidden;
+    font-size: 0.875em;
+
+    thead tr {
+      background: var(--color-bg-secondary);
+      border-bottom: 1px solid var(--color-border-default);
+
+      th {
+        padding: 0.625em 1em;
+        text-align: left;
+        font-size: 0.8125em;
+        font-weight: 600;
+        color: var(--color-text-tertiary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+
+        &.actions-col { text-align: right; }
+      }
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--color-border-muted);
+      transition: background var(--transition-fast);
+
+      &:last-child { border-bottom: none; }
+
+      &:hover { background: var(--color-bg-secondary); }
+
+      td {
+        padding: 0.625em 1em;
+        color: var(--color-text);
+        vertical-align: middle;
+      }
+
+      .email-cell {
+        font-family: var(--font-mono);
+        font-size: 0.9375em;
+
+        .local { color: var(--color-text); }
+        .at { color: var(--color-text-muted); }
+        .domain { color: var(--color-text-secondary); }
+      }
+
+      .domain-cell {
+        color: var(--color-text-tertiary);
+        font-size: 0.875em;
+      }
+
+      .actions-cell {
+        text-align: right;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.25em;
+
+        .danger-ghost {
+          color: var(--color-danger);
+
+          &:hover {
+            background: var(--color-danger-light);
+            color: var(--color-danger);
+          }
+        }
+      }
+
+      .empty-row {
+        text-align: center;
+        padding: 2.5em;
+        color: var(--color-text-muted);
+      }
+    }
+  }
+}

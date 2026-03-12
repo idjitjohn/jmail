@@ -1,0 +1,127 @@
+.AdminSidebar {
+  display: flex;
+  flex-direction: column;
+  width: 14em;
+  min-width: 14em;
+  height: 100%;
+  background: var(--color-sidebar-bg);
+  border-right: 1px solid var(--color-border-muted);
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875em 0.875em 0.75em;
+    flex-shrink: 0;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      color: var(--color-primary);
+
+      .brand-icon {
+        width: 1.125em;
+        height: 1.125em;
+        flex-shrink: 0;
+      }
+
+      .brand-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+
+        .brand-name {
+          font-size: 0.9375em;
+          font-weight: 700;
+          color: var(--color-text);
+          letter-spacing: -0.3px;
+        }
+
+        .brand-sub {
+          font-size: 0.6875em;
+          font-weight: 500;
+          color: var(--color-primary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+      }
+    }
+  }
+
+  .nav {
+    flex: 1;
+    padding: 0.25em 0.5em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125em;
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6em;
+      padding: 0.45em 0.75em;
+      border-radius: 0.5em;
+      color: var(--color-text-secondary);
+      font-size: 0.875em;
+      font-weight: 400;
+      text-decoration: none;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        background: var(--color-sidebar-item-hover);
+        color: var(--color-text);
+      }
+
+      &.active {
+        background: var(--color-sidebar-item-active);
+        color: var(--color-primary);
+        font-weight: 500;
+
+        .nav-icon { color: var(--color-primary); }
+      }
+
+      .nav-icon {
+        display: flex;
+        align-items: center;
+        color: var(--color-text-tertiary);
+        flex-shrink: 0;
+        transition: color var(--transition-fast);
+
+        svg {
+          width: 0.9375em;
+          height: 0.9375em;
+        }
+      }
+    }
+  }
+
+  .footer {
+    padding: 0.75em;
+    border-top: 1px solid var(--color-border-muted);
+    flex-shrink: 0;
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      padding: 0.4em 0.5em;
+      border-radius: 0.4em;
+      color: var(--color-text-tertiary);
+      font-size: 0.8125em;
+      text-decoration: none;
+      transition: all var(--transition-fast);
+
+      svg {
+        width: 0.875em;
+        height: 0.875em;
+        flex-shrink: 0;
+      }
+
+      &:hover {
+        background: var(--color-sidebar-item-hover);
+        color: var(--color-text);
+      }
+    }
+  }
+}

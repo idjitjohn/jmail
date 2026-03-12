@@ -1,0 +1,79 @@
+.CreateAccountForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  max-width: 30em;
+  background: var(--color-bg-default);
+  border: 1px solid var(--color-border-muted);
+  border-radius: 0.625em;
+  padding: 1.5em;
+
+  .email-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5em;
+
+    .local-wrap {
+      flex: 1;
+    }
+
+    .at-sep {
+      font-size: 1.125em;
+      color: var(--color-text-muted);
+      padding-bottom: 0.55em;
+      flex-shrink: 0;
+    }
+
+    .domain-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375em;
+      flex: 1;
+
+      .domain-label {
+        font-size: 0.875em;
+        font-weight: 500;
+        color: var(--color-text-secondary);
+      }
+
+      .domain-select {
+        padding: 0.55em 0.75em;
+        border: 1px solid var(--color-input-border);
+        border-radius: 0.5em;
+        background: var(--color-input-bg);
+        color: var(--color-input-text);
+        font-size: 0.9375em;
+        font-family: var(--font-sans);
+        transition: border-color var(--transition-fast);
+
+        &:focus {
+          outline: none;
+          border-color: var(--color-input-border-focus);
+          box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+        }
+      }
+    }
+  }
+
+  .preview {
+    font-size: 0.8125em;
+    color: var(--color-text-tertiary);
+    background: var(--color-bg-secondary);
+    padding: 0.5em 0.75em;
+    border-radius: 0.375em;
+    border: 1px solid var(--color-border-muted);
+
+    strong {
+      color: var(--color-primary);
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5em;
+    margin-top: 0.25em;
+  }
+}

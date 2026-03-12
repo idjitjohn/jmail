@@ -1,0 +1,73 @@
+.DeleteModal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1em;
+
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    max-width: 22em;
+    padding: 2em 1.5em 1.5em;
+    background: var(--color-bg-default);
+    border-radius: 0.75em;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--color-border-muted);
+    gap: 0.75em;
+
+    .panel-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.75em;
+      height: 2.75em;
+      border-radius: 50%;
+      background: var(--color-danger-light);
+      color: var(--color-danger);
+      margin-bottom: 0.25em;
+
+      svg {
+        width: 1.25em;
+        height: 1.25em;
+      }
+    }
+
+    .panel-title {
+      font-size: 1em;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .panel-desc {
+      font-size: 0.875em;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+
+      strong {
+        color: var(--color-text);
+        font-weight: 500;
+      }
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 0.5em;
+      margin-top: 0.5em;
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}

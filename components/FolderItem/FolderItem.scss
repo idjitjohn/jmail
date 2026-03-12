@@ -1,0 +1,52 @@
+.FolderItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  width: 100%;
+  padding: 0.45em 0.75em;
+  border: none;
+  border-radius: 0.5em;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.875em;
+  font-weight: 400;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--color-sidebar-item-hover);
+    color: var(--color-text);
+  }
+
+  &.active {
+    background: var(--color-sidebar-item-active);
+    color: var(--color-primary);
+    font-weight: 500;
+
+    .icon {
+      color: var(--color-primary);
+    }
+  }
+
+  .icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: var(--color-text-tertiary);
+    transition: color var(--transition-fast);
+
+    svg {
+      width: 0.9375em;
+      height: 0.9375em;
+    }
+  }
+
+  .name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
