@@ -138,7 +138,18 @@ Open [http://localhost:3000](http://localhost:3000) and sign in with any Maddy a
 
 JMail is designed to run as the `maddy` system user — this gives it permission to write Sieve scripts and call the `maddy` CLI without elevated privileges.
 
-### 1. Prepare the Sieve directory
+### 1. Allow passwordless sudo for the maddy CLI
+
+JMail calls `sudo /usr/local/bin/maddy` to manage accounts and credentials. Grant the app user (e.g. `www-data` or whichever user runs the process) passwordless access:
+
+```bash
+echo "www-data ALL=(ALL) NOPASSWD: /usr/local/bin/maddy" | sudo tee /etc/sudoers.d/jmail-maddy
+sudo chmod 440 /etc/sudoers.d/jmail-maddy
+```
+
+Replace `www-data` with the actual user running JMail.
+
+### 2. Prepare the Sieve directory
 
 ```bash
 mkdir -p /var/lib/maddy/sieve
