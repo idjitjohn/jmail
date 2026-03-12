@@ -34,9 +34,10 @@ async function runIdleLoop(email: string, password: string, entry: PoolEntry): P
       client.on('exists', (data: { path: string; count: number }) => {
         if (!hasSubscribers(email)) { entry.running = false; return }
         broadcast(email, { type: 'new_mail', folder: data.path, count: data.count })
-      })
+      });
 
-      client.on('flags', (data: { path: string; uid: number; flags: Set<string> }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (client as any).on('flags', (data: { path: string; uid: number; flags: Set<string> }) => {
         if (!data.uid) return
         broadcast(email, {
           type: 'flag_update',
@@ -44,9 +45,10 @@ async function runIdleLoop(email: string, password: string, entry: PoolEntry): P
           uid: data.uid,
           isRead: data.flags?.has('\\Seen') ?? false,
         })
-      })
+      });
 
-      client.on('expunge', (data: { path: string }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (client as any).on('expunge', (data: { path: string }) => {
         broadcast(email, { type: 'mail_expunged', folder: data.path })
       })
 
