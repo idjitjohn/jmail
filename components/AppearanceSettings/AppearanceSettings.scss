@@ -1,0 +1,162 @@
+.AppearanceSettings {
+  padding: 2.5em 2em;
+  max-width: 35em;
+  margin: 0 auto;
+
+  @media (max-width: 480px) {
+    padding: 1.25em 1em;
+  }
+
+  .settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+
+    .section-title {
+      font-size: 0.8125em;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0 0.75em;
+    }
+  }
+
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75em;
+
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .theme-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625em;
+    padding: 0.75em;
+    border: none;
+    border-radius: 0.75em;
+    background: var(--color-bg-overlay);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: left;
+    box-shadow: 0 0.5px 0 0 rgba(255, 255, 255, 0.06) inset,
+      0 1px 3px rgba(0, 0, 0, 0.2);
+
+    @media (max-width: 480px) {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.875em;
+
+      .preview {
+        width: 5em;
+        flex-shrink: 0;
+        aspect-ratio: 16 / 10;
+      }
+
+      .card-info { flex: 1; }
+    }
+
+    &:hover {
+      box-shadow: 0 0.5px 0 0 rgba(255, 255, 255, 0.06) inset,
+        0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    &.active {
+      box-shadow: 0 0 0 2px var(--color-primary),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .check {
+      position: absolute;
+      top: 0.5em;
+      right: 0.5em;
+      width: 1em;
+      height: 1em;
+      color: var(--color-primary);
+    }
+  }
+
+  /* Theme preview thumbnails */
+  .preview {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    border-radius: 0.4em;
+    border: 1px solid var(--color-border-muted);
+    display: flex;
+    overflow: hidden;
+
+    .preview-sidebar {
+      width: 28%;
+      flex-shrink: 0;
+    }
+
+    .preview-content {
+      flex: 1;
+      padding: 0.5em 0.4em;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3em;
+    }
+
+    .preview-bar {
+      height: 0.25em;
+      border-radius: 0.125em;
+
+      &.short { width: 60%; }
+    }
+  }
+
+  .preview-light {
+    background: #f2f2f7;
+
+    .preview-sidebar { background: #e5e5ea; }
+    .preview-content { background: #fff; }
+    .preview-bar { background: #c7c7cc; }
+  }
+
+  .preview-dark {
+    background: #1c1c1e;
+
+    .preview-sidebar { background: #2c2c2e; }
+    .preview-content { background: #1c1c1e; }
+    .preview-bar { background: #48484a; }
+  }
+
+  .preview-system {
+    background: linear-gradient(135deg, #f2f2f7 50%, #1c1c1e 50%);
+
+    .preview-sidebar {
+      background: linear-gradient(180deg, #e5e5ea 50%, #2c2c2e 50%);
+    }
+
+    .preview-content {
+      background: linear-gradient(135deg, #fff 50%, #1c1c1e 50%);
+    }
+
+    .preview-bar {
+      background: linear-gradient(90deg, #c7c7cc 50%, #48484a 50%);
+    }
+  }
+
+  .card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125em;
+
+    .card-label {
+      font-size: 0.875em;
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    .card-desc {
+      font-size: 0.75em;
+      color: var(--color-text-tertiary);
+    }
+  }
+}

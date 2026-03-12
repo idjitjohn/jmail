@@ -96,10 +96,10 @@
   --color-bg-default: #1c1c1e;
   --color-bg-secondary: #2c2c2e;
   --color-bg-tertiary: #3a3a3c;
-  --color-bg-overlay: #2c2c2e;
+  --color-bg-overlay: #39393d;
 
   --color-border-default: #38383a;
-  --color-border-muted: #2c2c2e;
+  --color-border-muted: #3a3a3c;
 
   --color-input-bg: #1c1c1e;
   --color-input-border: #38383a;
@@ -138,9 +138,9 @@
     --color-bg-default: #1c1c1e;
     --color-bg-secondary: #2c2c2e;
     --color-bg-tertiary: #3a3a3c;
-    --color-bg-overlay: #2c2c2e;
+    --color-bg-overlay: #39393d;
     --color-border-default: #38383a;
-    --color-border-muted: #2c2c2e;
+    --color-border-muted: #3a3a3c;
     --color-input-bg: #1c1c1e;
     --color-input-border: #38383a;
     --color-input-border-focus: #0a84ff;
