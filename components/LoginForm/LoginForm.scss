@@ -20,8 +20,11 @@
     align-items: center;
     width: 100%;
     max-width: 22em;
-    min-width: 40vw;
     padding: 2.5em 2em;
+
+    @media (max-width: 480px) {
+      padding: 2em 1.5em;
+    }
     background: var(--color-bg-default);
     border-radius: 1em;
     box-shadow: var(--shadow-xl);

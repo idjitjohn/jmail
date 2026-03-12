@@ -4,6 +4,38 @@
   overflow: hidden;
   background: var(--color-bg-default);
 
+  @media (max-width: 768px) {
+    flex-direction: column;
+    overflow-y: auto;
+
+    .sidebar {
+      width: 100%;
+      min-width: unset;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--color-border-muted);
+      flex-shrink: 0;
+
+      .nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 0 0.5em 0.5em;
+        gap: 0.25em;
+      }
+
+      .nav-title { display: none; }
+
+      .footer {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5em;
+      }
+    }
+
+    .content { overflow-y: unset; }
+  }
+
   .sidebar {
     display: flex;
     flex-direction: column;

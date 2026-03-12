@@ -12,6 +12,7 @@ interface Props {
   folder: string
   onReply: (message: { to: string; subject: string; inReplyTo?: string }) => void
   onDelete: () => void
+  onMobileBack?: () => void
 }
 
 const replyIcon = (
@@ -45,7 +46,7 @@ const markUnreadIcon = (
   </svg>
 )
 
-export default function MailViewer({ uid, folder, onReply, onDelete }: Props) {
+export default function MailViewer({ uid, folder, onReply, onDelete, onMobileBack }: Props) {
   const { message, loading, error, markRead, deleteMessage } = useMailViewer(uid, folder)
 
   if (!uid) {
@@ -111,6 +112,14 @@ export default function MailViewer({ uid, folder, onReply, onDelete }: Props) {
 
   return (
     <div className="MailViewer">
+      <div className="mobile-nav">
+        <button className="mobile-back" onClick={onMobileBack} type="button" aria-label="Back">
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <path fillRule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0" />
+          </svg>
+          Back
+        </button>
+      </div>
       <Toolbar actions={toolbarActions} />
 
       <div className="body">

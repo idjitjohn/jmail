@@ -31,6 +31,10 @@
       }
     }
 
+    .label {
+      @media (max-width: 768px) { display: none; }
+    }
+
     &:hover:not(:disabled) {
       background: var(--color-sidebar-item-hover);
       color: var(--color-text);
