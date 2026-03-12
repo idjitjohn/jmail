@@ -46,7 +46,10 @@ export async function GET(req: NextRequest) {
         let preview = ''
         const part = msg.bodyParts?.get('1')
         if (part) {
-          preview = Buffer.from(part).toString('utf-8').slice(0, 120).replace(/\s+/g, ' ')
+          const raw = Buffer.from(part).toString('utf-8')
+          // Strip HTML tags if part is HTML
+          const stripped = raw.replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/gi, ' ')
+          preview = stripped.replace(/\s+/g, ' ').trim().slice(0, 120)
         }
 
         messages.push({
