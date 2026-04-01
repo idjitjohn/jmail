@@ -122,7 +122,17 @@
         cursor: pointer;
         transition: all var(--transition-fast);
 
-        svg { width: 0.9375em; height: 0.9375em; }
+        &::before {
+          content: '';
+          display: block;
+          width: 0.9375em;
+          height: 0.9375em;
+          background-color: currentColor;
+          mask-image: url('/icons/sign-out.svg');
+          mask-size: contain;
+          mask-repeat: no-repeat;
+          mask-position: center;
+        }
 
         &:hover { background: var(--color-sidebar-item-hover); color: var(--color-text); }
       }

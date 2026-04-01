@@ -67,7 +67,17 @@
         cursor: pointer;
         transition: all var(--transition-fast);
 
-        svg { width: 0.875em; height: 0.875em; }
+        &::before {
+          content: '';
+          display: block;
+          width: 0.875em;
+          height: 0.875em;
+          background-color: currentColor;
+          mask-image: url('/icons/close.svg');
+          mask-size: contain;
+          mask-repeat: no-repeat;
+          mask-position: center;
+        }
 
         &:hover {
           background: var(--color-border-default);
@@ -99,7 +109,17 @@
         padding: 0;
         opacity: 0.7;
 
-        svg { width: 0.625em; height: 0.625em; }
+        &::before {
+          content: '';
+          display: block;
+          width: 0.625em;
+          height: 0.625em;
+          background-color: currentColor;
+          mask-image: url('/icons/close.svg');
+          mask-size: contain;
+          mask-repeat: no-repeat;
+          mask-position: center;
+        }
 
         &:hover { opacity: 1; }
       }
@@ -158,9 +178,14 @@
           background: var(--color-bg-secondary);
 
           .file-icon {
+            display: block;
             width: 0.875em;
             height: 0.875em;
-            color: var(--color-text-tertiary);
+            background-color: var(--color-text-tertiary);
+            mask-image: url('/icons/file.svg');
+            mask-size: contain;
+            mask-repeat: no-repeat;
+            mask-position: center;
             flex-shrink: 0;
           }
 
@@ -193,7 +218,17 @@
             flex-shrink: 0;
             transition: all var(--transition-fast);
 
-            svg { width: 0.625em; height: 0.625em; }
+            &::before {
+              content: '';
+              display: block;
+              width: 0.625em;
+              height: 0.625em;
+              background-color: currentColor;
+              mask-image: url('/icons/close.svg');
+              mask-size: contain;
+              mask-repeat: no-repeat;
+              mask-position: center;
+            }
 
             &:hover { background: var(--color-danger-light); color: var(--color-danger); }
           }
@@ -306,7 +341,17 @@
           cursor: pointer;
           transition: all var(--transition-fast);
 
-          svg { width: 0.9375em; height: 0.9375em; }
+          &::before {
+            content: '';
+            display: block;
+            width: 0.9375em;
+            height: 0.9375em;
+            background-color: currentColor;
+            mask-image: url('/icons/attachment.svg');
+            mask-size: contain;
+            mask-repeat: no-repeat;
+            mask-position: center;
+          }
 
           &:hover { background: var(--color-border-muted); color: var(--color-text); }
         }
@@ -332,7 +377,17 @@
           cursor: pointer;
           transition: all var(--transition-fast);
 
-          svg { width: 0.9375em; height: 0.9375em; }
+          &::before {
+            content: '';
+            display: block;
+            width: 0.9375em;
+            height: 0.9375em;
+            background-color: currentColor;
+            mask-image: url('/icons/clock.svg');
+            mask-size: contain;
+            mask-repeat: no-repeat;
+            mask-position: center;
+          }
 
           &:hover { background: var(--color-border-muted); color: var(--color-text); }
 

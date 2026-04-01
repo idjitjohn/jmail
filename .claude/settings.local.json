@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git diff --staged --no-ext-diff -U1)",
+      "Bash(git diff --no-ext-diff -U1)",
+      "Bash(echo \"style\\(r8\\): Replacing remaining inline SVGs with CSS mask-image icons:*)",
+      "Bash(pbcopy)"
+    ]
+  }
+}

@@ -39,9 +39,16 @@
         pointer-events: none;
       }
 
-      svg {
+      &.link::before {
+        content: '';
+        display: block;
         width: 0.9375em;
         height: 0.9375em;
+        background-color: currentColor;
+        mask-image: url('/icons/link.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
         flex-shrink: 0;
       }
 

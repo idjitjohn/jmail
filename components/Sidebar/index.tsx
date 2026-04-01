@@ -7,6 +7,7 @@ import FolderItem from '../FolderItem'
 import ThemeToggle from '../ThemeToggle'
 import Spinner from '../Spinner'
 import { useSidebar } from './useSidebar'
+import { useLogout } from '@/lib/useLogout'
 import './Sidebar.scss'
 
 interface Props {
@@ -21,15 +22,11 @@ interface Props {
 
 export default function Sidebar({ activeFolder, onFolderChange, onCompose, userEmail, isAdmin, refreshTrigger }: Props) {
   const { folders, loading, refetch } = useSidebar()
+  const logout = useLogout()
 
   useEffect(() => {
     if (refreshTrigger && refreshTrigger > 0) refetch()
   }, [refreshTrigger, refetch])
-
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' })
-    window.location.href = '/'
-  }
 
   return (
     <aside className="Sidebar">
@@ -78,7 +75,7 @@ export default function Sidebar({ activeFolder, onFolderChange, onCompose, userE
         <Link href="/settings/profile" className="settings-btn">
           Settings
         </Link>
-        <button className="logout-btn" onClick={handleLogout} type="button">
+        <button className="logout-btn" onClick={logout} type="button">
           Sign out
         </button>
       </div>

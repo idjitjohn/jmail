@@ -66,21 +66,13 @@ export default function ComposeModal({
         <div className="panel">
           <div className="panel-header">
             <h2 className="title">New Message</h2>
-            <button className="close-btn" onClick={onClose} type="button" aria-label="Close">
-              <svg viewBox="0 0 16 16" fill="currentColor">
-                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
-              </svg>
-            </button>
+            <button className="close-btn" onClick={onClose} type="button" aria-label="Close" />
           </div>
 
           {draftBanner && (
             <div className="draft-banner">
               <span>Draft restored</span>
-              <button type="button" className="draft-dismiss" onClick={dismissDraftBanner}>
-                <svg viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
-                </svg>
-              </button>
+              <button type="button" className="draft-dismiss" onClick={dismissDraftBanner} aria-label="Dismiss" />
             </div>
           )}
 
@@ -139,9 +131,7 @@ export default function ComposeModal({
               <ul className="attachment-list">
                 {attachments.map((f, i) => (
                   <li key={i} className="attachment-item">
-                    <svg className="file-icon" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z" />
-                    </svg>
+                    <span className="file-icon" />
                     <span className="file-name">{f.name}</span>
                     <span className="file-size">{formatBytes(f.size)}</span>
                     <button
@@ -149,11 +139,7 @@ export default function ComposeModal({
                       className="file-remove"
                       onClick={() => removeAttachment(i)}
                       aria-label="Remove"
-                    >
-                      <svg viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
-                      </svg>
-                    </button>
+                    />
                   </li>
                 ))}
               </ul>
@@ -192,11 +178,8 @@ export default function ComposeModal({
                 className="attach-btn"
                 onClick={() => fileInputRef.current?.click()}
                 title="Attach files"
-              >
-                <svg viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0z" />
-                </svg>
-              </button>
+                aria-label="Attach files"
+              />
               <input
                 ref={fileInputRef}
                 type="file"
@@ -217,12 +200,8 @@ export default function ComposeModal({
                 className={`schedule-toggle ${showSchedule ? 'active' : ''}`}
                 onClick={() => setShowSchedule(s => !s)}
                 title="Schedule send"
-              >
-                <svg viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z" />
-                  <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0" />
-                </svg>
-              </button>
+                aria-label="Schedule send"
+              />
               <Button onClick={handleSend} loading={sending}>Send</Button>
             </div>
           </div>
