@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSession, unauthorized } from '@/lib/auth'
-import { readSieveConfig, writeSieveConfig } from '@/lib/sieve'
+import { readSieveConfig, trySaveSieveConfig } from '@/lib/sieve'
 
 export async function GET() {
   const session = await getSession()
@@ -21,10 +21,12 @@ export async function POST(req: Request) {
   }
 
   const config = await readSieveConfig(session.email)
-  await writeSieveConfig(session.email, {
+  const saveError = await trySaveSieveConfig(session.email, {
     ...config,
     vacation: { subject: subject.trim(), message: message.trim(), days: days ?? 7 },
   })
+
+  if (saveError) return NextResponse.json({ error: saveError }, { status: 500 })
 
   return NextResponse.json({ ok: true })
 }
@@ -34,7 +36,9 @@ export async function DELETE() {
   if (!session) return unauthorized()
 
   const config = await readSieveConfig(session.email)
-  await writeSieveConfig(session.email, { ...config, vacation: null })
+  const saveError = await trySaveSieveConfig(session.email, { ...config, vacation: null })
+
+  if (saveError) return NextResponse.json({ error: saveError }, { status: 500 })
 
   return NextResponse.json({ ok: true })
 }

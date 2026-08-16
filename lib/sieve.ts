@@ -1,7 +1,11 @@
 import { readFile, writeFile, unlink, mkdir } from 'fs/promises'
 import path from 'path'
 
-const SIEVE_DIR = '/var/lib/maddy/sieve'
+const SIEVE_DIR = process.env.SIEVE_DIR || '/var/lib/maddy/sieve'
+
+// Group-readable so maddy can read scripts written by the app user
+const FILE_MODE = 0o660
+const DIR_MODE = 0o2770
 
 export interface SieveForwarding {
   address: string
@@ -39,6 +43,7 @@ function getSievePath(email: string) {
 
 function getConfigPath(email: string) {
   const safe = email.replace(/[^a-zA-Z0-9@._-]/g, '')
+  if (safe !== email) throw new Error('Invalid email')
   const full = path.resolve(SIEVE_DIR, `${safe}.json`)
   if (!full.startsWith(SIEVE_DIR + '/')) throw new Error('Path traversal')
   return full
@@ -53,11 +58,42 @@ export async function readSieveConfig(email: string): Promise<SieveConfig> {
   }
 }
 
+export class SieveAccessError extends Error {
+  constructor(public path: string) {
+    super(`Cannot write Sieve files in ${SIEVE_DIR}. The app process lacks write permission.`)
+    this.name = 'SieveAccessError'
+  }
+}
+
+function rethrowAccess(err: unknown): never {
+  const e = err as NodeJS.ErrnoException
+  if (e?.code === 'EACCES' || e?.code === 'EPERM' || e?.code === 'EROFS') {
+    throw new SieveAccessError(e.path || SIEVE_DIR)
+  }
+  throw err
+}
+
+// Returns null on success, a user-facing message on permission failure
+export async function trySaveSieveConfig(email: string, config: SieveConfig): Promise<string | null> {
+  try {
+    await writeSieveConfig(email, config)
+    return null
+  } catch (err) {
+    if (err instanceof SieveAccessError) {
+      console.error(`[sieve] ${err.message} (path: ${err.path})`)
+      return 'Server cannot save mail rules — storage is not writable. Contact your administrator.'
+    }
+    throw err
+  }
+}
+
 export async function writeSieveConfig(email: string, config: SieveConfig): Promise<void> {
-  try { await mkdir(SIEVE_DIR, { recursive: true }) } catch { /* exists */ }
+  try { await mkdir(SIEVE_DIR, { recursive: true, mode: DIR_MODE }) } catch { /* exists */ }
 
   // Persist config as source of truth
-  await writeFile(getConfigPath(email), JSON.stringify(config), 'utf-8')
+  try {
+    await writeFile(getConfigPath(email), JSON.stringify(config), { encoding: 'utf-8', mode: FILE_MODE })
+  } catch (err) { rethrowAccess(err) }
 
   const { forwarding, vacation, filters = [] } = config
   const enabledFilters = filters.filter(f => f.enabled)
@@ -96,5 +132,7 @@ export async function writeSieveConfig(email: string, config: SieveConfig): Prom
       : `redirect "${forwarding.address}";\n`
   }
 
-  await writeFile(getSievePath(email), script, 'utf-8')
+  try {
+    await writeFile(getSievePath(email), script, { encoding: 'utf-8', mode: FILE_MODE })
+  } catch (err) { rethrowAccess(err) }
 }

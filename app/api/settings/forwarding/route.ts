@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSession, unauthorized } from '@/lib/auth'
-import { readSieveConfig, writeSieveConfig } from '@/lib/sieve'
+import { readSieveConfig, trySaveSieveConfig } from '@/lib/sieve'
 
 function isValidEmail(addr: string) {
   return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(addr)
@@ -30,10 +30,12 @@ export async function POST(req: Request) {
   }
 
   const config = await readSieveConfig(session.email)
-  await writeSieveConfig(session.email, {
+  const saveError = await trySaveSieveConfig(session.email, {
     ...config,
     forwarding: { address: forwardTo, keepCopy: !!keepCopy },
   })
+
+  if (saveError) return NextResponse.json({ error: saveError }, { status: 500 })
 
   return NextResponse.json({ ok: true })
 }
@@ -43,7 +45,9 @@ export async function DELETE() {
   if (!session) return unauthorized()
 
   const config = await readSieveConfig(session.email)
-  await writeSieveConfig(session.email, { ...config, forwarding: null })
+  const saveError = await trySaveSieveConfig(session.email, { ...config, forwarding: null })
+
+  if (saveError) return NextResponse.json({ error: saveError }, { status: 500 })
 
   return NextResponse.json({ ok: true })
 }

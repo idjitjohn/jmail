@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, unauthorized } from '@/lib/auth'
-import { readSieveConfig, writeSieveConfig } from '@/lib/sieve'
+import { readSieveConfig, trySaveSieveConfig } from '@/lib/sieve'
 import type { SieveFilter } from '@/lib/sieve'
 
 // GET — list filters
@@ -25,7 +25,9 @@ export async function PUT(req: NextRequest) {
 
   const config = await readSieveConfig(session.email)
   config.filters = filters
-  await writeSieveConfig(session.email, config)
+  const saveError = await trySaveSieveConfig(session.email, config)
+
+  if (saveError) return NextResponse.json({ error: saveError }, { status: 500 })
 
   return NextResponse.json({ ok: true })
 }
