@@ -60,6 +60,7 @@ export default function CreateAccountForm() {
             value={local}
             onChange={e => setLocal(e.target.value)}
             error={errors.local}
+            autocomplete="off"
             autoFocus
             required
           />
@@ -89,6 +90,7 @@ export default function CreateAccountForm() {
         onChange={e => setPassword(e.target.value)}
         error={errors.password}
         required
+        autocomplete="new-password"
       />
       <Input
         label="Confirm password"

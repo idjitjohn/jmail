@@ -6,4 +6,5 @@ export const DOMAINS = [
   'iza-ary.mg',
   'atrnai.com',
   'mcore.mg',
+  'feyalegria.mg',
 ]
