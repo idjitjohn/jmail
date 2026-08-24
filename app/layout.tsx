@@ -3,7 +3,7 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   title: "JMail",
-  description: "Webmail for Maddy server",
+  description: "Webmail for Atydago.com customers",
 }
 
 export default function RootLayout({
