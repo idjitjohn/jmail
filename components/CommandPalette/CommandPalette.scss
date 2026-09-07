@@ -1,0 +1,164 @@
+.CommandPalette {
+  animation: commands-appear 150ms ease-out;
+  padding: 0;
+  margin: 6em auto auto;
+  width: calc(100% - 2em);
+  max-width: 35em;
+  max-height: calc(100% - 8em);
+  color: var(--color-text);
+  background: var(--color-bg-default);
+  border: 1px solid var(--color-border-muted);
+  border-radius: 1em;
+  box-shadow: 0 1.5em 5em #0003;
+  &::backdrop {
+    background: #10182766;
+    backdrop-filter: blur(0.25em);
+  }
+  .surface {
+    .heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1em;
+      padding: 1.25em 1.5em 0.75em;
+      h2 {
+        font-size: 0.875em;
+        font-weight: 600;
+      }
+      button {
+        border: 1px solid var(--color-border-muted);
+        border-radius: 0.375em;
+        padding: 0.25em 0.5em;
+        font: inherit;
+        font-size: 0.6875em;
+        color: var(--color-text-tertiary);
+        background: transparent;
+        cursor: pointer;
+      }
+    }
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 0.75em;
+      padding: 0.5em 1.5em 1.25em;
+      border-bottom: 1px solid var(--color-border-muted);
+      &::before {
+        content: '';
+        width: 1.125em;
+        height: 1.125em;
+        background: var(--color-primary);
+        mask: url('/icons/search.svg') center / contain no-repeat;
+      }
+      input {
+        flex: 1;
+        min-width: 0;
+        border: none;
+        outline: none;
+        color: var(--color-text);
+        background: transparent;
+        font: inherit;
+        font-size: 1.125em;
+        &::placeholder {
+          color: var(--color-text-tertiary);
+        }
+      }
+    }
+    .commands {
+      padding: 0.5em;
+      max-height: 24em;
+      overflow-y: auto;
+      .command {
+        display: flex;
+        align-items: center;
+        gap: 0.875em;
+        width: 100%;
+        padding: 0.75em 1em;
+        border: none;
+        border-radius: 0.625em;
+        background: transparent;
+        text-align: left;
+        color: var(--color-text);
+        font: inherit;
+        cursor: pointer;
+        &.active {
+          background: var(--color-mail-selected);
+        }
+        &::before {
+          content: '';
+          flex-shrink: 0;
+          width: 1.125em;
+          height: 1.125em;
+          background: var(--color-primary);
+          mask: var(--icon) center / contain no-repeat;
+        }
+        &.compose {
+          --icon: url('/icons/plus.svg');
+        }
+        &.find {
+          --icon: url('/icons/search.svg');
+        }
+        &.inbox {
+          --icon: url('/icons/folder-inbox.svg');
+        }
+        &.sent {
+          --icon: url('/icons/folder-sent.svg');
+        }
+        &.archive {
+          --icon: url('/icons/folder-archive.svg');
+        }
+        &.settings {
+          --icon: url('/icons/gear.svg');
+        }
+        .copy {
+          flex: 1;
+          strong {
+            display: block;
+            font-size: 0.875em;
+            font-weight: 500;
+          }
+          span {
+            display: block;
+            margin-top: 0.2em;
+            color: var(--color-text-tertiary);
+            font-size: 0.75em;
+          }
+        }
+        kbd {
+          font-size: 0.75em;
+          color: var(--color-text-tertiary);
+        }
+      }
+      .empty {
+        padding: 2em;
+        color: var(--color-text-tertiary);
+        text-align: center;
+        font-size: 0.875em;
+      }
+    }
+    .footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1em;
+      padding: 1em 1.5em;
+      background: var(--color-bg-secondary);
+      border-top: 1px solid var(--color-border-muted);
+      color: var(--color-text-tertiary);
+      font-size: 0.6875em;
+    }
+  }
+  @media (max-width: 48em) {
+    margin-top: 2em;
+    max-height: calc(100% - 4em);
+  }
+}
+
+@keyframes commands-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

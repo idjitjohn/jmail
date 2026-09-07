@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { verifySession } from '@/lib/auth'
+import { getManagedDomains } from '@/lib/maddy-admin'
 import { listAccounts } from '@/lib/maddy'
 import AdminLayout from '@/components/AdminLayout'
 import AdminDashboard from '@/components/AdminDashboard'
@@ -17,9 +18,12 @@ export default async function AdminDashboardPage() {
   let accounts: string[] = []
   try { accounts = await listAccounts() } catch { /* server not reachable */ }
 
+  let domains: string[] = []
+  try { domains = await getManagedDomains() } catch { domains = [...new Set(accounts.map(email => email.split('@')[1]))] }
+
   return (
     <AdminLayout title="Dashboard">
-      <AdminDashboard accounts={accounts} />
+      <AdminDashboard domains={domains} accounts={accounts} />
     </AdminLayout>
   )
 }

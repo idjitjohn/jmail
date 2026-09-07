@@ -6,6 +6,7 @@
   border-bottom: 1px solid var(--color-border-muted);
   background: var(--color-bg-default);
   flex-shrink: 0;
+  flex-wrap: wrap;
 
   .action {
     display: inline-flex;
@@ -31,16 +32,33 @@
       mask-position: center;
       flex-shrink: 0;
 
-      &.icon-reply { mask-image: url('/icons/reply.svg'); }
-      &.icon-forward { mask-image: url('/icons/forward.svg'); }
-      &.icon-trash { mask-image: url('/icons/trash.svg'); }
-      &.icon-mark-unread { mask-image: url('/icons/mark-unread.svg'); }
-      &.icon-star { mask-image: url('/icons/star-outline.svg'); }
-      &.icon-star-filled { mask-image: url('/icons/star.svg'); }
+      &.icon-archive {
+        mask-image: url('/icons/folder-archive.svg');
+      }
+      &.icon-reply {
+        mask-image: url('/icons/reply.svg');
+      }
+      &.icon-forward {
+        mask-image: url('/icons/forward.svg');
+      }
+      &.icon-trash {
+        mask-image: url('/icons/trash.svg');
+      }
+      &.icon-mark-unread {
+        mask-image: url('/icons/mark-unread.svg');
+      }
+      &.icon-star {
+        mask-image: url('/icons/star-outline.svg');
+      }
+      &.icon-star-filled {
+        mask-image: url('/icons/star.svg');
+      }
     }
 
     .label {
-      @media (max-width: 768px) { display: none; }
+      @media (max-width: 768px) {
+        display: none;
+      }
     }
 
     &:hover:not(:disabled) {
@@ -60,6 +78,16 @@
     &:disabled {
       opacity: 0.4;
       cursor: not-allowed;
+    }
+  }
+}
+
+@media (pointer: coarse) {
+  .Toolbar {
+    .action {
+      min-height: 3.4em;
+      min-width: 3.4em;
+      justify-content: center;
     }
   }
 }

@@ -67,6 +67,50 @@
     }
   }
 
+  .command-wrap {
+    padding: 0 0.75em 1.25em;
+    .command-trigger {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      width: 100%;
+      padding: 0.625em 0.75em;
+      border: 1px solid var(--color-border-muted);
+      border-radius: 0.625em;
+      background: var(--color-bg-default);
+      color: var(--color-text-secondary);
+      font: inherit;
+      font-size: 0.75em;
+      cursor: pointer;
+      &::before {
+        content: '';
+        width: 1em;
+        height: 1em;
+        background: currentColor;
+        mask: url('/icons/search.svg') center / contain no-repeat;
+      }
+      span {
+        flex: 1;
+        text-align: left;
+      }
+      kbd {
+        font-size: 0.875em;
+        color: var(--color-text-tertiary);
+      }
+      &:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+      }
+    }
+  }
+  .section-label {
+    padding: 0 1.5em 0.75em;
+    color: var(--color-text-tertiary);
+    font-size: 0.625em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
   .folders {
     flex: 1;
     overflow-y: auto;

@@ -76,7 +76,7 @@ export default function AccountTable({ accounts, onRefresh }: Props) {
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
-        <DomainFilter value={domain} onChange={setDomain} />
+        <DomainFilter domains={[...new Set(accounts.map(email => email.split('@')[1]))]} value={domain} onChange={setDomain} />
       </div>
 
       <div className="count">{filtered.length} account{filtered.length !== 1 ? 's' : ''}</div>

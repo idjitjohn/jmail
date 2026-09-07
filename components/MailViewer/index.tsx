@@ -4,91 +4,88 @@ import Avatar from '../Avatar'
 import Spinner from '../Spinner'
 import Toolbar from '../Toolbar'
 import { useMailViewer } from './useMailViewer'
-import { formatFullDate, formatDate, formatAddress, formatBytes } from '@/lib/format'
+import {
+  formatFullDate,
+  formatDate,
+  formatAddress,
+  formatBytes,
+} from '@/lib/format'
 import type { MailThread, MailAttachment } from '@/lib/types'
 import './MailViewer.scss'
 
-interface Props {
+type Props = {
   thread: MailThread | null
   folder: string
   onReply: (data: { to: string; subject: string; inReplyTo?: string }) => void
   onDelete: () => void
+  onUpdate?: () => void
   onMobileBack?: () => void
 }
 
-export default function MailViewer({ thread, folder, onReply, onDelete, onMobileBack }: Props) {
-  const { expanded, fullMessages, loading, error, toggleExpand, deleteMessage, markRead, toggleFlag } =
-    useMailViewer(thread, folder)
+const MailViewer = ({
+  thread,
+  folder,
+  onReply,
+  onDelete,
+  onMobileBack,
+  onUpdate,
+}: Props) => {
+  const {
+    expanded,
+    fullMessages,
+    loading,
+    error,
+    toggleExpand,
+    toolbarActions,
+    actionError,
+  } = useMailViewer(thread, folder, onReply, onDelete, onUpdate)
 
   if (!thread) {
     return (
       <div className="MailViewer empty">
         <div className="placeholder">
-          <span className="placeholder-icon" />
-          <p>Select a message to read</p>
+          <p className="eyebrow">A little less inbox. A little more focus.</p>
+          <h2>Make room for what matters.</h2>
+          <p>
+            Choose a conversation to get started.
+            <br />
+            We’ll keep the everyday things simple.
+          </p>
+          <div className="shortcut-hints">
+            <span>
+              <kbd>C</kbd> Compose
+            </span>
+            <span>
+              <kbd>/</kbd> Search
+            </span>
+            <span>
+              <kbd>?</kbd> Commands
+            </span>
+          </div>
         </div>
       </div>
     )
   }
 
-  // Toolbar uses the latest message in the thread
-  const latestFull = fullMessages.get(thread.latest.uid)
-  const latest = latestFull || thread.latest
-
-  const toolbarActions = [
-    {
-      id: 'reply',
-      label: 'Reply',
-      icon: 'reply',
-      onClick: () => onReply({
-        to: latest.from.address,
-        subject: `Re: ${thread.subject}`,
-        inReplyTo: latest.messageId,
-      }),
-    },
-    {
-      id: 'forward',
-      label: 'Forward',
-      icon: 'forward',
-      onClick: () => onReply({
-        to: '',
-        subject: `Fwd: ${thread.subject}`,
-      }),
-    },
-    {
-      id: 'star',
-      label: latest.isFlagged ? 'Unstar' : 'Star',
-      icon: latest.isFlagged ? 'star-filled' : 'star',
-      active: latest.isFlagged,
-      onClick: () => toggleFlag(latest.uid, !latest.isFlagged),
-    },
-    {
-      id: 'mark-unread',
-      label: latest.isRead ? 'Mark unread' : 'Mark read',
-      icon: 'mark-unread',
-      onClick: () => markRead(latest.uid, !latest.isRead),
-    },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: 'trash',
-      danger: true,
-      onClick: async () => {
-        await deleteMessage(latest.uid)
-        onDelete()
-      },
-    },
-  ]
-
   return (
     <div className="MailViewer">
       <div className="mobile-nav">
-        <button className="mobile-back" onClick={onMobileBack} type="button" aria-label="Back">
+        <button
+          className="mobile-back"
+          onClick={onMobileBack}
+          type="button"
+          aria-label="Back"
+        >
           Back
         </button>
       </div>
 
       <Toolbar actions={toolbarActions} />
+      {actionError && (
+        <p className="action-error" role="alert">
+          {actionError}
+        </p>
+      )}
 
       <div className="body">
         {loading ? (
@@ -101,10 +98,12 @@ export default function MailViewer({ thread, folder, onReply, onDelete, onMobile
           </div>
         ) : (
           <>
-            <h1 className="thread-subject">{thread.subject || '(no subject)'}</h1>
+            <h1 className="thread-subject">
+              {thread.subject || '(no subject)'}
+            </h1>
 
             <div className="thread-messages">
-              {thread.messages.map(msg => {
+              {thread.messages.map((msg) => {
                 const full = fullMessages.get(msg.uid)
                 const isExpanded = expanded.has(msg.uid)
 
@@ -118,7 +117,11 @@ export default function MailViewer({ thread, folder, onReply, onDelete, onMobile
                       onClick={() => toggleExpand(msg.uid)}
                       type="button"
                     >
-                      <Avatar name={msg.from.name} email={msg.from.address} size="sm" />
+                      <Avatar
+                        name={msg.from.name}
+                        email={msg.from.address}
+                        size="sm"
+                      />
                       <div className="item-meta">
                         <span className="item-sender">
                           {msg.from.name || msg.from.address}
@@ -128,7 +131,9 @@ export default function MailViewer({ thread, folder, onReply, onDelete, onMobile
                         )}
                       </div>
                       <time className="item-date">
-                        {isExpanded ? formatFullDate(msg.date) : formatDate(msg.date)}
+                        {isExpanded
+                          ? formatFullDate(msg.date)
+                          : formatDate(msg.date)}
                       </time>
                     </button>
 
@@ -169,19 +174,27 @@ export default function MailViewer({ thread, folder, onReply, onDelete, onMobile
                         {full?.attachments && full.attachments.length > 0 && (
                           <div className="item-attachments">
                             <span className="attachments-label">
-                              {full.attachments.length} attachment{full.attachments.length > 1 ? 's' : ''}
+                              {full.attachments.length} attachment
+                              {full.attachments.length > 1 ? 's' : ''}
                             </span>
                             <ul className="attachments-list">
                               {full.attachments.map((att: MailAttachment) => (
-                                <li key={att.partId} className="attachment-chip">
+                                <li
+                                  key={att.partId}
+                                  className="attachment-chip"
+                                >
                                   <a
                                     href={`/api/messages/${msg.uid}/attachments/${att.partId}?folder=${encodeURIComponent(folder)}`}
                                     download={att.filename}
                                     className="attachment-link"
                                   >
                                     <span className="attachment-icon" />
-                                    <span className="attachment-name">{att.filename}</span>
-                                    <span className="attachment-size">{formatBytes(att.size)}</span>
+                                    <span className="attachment-name">
+                                      {att.filename}
+                                    </span>
+                                    <span className="attachment-size">
+                                      {formatBytes(att.size)}
+                                    </span>
                                   </a>
                                 </li>
                               ))}
@@ -193,21 +206,25 @@ export default function MailViewer({ thread, folder, onReply, onDelete, onMobile
                           <button
                             className="reply-btn"
                             type="button"
-                            onClick={() => onReply({
-                              to: msg.from.address,
-                              subject: `Re: ${thread.subject}`,
-                              inReplyTo: msg.messageId,
-                            })}
+                            onClick={() =>
+                              onReply({
+                                to: msg.from.address,
+                                subject: `Re: ${thread.subject}`,
+                                inReplyTo: msg.messageId,
+                              })
+                            }
                           >
                             Reply
                           </button>
                           <button
                             className="forward-btn"
                             type="button"
-                            onClick={() => onReply({
-                              to: '',
-                              subject: `Fwd: ${thread.subject}`,
-                            })}
+                            onClick={() =>
+                              onReply({
+                                to: '',
+                                subject: `Fwd: ${thread.subject}`,
+                              })
+                            }
                           >
                             Forward
                           </button>
@@ -224,3 +241,5 @@ export default function MailViewer({ thread, folder, onReply, onDelete, onMobile
     </div>
   )
 }
+
+export default MailViewer

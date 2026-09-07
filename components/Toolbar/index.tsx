@@ -17,13 +17,14 @@ interface Props {
 export default function Toolbar({ actions }: Props) {
   return (
     <div className="Toolbar">
-      {actions.map(action => (
+      {actions.map((action) => (
         <button
           key={action.id}
           className={`action${action.danger ? ' danger' : ''}${action.active ? ' active' : ''}`}
           onClick={action.onClick}
           disabled={action.disabled}
           title={action.label}
+          aria-label={action.label}
           type="button"
         >
           <span className={`icon icon-${action.icon}`} />

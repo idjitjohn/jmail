@@ -1,0 +1,132 @@
+.ReplyTemplates {
+  padding: 1em;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 0.75em;
+  background: var(--color-bg-secondary);
+  font-size: 0.875em;
+  button {
+    cursor: pointer;
+    font: inherit;
+    color: var(--color-primary);
+    background: transparent;
+    border: none;
+    border-radius: 0.375em;
+    padding: 0.375em 0.625em;
+    &:hover {
+      background: var(--color-mail-selected);
+    }
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+  input,
+  textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 0.625em 0.75em;
+    font: inherit;
+    color: var(--color-text);
+    background: var(--color-bg-default);
+    border: 1px solid var(--color-border-default);
+    border-radius: 0.5em;
+  }
+  .heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75em;
+    margin-bottom: 0.875em;
+    .intro {
+      h3 {
+        font-weight: 600;
+      }
+      p {
+        color: var(--color-text-tertiary);
+        font-size: 0.875em;
+        margin-top: 0.25em;
+      }
+    }
+    .close {
+      color: var(--color-text-tertiary);
+    }
+  }
+  .error {
+    color: var(--color-danger);
+    margin-bottom: 0.75em;
+  }
+  .tools {
+    display: flex;
+    gap: 0.5em;
+    margin-bottom: 0.75em;
+    input {
+      flex: 1;
+    }
+    button {
+      white-space: nowrap;
+    }
+  }
+  .templates {
+    max-height: 13em;
+    overflow-y: auto;
+    .hint {
+      padding: 1em;
+      color: var(--color-text-tertiary);
+    }
+    .template {
+      display: flex;
+      align-items: center;
+      border-top: 1px solid var(--color-border-muted);
+      .insert {
+        flex: 1;
+        min-width: 0;
+        padding: 0.75em 0.5em;
+        text-align: left;
+        strong {
+          display: block;
+          color: var(--color-text);
+          font-weight: 500;
+        }
+        span {
+          display: block;
+          margin-top: 0.25em;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          color: var(--color-text-tertiary);
+          font-size: 0.875em;
+        }
+      }
+      .remove {
+        color: var(--color-text-tertiary);
+      }
+      .delete-confirm {
+        display: flex;
+        font-size: 0.8125em;
+      }
+    }
+  }
+  .create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375em;
+      color: var(--color-text-secondary);
+      textarea {
+        resize: vertical;
+      }
+    }
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5em;
+      .primary {
+        background: var(--color-primary);
+        color: white;
+      }
+    }
+  }
+}

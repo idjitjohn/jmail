@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from 'jose'
 import type { UserSession } from './types'
 
 const SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || 'fallback-secret-change-me'
+  process.env.NEXTAUTH_SECRET || ''
 )
 
 export interface SessionPayload extends UserSession {
@@ -10,6 +10,7 @@ export interface SessionPayload extends UserSession {
 }
 
 export async function createSession(payload: SessionPayload): Promise<string> {
+  if (SECRET.length < 32) throw new Error('NEXTAUTH_SECRET must contain at least 32 bytes')
   return new SignJWT({ ...payload })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -19,6 +20,7 @@ export async function createSession(payload: SessionPayload): Promise<string> {
 
 export async function verifySession(token: string): Promise<SessionPayload | null> {
   try {
+    if (SECRET.length < 32) return null
     const { payload } = await jwtVerify(token, SECRET)
     return {
       email: payload.email as string,

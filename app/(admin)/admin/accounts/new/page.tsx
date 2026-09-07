@@ -1,3 +1,4 @@
+import { getManagedDomains } from '@/lib/maddy-admin'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { verifySession } from '@/lib/auth'
@@ -14,10 +15,13 @@ export default async function NewAccountPage() {
 
   if (!session || session.email !== ADMIN_EMAIL) redirect('/')
 
+  let domains: string[] = []
+  try { domains = await getManagedDomains() } catch { /* Unavailable domain configuration */ }
+
   return (
     <AdminLayout title="New account">
       <ToastProvider>
-        <CreateAccountForm />
+        <CreateAccountForm domains={domains} />
       </ToastProvider>
     </AdminLayout>
   )

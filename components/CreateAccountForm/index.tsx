@@ -1,57 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Input from '../Input'
 import Button from '../Button'
-import { useToast } from '../Toast'
-import { DOMAINS } from '@/lib/domains'
+import { useCreateAccountForm } from './useCreateAccountForm'
 import './CreateAccountForm.scss'
 
-export default function CreateAccountForm() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [local, setLocal] = useState('')
-  const [domain, setDomain] = useState(DOMAINS[0])
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+type Props = { domains: string[] }
 
-  const validate = () => {
-    const e: Record<string, string> = {}
-    if (!local.trim()) e.local = 'Required'
-    else if (!/^[a-zA-Z0-9._%+\-]+$/.test(local)) e.local = 'Invalid characters'
-    if (password.length < 8) e.password = 'Minimum 8 characters'
-    if (password !== confirm) e.confirm = 'Passwords do not match'
-    setErrors(e)
-    return Object.keys(e).length === 0
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validate()) return
-
-    setLoading(true)
-    try {
-      const res = await fetch('/api/admin/accounts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: `${local}@${domain}`, password }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      toast(`Created ${local}@${domain}`, 'success')
-      router.push('/admin/accounts')
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'Failed to create account', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
+const CreateAccountForm = ({ domains }: Props) => {
+  const { local, setLocal, domain, setDomain, password, setPassword, confirm, setConfirm, loading, errors, handleSubmit, back } = useCreateAccountForm(domains)
 
   return (
     <form className="CreateAccountForm" onSubmit={handleSubmit}>
+      {!domains.length && <p role="alert">No domains available. Connect Maddy administration and add a domain in Mail server first.</p>}
       <div className="email-row">
         <div className="local-wrap">
           <Input
@@ -73,7 +34,7 @@ export default function CreateAccountForm() {
             value={domain}
             onChange={e => setDomain(e.target.value)}
           >
-            {DOMAINS.map(d => <option key={d} value={d}>{d}</option>)}
+            {domains.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
         </div>
       </div>
@@ -103,13 +64,15 @@ export default function CreateAccountForm() {
       />
 
       <div className="form-actions">
-        <Button variant="secondary" type="button" onClick={() => router.back()}>
+        <Button variant="secondary" type="button" onClick={back}>
           Cancel
         </Button>
-        <Button type="submit" loading={loading}>
+        <Button type="submit" loading={loading} disabled={!domains.length}>
           Create account
         </Button>
       </div>
     </form>
   )
 }
+
+export default CreateAccountForm

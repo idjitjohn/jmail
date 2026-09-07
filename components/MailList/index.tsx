@@ -1,6 +1,5 @@
 'use client'
 
-import { useRef, useState } from 'react'
 import MailItem from '../MailItem'
 import Spinner from '../Spinner'
 import Button from '../Button'
@@ -8,100 +7,149 @@ import { useMailList } from './useMailList'
 import type { MailThread } from '@/lib/types'
 import './MailList.scss'
 
-interface Props {
+type Props = {
   folder: string
+  refreshTrigger: number
   selectedThread: MailThread | null
   onSelect: (thread: MailThread) => void
   onMobileBack?: () => void
   onRefresh?: () => void
 }
 
-export default function MailList({ folder, selectedThread, onSelect, onMobileBack, onRefresh }: Props) {
-  const { threads, loading, error, hasMore, loadMore, refresh, searchQuery, search, searching, markAllRead } = useMailList(folder)
-
-  const handleSwipeDelete = async (thread: import('@/lib/types').MailThread) => {
-    try {
-      await Promise.all(
-        thread.messages.map(m =>
-          fetch(`/api/messages/${m.uid}?folder=${encodeURIComponent(folder)}`, { method: 'DELETE' })
-        )
-      )
-      refresh()
-      onRefresh?.()
-    } catch { /* non-fatal */ }
-  }
-  const [searchOpen, setSearchOpen] = useState(false)
-  const searchRef = useRef<HTMLInputElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-
-  const folderLabel = folder === 'INBOX' ? 'Inbox' : folder
-
-  const handleSearchToggle = () => {
-    if (searchOpen) {
-      search('')
-      setSearchOpen(false)
-    } else {
-      setSearchOpen(true)
-      setTimeout(() => searchRef.current?.focus(), 50)
-    }
-  }
-
-  const handleSearchInput = (val: string) => {
-    clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => search(val), 400)
-  }
+const MailList = ({
+  folder,
+  refreshTrigger,
+  selectedThread,
+  onSelect,
+  onMobileBack,
+  onRefresh,
+}: Props) => {
+  const {
+    threads,
+    loading,
+    error,
+    hasMore,
+    total,
+    loadMore,
+    refresh,
+    searchQuery,
+    setSearchQuery,
+    searchRef,
+    filter,
+    setFilter,
+    clearSearch,
+    markAllRead,
+    markingRead,
+    handleSwipeDelete,
+    folderLabel,
+    emptyTitle,
+    emptyDescription,
+  } = useMailList({
+    folder,
+    refreshTrigger,
+    selectedThread,
+    onSelect,
+    onRefresh,
+  })
 
   return (
-    <div className="MailList">
+    <section className="MailList" aria-label={`${folderLabel} messages`}>
       <div className="header">
-        <button className="mobile-back" onClick={onMobileBack} type="button" aria-label="Back" />
+        <button
+          className="mobile-back"
+          onClick={onMobileBack}
+          type="button"
+          aria-label="Show folders"
+        />
         <h2 className="title">{folderLabel}</h2>
         <button
-          className={`search-btn${searchOpen ? ' active' : ''}`}
-          onClick={handleSearchToggle}
+          className="mark-all-read-btn"
+          onClick={markAllRead}
+          disabled={markingRead || loading}
           type="button"
-          title="Search"
+          title="Mark folder as read"
+          aria-label="Mark folder as read"
         />
-        <button className="mark-all-read-btn" onClick={() => { markAllRead(); onRefresh?.() }} type="button" title="Mark all read" />
-        <button className="refresh-btn" onClick={refresh} type="button" title="Refresh" />
+        <button
+          className={`refresh-btn${loading ? ' refreshing' : ''}`}
+          onClick={refresh}
+          disabled={loading}
+          type="button"
+          title="Refresh"
+          aria-label="Refresh messages"
+        />
       </div>
-
-      {searchOpen && (
-        <div className="search-bar">
-          <span className="search-icon" />
-          <input
-            ref={searchRef}
-            className="search-input"
-            type="text"
-            placeholder="Search messages..."
-            defaultValue={searchQuery}
-            onChange={e => handleSearchInput(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Escape') handleSearchToggle()
-            }}
-          />
-          {searching && <Spinner size="sm" />}
-        </div>
-      )}
-
-      <div className="messages">
+      <div className="search-bar">
+        <input
+          ref={searchRef}
+          className="search-input"
+          type="search"
+          placeholder="Search this folder"
+          aria-label="Search this folder"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') clearSearch()
+          }}
+        />
+        <kbd>/</kbd>
+      </div>
+      <div className="filters" role="group" aria-label="Filter messages">
+        <button
+          type="button"
+          className={`filter ${filter === 'all' ? 'active' : ''}`}
+          aria-pressed={filter === 'all'}
+          onClick={() => setFilter('all')}
+        >
+          All mail
+        </button>
+        <button
+          type="button"
+          className={`filter ${filter === 'unread' ? 'active' : ''}`}
+          aria-pressed={filter === 'unread'}
+          onClick={() => setFilter('unread')}
+        >
+          Unread
+        </button>
+        <button
+          type="button"
+          className={`filter ${filter === 'starred' ? 'active' : ''}`}
+          aria-pressed={filter === 'starred'}
+          onClick={() => setFilter('starred')}
+        >
+          Starred
+        </button>
+      </div>
+      <div className="list-caption" role="status">
+        <span>
+          {loading
+            ? 'Updating your mail…'
+            : `${total.toLocaleString()} message${total === 1 ? '' : 's'}`}
+        </span>
+        <span>Newest first</span>
+      </div>
+      <div className="messages" aria-busy={loading}>
+        {error && (
+          <div className="error-state" role="alert">
+            <p>{error}</p>
+            <Button variant="secondary" size="sm" onClick={refresh}>
+              Try again
+            </Button>
+          </div>
+        )}
         {loading && threads.length === 0 ? (
           <div className="empty-state">
             <Spinner size="md" />
+            <p>Getting your mail ready…</p>
           </div>
-        ) : error ? (
-          <div className="error-state">
-            <p>{error}</p>
-            <Button variant="secondary" size="sm" onClick={refresh}>Retry</Button>
-          </div>
-        ) : threads.length === 0 ? (
+        ) : !error && threads.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-icon" />
-            <p>No messages</p>
+            <h3>{emptyTitle}</h3>
+            <p>{emptyDescription}</p>
           </div>
         ) : (
           <>
-            {threads.map(thread => (
+            {threads.map((thread) => (
               <MailItem
                 key={thread.id}
                 thread={thread}
@@ -112,7 +160,12 @@ export default function MailList({ folder, selectedThread, onSelect, onMobileBac
             ))}
             {hasMore && (
               <div className="load-more">
-                <Button variant="ghost" size="sm" onClick={loadMore} loading={loading}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={loadMore}
+                  loading={loading}
+                >
                   Load more
                 </Button>
               </div>
@@ -120,6 +173,8 @@ export default function MailList({ folder, selectedThread, onSelect, onMobileBac
           </>
         )}
       </div>
-    </div>
+    </section>
   )
 }
+
+export default MailList

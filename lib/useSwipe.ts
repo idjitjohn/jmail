@@ -2,12 +2,13 @@
 
 import { useRef, useState, useEffect } from 'react'
 
-interface Options {
+type Options = {
   onSwipeLeft?: () => void
   onSwipeRight?: () => void
-  threshold?: number        // min px to commit, default 80
+  threshold?: number // min px to commit, default 80
   velocityThreshold?: number // px/ms to commit even if short, default 0.4
   disabled?: boolean
+  ignoreSelector?: string
 }
 
 // Panel navigation swipe hook.
@@ -19,6 +20,7 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
   threshold = 80,
   velocityThreshold = 0.4,
   disabled = false,
+  ignoreSelector = '',
 }: Options = {}) {
   const ref = useRef<T>(null)
   const startX = useRef(0)
@@ -32,14 +34,28 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
   // Keep callbacks in refs so the effect doesn't re-register on every render
   const leftRef = useRef(onSwipeLeft)
   const rightRef = useRef(onSwipeRight)
-  useEffect(() => { leftRef.current = onSwipeLeft }, [onSwipeLeft])
-  useEffect(() => { rightRef.current = onSwipeRight }, [onSwipeRight])
+  useEffect(() => {
+    leftRef.current = onSwipeLeft
+  }, [onSwipeLeft])
+  useEffect(() => {
+    rightRef.current = onSwipeRight
+  }, [onSwipeRight])
 
   useEffect(() => {
     const el = ref.current
     if (!el || disabled) return
 
+    let tracking = false
+
     const onStart = (e: TouchEvent) => {
+      tracking =
+        e.touches.length === 1 &&
+        !(
+          ignoreSelector &&
+          e.target instanceof Element &&
+          e.target.closest(ignoreSelector)
+        )
+      if (!tracking) return
       startX.current = e.touches[0].clientX
       startY.current = e.touches[0].clientY
       startTime.current = Date.now()
@@ -50,6 +66,7 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
     }
 
     const onMove = (e: TouchEvent) => {
+      if (!tracking || e.touches.length !== 1) return
       const dx = e.touches[0].clientX - startX.current
       const dy = e.touches[0].clientY - startY.current
 
@@ -65,6 +82,8 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
     }
 
     const onEnd = () => {
+      if (!tracking) return
+      tracking = false
       setDragging(false)
       const dx = currentX.current
       const elapsed = Math.max(Date.now() - startTime.current, 1)
@@ -80,6 +99,7 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
     }
 
     const onCancel = () => {
+      tracking = false
       setDragging(false)
       currentX.current = 0
       setDragX(0)
@@ -96,7 +116,7 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
       el.removeEventListener('touchend', onEnd)
       el.removeEventListener('touchcancel', onCancel)
     }
-  }, [disabled, threshold, velocityThreshold])
+  }, [disabled, threshold, velocityThreshold, ignoreSelector])
 
   return { ref, dragX, dragging }
 }

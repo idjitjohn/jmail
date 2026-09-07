@@ -16,7 +16,15 @@ export default function RichEditor({
   onChange,
   placeholder,
 }: Props) {
-  const { divRef, formats, inLink, exec, toggleLink, handleInput, handleKeyDown } = useRichEditor({
+  const {
+    divRef,
+    formats,
+    inLink,
+    exec,
+    toggleLink,
+    handleInput,
+    handleKeyDown,
+  } = useRichEditor({
     defaultValue,
     resetToken,
     onChange,
@@ -28,7 +36,10 @@ export default function RichEditor({
         <button
           type="button"
           className={`tool-btn ${formats.bold ? 'active' : ''}`}
-          onMouseDown={e => { e.preventDefault(); exec('bold') }}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            exec('bold')
+          }}
           title="Bold (⌘B)"
         >
           <b>B</b>
@@ -36,7 +47,10 @@ export default function RichEditor({
         <button
           type="button"
           className={`tool-btn italic ${formats.italic ? 'active' : ''}`}
-          onMouseDown={e => { e.preventDefault(); exec('italic') }}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            exec('italic')
+          }}
           title="Italic (⌘I)"
         >
           <i>I</i>
@@ -44,7 +58,10 @@ export default function RichEditor({
         <button
           type="button"
           className={`tool-btn underline ${formats.underline ? 'active' : ''}`}
-          onMouseDown={e => { e.preventDefault(); exec('underline') }}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            exec('underline')
+          }}
           title="Underline (⌘U)"
         >
           <u>U</u>
@@ -53,7 +70,10 @@ export default function RichEditor({
         <button
           type="button"
           className={`tool-btn link ${inLink ? 'active' : ''}`}
-          onMouseDown={e => { e.preventDefault(); toggleLink() }}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            toggleLink()
+          }}
           title={inLink ? 'Remove link (⌘K)' : 'Insert link (⌘K)'}
         />
       </div>
@@ -62,6 +82,10 @@ export default function RichEditor({
         ref={divRef}
         className="editor"
         contentEditable
+        role="textbox"
+        aria-label="Message body"
+        aria-multiline="true"
+        spellCheck
         suppressContentEditableWarning
         onInput={handleInput}
         onKeyDown={handleKeyDown}

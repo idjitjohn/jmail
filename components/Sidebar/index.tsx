@@ -14,13 +14,22 @@ interface Props {
   activeFolder: string
   onFolderChange: (folder: string) => void
   onCompose: () => void
+  onCommands?: () => void
   userEmail?: string
   isAdmin?: boolean
   // Increment to trigger a folders refetch
   refreshTrigger?: number
 }
 
-export default function Sidebar({ activeFolder, onFolderChange, onCompose, userEmail, isAdmin, refreshTrigger }: Props) {
+export default function Sidebar({
+  activeFolder,
+  onFolderChange,
+  onCompose,
+  userEmail,
+  isAdmin,
+  refreshTrigger,
+  onCommands,
+}: Props) {
   const { folders, loading, refetch } = useSidebar()
   const logout = useLogout()
 
@@ -44,13 +53,20 @@ export default function Sidebar({ activeFolder, onFolderChange, onCompose, userE
         </Button>
       </div>
 
-      <nav className="folders">
+      <div className="command-wrap">
+        <button type="button" className="command-trigger" onClick={onCommands}>
+          <span>Quick commands</span>
+          <kbd>⌘ K</kbd>
+        </button>
+      </div>
+      <p className="section-label">Your workspace</p>
+      <nav className="folders" aria-label="Mail folders">
         {loading ? (
           <div className="loading">
             <Spinner size="sm" />
           </div>
         ) : (
-          folders.map(folder => (
+          folders.map((folder) => (
             <FolderItem
               key={folder.path}
               folder={folder}

@@ -9,19 +9,28 @@ interface Props {
   thread: MailThread
   isSelected: boolean
   onClick: (thread: MailThread) => void
-  onSwipeDelete?: (thread: MailThread) => void
+  onSwipeDelete?: (thread: MailThread) => Promise<boolean>
 }
 
-const REVEAL_MAX = 72  // px — max left reveal width
-const COMMIT_PX  = 60  // px — swipe distance to commit
+const REVEAL_MAX = 72 // px — max left reveal width
+const COMMIT_PX = 60 // px — swipe distance to commit
 const COMMIT_VEL = 0.5 // px/ms — velocity to commit even if short
 
-export default function MailItem({ thread, isSelected, onClick, onSwipeDelete }: Props) {
+export default function MailItem({
+  thread,
+  isSelected,
+  onClick,
+  onSwipeDelete,
+}: Props) {
   const { subject, participants, latest, messages, unreadCount } = thread
 
-  const senderLabel = participants.length === 1
-    ? (participants[0].name || participants[0].address.split('@')[0])
-    : participants.slice(0, 2).map(p => p.name || p.address.split('@')[0]).join(', ')
+  const senderLabel =
+    participants.length === 1
+      ? participants[0].name || participants[0].address.split('@')[0]
+      : participants
+          .slice(0, 2)
+          .map((p) => p.name || p.address.split('@')[0])
+          .join(', ')
 
   const btnRef = useRef<HTMLButtonElement>(null)
   const startX = useRef(0)
@@ -63,22 +72,31 @@ export default function MailItem({ thread, isSelected, onClick, onSwipeDelete }:
       setSwipeX(clamped)
     }
 
-    const onEnd = () => {
+    const onEnd = async () => {
       const dx = currentX.current
       const elapsed = Math.max(Date.now() - startTime.current, 1)
       const velocity = Math.abs(dx) / elapsed
 
       if (dx < -COMMIT_PX || (dx < -10 && velocity > COMMIT_VEL)) {
-        setDismissed(true)
-        setTimeout(() => onSwipeDelete(thread), 280)
+        const deleted = await onSwipeDelete(thread)
+        if (deleted) setDismissed(true)
+        else {
+          setSwipeX(0)
+          didSwipe.current = false
+        }
       } else {
         setSwipeX(0)
-        setTimeout(() => { didSwipe.current = false }, 50)
+        setTimeout(() => {
+          didSwipe.current = false
+        }, 50)
       }
       currentX.current = 0
     }
 
-    const onCancel = () => { setSwipeX(0); didSwipe.current = false }
+    const onCancel = () => {
+      setSwipeX(0)
+      didSwipe.current = false
+    }
 
     el.addEventListener('touchstart', onStart, { passive: true })
     el.addEventListener('touchmove', onMove, { passive: false })
@@ -96,24 +114,43 @@ export default function MailItem({ thread, isSelected, onClick, onSwipeDelete }:
   return (
     <button
       ref={btnRef}
-      className={clsx('MailItem', { selected: isSelected, unread: unreadCount > 0, dismissed })}
-      onClick={() => { if (!didSwipe.current) onClick(thread) }}
+      className={clsx('MailItem', {
+        selected: isSelected,
+        unread: unreadCount > 0,
+        dismissed,
+      })}
+      onClick={() => {
+        if (!didSwipe.current) onClick(thread)
+      }}
       type="button"
-      style={swipeX !== 0 ? { '--swipe-x': `${swipeX}px` } as React.CSSProperties : undefined}
+      aria-pressed={isSelected}
+      style={
+        swipeX !== 0
+          ? ({ '--swipe-x': `${swipeX}px` } as React.CSSProperties)
+          : undefined
+      }
     >
       {/* Red delete backdrop, revealed by left swipe */}
       <div className="delete-bg" aria-hidden="true" />
 
       <div className="item-content">
-        <Avatar name={participants[0].name} email={participants[0].address} size="md" />
+        <Avatar
+          name={participants[0].name}
+          email={participants[0].address}
+          size="md"
+        />
 
         <div className="content">
           <div className="meta">
             <span className="sender">
               {senderLabel}
-              {messages.length > 1 && <span className="count">{messages.length}</span>}
+              {messages.length > 1 && (
+                <span className="count">{messages.length}</span>
+              )}
             </span>
-            {latest.isFlagged && <span className="star-icon" aria-hidden="true" />}
+            {latest.isFlagged && (
+              <span className="star-icon" aria-hidden="true" />
+            )}
             <span className="date">{formatDate(latest.date)}</span>
           </div>
           <p className="subject">{subject || '(no subject)'}</p>

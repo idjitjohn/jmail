@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-interface ForwardingConfig {
-  active: boolean
-  address: string | null
-  keepCopy: boolean
-}
+import type { ForwardingConfig } from './types'
 
 export function useForwardingSettings() {
   const [enabled, setEnabled] = useState(false)
@@ -19,13 +15,17 @@ export function useForwardingSettings() {
 
   useEffect(() => {
     fetch('/api/settings/forwarding')
-      .then(r => r.json())
+      .then(async response => {
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || 'Failed to load settings')
+        return data
+      })
       .then((data: ForwardingConfig) => {
         setEnabled(data.active)
         setForwardTo(data.address ?? '')
         setKeepCopy(data.keepCopy)
       })
-      .catch(() => setError('Failed to load settings'))
+      .catch(error => setError(error instanceof Error ? error.message : 'Failed to load settings'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -36,11 +36,13 @@ export function useForwardingSettings() {
     if (!enabled) {
       setSaving(true)
       try {
-        await fetch('/api/settings/forwarding', { method: 'DELETE' })
+        const response = await fetch('/api/settings/forwarding', { method: 'DELETE' })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error || 'Failed to save settings')
         setSaved(true)
         setTimeout(() => setSaved(false), 3000)
-      } catch {
-        setError('Failed to save settings')
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Failed to save settings')
       } finally {
         setSaving(false)
       }

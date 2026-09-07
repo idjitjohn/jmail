@@ -1,12 +1,12 @@
-import { DOMAINS } from '@/lib/domains'
 import './DomainFilter.scss'
 
-interface Props {
+type Props = {
+  domains: string[]
   value: string
   onChange: (domain: string) => void
 }
 
-export default function DomainFilter({ value, onChange }: Props) {
+const DomainFilter = ({ domains, value, onChange }: Props) => {
   return (
     <div className="DomainFilter">
       <select
@@ -15,10 +15,12 @@ export default function DomainFilter({ value, onChange }: Props) {
         onChange={e => onChange(e.target.value)}
       >
         <option value="">All domains</option>
-        {DOMAINS.map(d => (
+        {domains.map(d => (
           <option key={d} value={d}>{d}</option>
         ))}
       </select>
     </div>
   )
 }
+
+export default DomainFilter

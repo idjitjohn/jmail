@@ -1,28 +1,46 @@
 'use client'
 
-export interface DraftData {
+export type DraftData = {
   to: string
   cc: string
   subject: string
   bodyHtml: string
   signatureId: string | null
+  inReplyTo?: string
 }
 
-const KEY = 'jmail-compose-draft'
+const key = (email: string) => `jmail-compose-draft:${email}`
 
-export function saveDraft(draft: DraftData): void {
-  localStorage.setItem(KEY, JSON.stringify(draft))
-}
-
-export function loadDraft(): DraftData | null {
+export const saveDraft = (draft: DraftData, email: string): boolean => {
   try {
-    const raw = localStorage.getItem(KEY)
-    return raw ? (JSON.parse(raw) as DraftData) : null
+    localStorage.setItem(key(email), JSON.stringify(draft))
+    return true
+  } catch {
+    return false
+  }
+}
+
+export const loadDraft = (email: string): DraftData | null => {
+  try {
+    const raw = localStorage.getItem(key(email))
+    if (!raw) return null
+    const draft = JSON.parse(raw)
+    if (
+      ![draft.to, draft.cc, draft.subject, draft.bodyHtml].every(
+        (value) => typeof value === 'string',
+      )
+    )
+      return null
+    return draft
   } catch {
     return null
   }
 }
 
-export function clearDraft(): void {
-  localStorage.removeItem(KEY)
+export const clearDraft = (email: string): void => {
+  try {
+    localStorage.removeItem(key(email))
+  } catch {
+    /* Unavailable storage */
+  }
 }

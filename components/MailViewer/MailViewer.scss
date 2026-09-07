@@ -73,11 +73,17 @@
   }
 
   @media (max-width: 768px) {
-    .mobile-nav { display: flex; }
+    .mobile-nav {
+      display: flex;
+    }
 
     .body {
-      .thread-subject { padding: 0.875em 1em 0.5em; }
-      .thread-messages { padding: 0.5em 0.5em 1em; }
+      .thread-subject {
+        padding: 0.875em 1em 0.5em;
+      }
+      .thread-messages {
+        padding: 0.5em 0.5em 1em;
+      }
     }
   }
 
@@ -352,8 +358,88 @@
               }
             }
 
-            .reply-btn::before { mask-image: url('/icons/reply.svg'); }
-            .forward-btn::before { mask-image: url('/icons/forward.svg'); }
+            .reply-btn::before {
+              mask-image: url('/icons/reply.svg');
+            }
+            .forward-btn::before {
+              mask-image: url('/icons/forward.svg');
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.MailViewer {
+  .action-error {
+    margin: 0.75em 1em;
+    padding: 0.75em 1em;
+    border: 1px solid var(--color-danger);
+    border-radius: 0.5em;
+    color: var(--color-danger);
+    background: var(--color-danger-light);
+    font-size: 0.8125em;
+  }
+  &.empty {
+    background: radial-gradient(
+      ellipse at 50% 40%,
+      var(--color-mail-selected),
+      transparent 65%
+    );
+    .placeholder {
+      max-width: 32em;
+      padding: 2em;
+      text-align: center;
+      &::before {
+        content: '';
+        display: block;
+        width: 3em;
+        height: 3em;
+        margin: 0 auto 1.5em;
+        background: var(--color-primary);
+        mask: url('/icons/jmail-brand.svg') center / contain no-repeat;
+        opacity: 0.8;
+      }
+      .eyebrow {
+        color: var(--color-primary);
+        font-size: 0.6875em;
+        font-weight: 500;
+      }
+      h2 {
+        margin: 0.625em 0;
+        color: var(--color-text);
+        font-size: 1.75em;
+        font-weight: 600;
+        line-height: 1.2;
+        letter-spacing: -0.04em;
+      }
+      p {
+        color: var(--color-text-tertiary);
+        line-height: 1.8;
+        font-size: 0.875em;
+      }
+      .shortcut-hints {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1.25em;
+        margin-top: 2.5em;
+        color: var(--color-text-tertiary);
+        font-size: 0.75em;
+        span {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5em;
+          kbd {
+            display: inline-grid;
+            place-items: center;
+            min-width: 1.75em;
+            height: 1.75em;
+            border: 1px solid var(--color-border-default);
+            border-radius: 0.375em;
+            background: var(--color-bg-default);
+            font-size: 0.875em;
           }
         }
       }

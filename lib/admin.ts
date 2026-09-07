@@ -24,5 +24,3 @@ export async function logAdminAction(action: string, details: string): Promise<v
     console.log('[admin]', line.trim())
   }
 }
-
-export { DOMAINS } from './domains'

@@ -9,12 +9,13 @@
   pointer-events: none;
 
   .backdrop {
+    background: #10182726;
     position: fixed;
     inset: 0;
     pointer-events: all;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 48em) {
     align-items: stretch;
     justify-content: flex-end;
     padding: 0;
@@ -27,6 +28,7 @@
   }
 
   .panel {
+    animation: compose-appear 180ms ease-out;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -121,10 +123,72 @@
           mask-position: center;
         }
 
-        &:hover { opacity: 1; }
+        &:hover {
+          opacity: 1;
+        }
       }
     }
 
+    .undo-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1em;
+      padding: 1em 1.25em;
+      background: var(--color-mail-selected);
+      color: var(--color-primary);
+      .undo-copy {
+        strong {
+          display: block;
+          font-size: 0.875em;
+        }
+        span {
+          display: block;
+          font-size: 0.75em;
+          margin-top: 0.25em;
+        }
+      }
+      button {
+        flex-shrink: 0;
+        padding: 0.625em 1em;
+        border: 1px solid var(--color-primary);
+        border-radius: 0.5em;
+        color: var(--color-primary);
+        background: var(--color-bg-default);
+        font: inherit;
+        font-size: 0.8125em;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    }
+    .attachment-warning {
+      padding: 0.875em 1.25em;
+      background: var(--color-warning-light);
+      color: var(--color-text);
+      font-size: 0.8125em;
+      .warning-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75em;
+        margin-top: 0.625em;
+        button {
+          padding: 0.25em 0;
+          border: none;
+          color: var(--color-text);
+          background: transparent;
+          font: inherit;
+          font-weight: 600;
+          cursor: pointer;
+          text-decoration: underline;
+          text-underline-offset: 0.2em;
+        }
+      }
+    }
+    .draft-status {
+      padding: 0.75em 1.5em;
+      font-size: 0.6875em;
+      color: var(--color-text-tertiary);
+    }
     .fields {
       display: flex;
       flex-direction: column;
@@ -133,12 +197,48 @@
       overflow-y: auto;
       flex: 1;
 
+      .writing-tools {
+        display: flex;
+        align-items: center;
+        gap: 0.75em;
+        .template-toggle {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5em;
+          padding: 0.5em 0.75em;
+          border: 1px solid var(--color-border-muted);
+          border-radius: 0.5em;
+          font: inherit;
+          font-size: 0.75em;
+          font-weight: 500;
+          color: var(--color-primary);
+          background: var(--color-bg-secondary);
+          cursor: pointer;
+          &::before {
+            content: '';
+            width: 1em;
+            height: 1em;
+            background: currentColor;
+            mask: url('/icons/file.svg') center / contain no-repeat;
+          }
+          &.active,
+          &:hover {
+            background: var(--color-mail-selected);
+          }
+        }
+        .writing-hint {
+          color: var(--color-text-tertiary);
+          font-size: 0.6875em;
+        }
+      }
       .field-row {
         display: flex;
         align-items: flex-end;
         gap: 0.5em;
 
-        > .Input { flex: 1; }
+        > .Input {
+          flex: 1;
+        }
 
         .cc-toggle {
           padding: 0.5em 0.625em;
@@ -230,7 +330,10 @@
               mask-position: center;
             }
 
-            &:hover { background: var(--color-danger-light); color: var(--color-danger); }
+            &:hover {
+              background: var(--color-danger-light);
+              color: var(--color-danger);
+            }
           }
         }
       }
@@ -253,7 +356,9 @@
           color: var(--color-text-secondary);
           line-height: 1.5;
 
-          p { margin: 0; }
+          p {
+            margin: 0;
+          }
         }
       }
     }
@@ -261,6 +366,25 @@
     // Schedule row (above footer)
     .schedule-row {
       display: flex;
+      flex-wrap: wrap;
+      .presets {
+        display: flex;
+        gap: 0.5em;
+        width: 100%;
+        button {
+          border: 1px solid var(--color-border-muted);
+          border-radius: 0.5em;
+          padding: 0.4em 0.625em;
+          color: var(--color-primary);
+          background: var(--color-bg-default);
+          font: inherit;
+          font-size: 0.75em;
+          cursor: pointer;
+          &:hover {
+            background: var(--color-mail-selected);
+          }
+        }
+      }
       align-items: center;
       gap: 0.625em;
       padding: 0.625em 1em;
@@ -276,6 +400,7 @@
 
       .schedule-input {
         flex: 1;
+        min-width: 0;
         padding: 0.375em 0.5em;
         border: 1px solid var(--color-input-border);
         border-radius: 0.4em;
@@ -286,7 +411,9 @@
         outline: none;
         transition: border-color var(--transition-fast);
 
-        &:focus { border-color: var(--color-input-border-focus); }
+        &:focus {
+          border-color: var(--color-input-border-focus);
+        }
       }
 
       .schedule-cancel {
@@ -299,7 +426,9 @@
         padding: 0;
         flex-shrink: 0;
 
-        &:hover { color: var(--color-text); }
+        &:hover {
+          color: var(--color-text);
+        }
       }
     }
 
@@ -316,6 +445,7 @@
 
     .panel-footer {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 0.5em;
@@ -328,7 +458,8 @@
         align-items: center;
         gap: 0.5em;
 
-        .attach-btn {
+        .attach-btn,
+        .discard-btn {
           display: flex;
           align-items: center;
           justify-content: center;
@@ -353,14 +484,29 @@
             mask-position: center;
           }
 
-          &:hover { background: var(--color-border-muted); color: var(--color-text); }
+          &:hover {
+            background: var(--color-border-muted);
+            color: var(--color-text);
+          }
         }
 
-        .file-input { display: none; }
+        .discard-btn {
+          &::before {
+            mask-image: url('/icons/trash.svg');
+          }
+          &:hover {
+            color: var(--color-danger);
+          }
+        }
+
+        .file-input {
+          display: none;
+        }
       }
 
       .footer-actions {
         display: flex;
+        margin-left: auto;
         align-items: center;
         gap: 0.5em;
 
@@ -389,9 +535,73 @@
             mask-position: center;
           }
 
-          &:hover { background: var(--color-border-muted); color: var(--color-text); }
+          &:hover {
+            background: var(--color-border-muted);
+            color: var(--color-text);
+          }
 
-          &.active { background: var(--color-mail-selected); color: var(--color-primary); }
+          &.active {
+            background: var(--color-mail-selected);
+            color: var(--color-primary);
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 48em) {
+  .ComposeModal {
+    padding: 0;
+    .panel {
+      width: 100%;
+      max-height: 100dvh;
+      border-radius: 1em 1em 0 0;
+      .fields {
+        .writing-tools {
+          .writing-hint {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes compose-appear {
+  from {
+    opacity: 0;
+    transform: translateY(0.75em) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (pointer: coarse) {
+  .ComposeModal {
+    .panel {
+      .panel-header {
+        .close-btn {
+          width: 2.75em;
+          height: 2.75em;
+        }
+      }
+      .panel-footer {
+        padding-bottom: max(0.75em, env(safe-area-inset-bottom));
+        .footer-left {
+          .attach-btn,
+          .discard-btn {
+            width: 2.75em;
+            height: 2.75em;
+          }
+        }
+        .footer-actions {
+          .schedule-toggle {
+            width: 2.75em;
+            height: 2.75em;
+          }
         }
       }
     }

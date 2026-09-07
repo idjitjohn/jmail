@@ -1,17 +1,13 @@
-import { DOMAINS } from '@/lib/domains'
+import { useAdminDashboard } from './useAdminDashboard'
 import './AdminDashboard.scss'
 
-interface Props {
+type Props = {
   accounts: string[]
+  domains: string[]
 }
 
-export default function AdminDashboard({ accounts }: Props) {
-  const byDomain = DOMAINS.map(domain => ({
-    domain,
-    count: accounts.filter(a => a.endsWith(`@${domain}`)).length,
-  }))
-
-  const recent = [...accounts].reverse().slice(0, 8)
+const AdminDashboard = ({ accounts, domains }: Props) => {
+  const { byDomain, recent } = useAdminDashboard(accounts, domains)
 
   return (
     <div className="AdminDashboard">
@@ -45,3 +41,5 @@ export default function AdminDashboard({ accounts }: Props) {
     </div>
   )
 }
+
+export default AdminDashboard

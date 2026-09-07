@@ -9,6 +9,7 @@ import './AdminSidebar.scss'
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: 'dashboard' },
   { href: '/admin/accounts', label: 'Accounts', icon: 'accounts' },
+  { href: '/admin/mail-server', label: 'Mail server', icon: 'system' },
 ]
 
 export default function AdminSidebar() {

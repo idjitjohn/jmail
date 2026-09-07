@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession, unauthorized } from '@/lib/auth'
 import { createImapClient } from '@/lib/mail'
 import type { MailMessage } from '@/lib/types'
+import {
+  buildMailSearch,
+  hasMailAttachments,
+  type MailFilter,
+} from '@/lib/mail-search'
 
 const MAX_RESULTS = 50
 
@@ -10,11 +15,20 @@ export async function GET(req: NextRequest) {
   if (!session) return unauthorized()
 
   const { searchParams } = new URL(req.url)
-  const query = searchParams.get('q')?.trim()
+  const query = searchParams.get('q')?.trim() || ''
+  const filter = searchParams.get('filter') || 'all'
+  const page = Number(searchParams.get('page') || '1')
   const folder = searchParams.get('folder') || 'INBOX'
 
-  if (!query) {
-    return NextResponse.json({ messages: [] })
+  if (
+    !['all', 'unread', 'starred'].includes(filter) ||
+    !Number.isSafeInteger(page) ||
+    page < 1
+  ) {
+    return NextResponse.json(
+      { error: 'Invalid filter or page' },
+      { status: 400 },
+    )
   }
 
   const client = createImapClient(session.email, session.password)
@@ -23,37 +37,42 @@ export async function GET(req: NextRequest) {
     await client.connect()
     await client.mailboxOpen(folder)
 
-    // IMAP OR search across subject, from, to, and body
-    const result = await client.search({
-      or: [
-        { subject: query },
-        { from: query },
-        { to: query },
-        { body: query },
-      ],
-    }, { uid: true })
+    const result = await client.search(
+      buildMailSearch(query, filter as MailFilter),
+      { uid: true },
+    )
 
     const uids = Array.isArray(result) ? result : []
 
     if (!uids.length) {
-      await client.logout()
-      return NextResponse.json({ messages: [] })
+      return NextResponse.json({ messages: [], total: 0, hasMore: false })
     }
 
-    // Take latest N results
-    const sliced = uids.slice(-MAX_RESULTS).reverse()
+    const end = Math.max(0, uids.length - (page - 1) * MAX_RESULTS)
+    const sliced = uids.slice(Math.max(0, end - MAX_RESULTS), end).reverse()
+    if (!sliced.length) {
+      return NextResponse.json({
+        messages: [],
+        total: uids.length,
+        hasMore: false,
+      })
+    }
     const uidRange = sliced.join(',')
 
     const messages: MailMessage[] = []
 
-    for await (const msg of client.fetch(uidRange, {
-      uid: true,
-      flags: true,
-      envelope: true,
-      bodyStructure: true,
-      bodyParts: ['1'],
-      size: true,
-    }, { uid: true })) {
+    for await (const msg of client.fetch(
+      uidRange,
+      {
+        uid: true,
+        flags: true,
+        envelope: true,
+        bodyStructure: true,
+        bodyParts: ['1'],
+        size: true,
+      },
+      { uid: true },
+    )) {
       const env = msg.envelope
       if (!env) continue
       const from = env.from?.[0]
@@ -75,27 +94,36 @@ export async function GET(req: NextRequest) {
           name: from?.name || undefined,
           address: from?.address || '',
         },
-        to: (env.to || []).map(a => ({ name: a.name || undefined, address: a.address || '' })),
+        to: (env.to || []).map((a) => ({
+          name: a.name || undefined,
+          address: a.address || '',
+        })),
         date: (env.date ?? new Date()).toISOString(),
         preview,
         isRead: msg.flags?.has('\\Seen') ?? false,
         isFlagged: msg.flags?.has('\\Flagged') ?? false,
-        hasAttachments: false,
+        hasAttachments: hasMailAttachments(msg.bodyStructure),
         folder,
         size: msg.size,
       })
     }
 
     // Sort newest first
-    messages.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    messages.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    )
 
-    await client.logout()
-
-    return NextResponse.json({ messages })
+    return NextResponse.json({
+      messages,
+      total: uids.length,
+      hasMore: uids.length > page * MAX_RESULTS,
+    })
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Search failed' },
-      { status: 500 }
+      { status: 500 },
     )
+  } finally {
+    await client.logout().catch(() => client.close())
   }
 }

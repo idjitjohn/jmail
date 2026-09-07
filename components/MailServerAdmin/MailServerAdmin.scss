@@ -1,0 +1,153 @@
+@mixin button {
+  padding: 0.6em 0.9em;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5em;
+  color: var(--color-text);
+  background: var(--color-bg-default);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875em;
+  &:hover { background: var(--color-bg-secondary); }
+  &:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 0.2em; }
+  &:disabled { opacity: 0.55; cursor: wait; }
+  &.primary { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+}
+
+@mixin panel {
+  padding: 1.25em;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 0.75em;
+  background: var(--color-bg-default);
+  > h3 { font-size: 1.05em; margin-bottom: 0.6em; }
+  > p { color: var(--color-text-secondary); font-size: 0.875em; margin-bottom: 1em; }
+}
+
+@mixin code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 1em;
+  background: var(--color-bg-secondary);
+  border-radius: 0.5em;
+  font-size: 0.8em;
+  margin: 0.75em 0;
+}
+
+@mixin form {
+  > fieldset {
+    border: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17em), 1fr));
+    gap: 1em;
+    margin: 1em 0;
+    > label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4em;
+      font-size: 0.875em;
+      color: var(--color-text-secondary);
+      > input, > select {
+        padding: 0.65em;
+        min-width: 0;
+        border: 1px solid var(--color-input-border);
+        border-radius: 0.4em;
+        color: var(--color-input-text);
+        background: var(--color-input-bg);
+        font: inherit;
+        &:focus { outline: 2px solid var(--color-primary); outline-offset: 0.15em; }
+      }
+      &.checkbox { flex-direction: row; align-items: center; }
+    }
+  }
+  > button { @include button; }
+}
+
+.MailServerAdmin {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25em;
+  max-width: 72em;
+  padding: 0;
+  > .intro {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1em;
+    > .heading {
+      > h2 { font-size: 1.5em; }
+      > p { color: var(--color-text-secondary); font-size: 0.9em; }
+    }
+    > button { @include button; }
+  }
+  > .error, > .notice, > .loading { padding: 0.85em 1em; border-radius: 0.5em; overflow-wrap: anywhere; font-size: 0.9em; }
+  > .error { background: var(--color-danger-light); color: var(--color-danger); }
+  > .notice { background: var(--color-success-light); color: var(--color-success); }
+  > .loading { color: var(--color-text-secondary); }
+  > .setup { @include panel; > pre { @include code; } }
+  > .domains {
+    @include panel;
+    > .section-heading {
+      display: flex; justify-content: space-between; align-items: center; gap: 1em;
+      > h3 { font-size: 1.05em; }
+      > button { @include button; }
+    }
+    > .domain-list {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17em), 1fr)); gap: 0.75em; margin: 1em 0 1.5em;
+      > .domain {
+        @include button;
+        display: flex; flex-direction: column; gap: 0.25em; text-align: left; overflow-wrap: anywhere;
+        > strong { font-size: 1.05em; }
+        > span { color: var(--color-text-secondary); font-size: 0.85em; }
+        &.selected { border-color: var(--color-primary); }
+      }
+    }
+    > .domain-form {
+      @include form;
+      border-top: 1px solid var(--color-border-muted); padding-top: 1.25em;
+      > h4 { font-size: 1em; margin-bottom: 0.5em; }
+      > p { font-size: 0.875em; color: var(--color-text-secondary); }
+    }
+  }
+  > .forwarding {
+    @include panel;
+    > .rule-list {
+      > p { color: var(--color-text-secondary); font-size: 0.875em; }
+      > .rule {
+        display: flex; align-items: center; flex-wrap: wrap; gap: 0.5em; padding: 0.75em 0; border-bottom: 1px solid var(--color-border-muted);
+        > span { flex: 1; overflow-wrap: anywhere; font-size: 0.875em; }
+        > button { @include button; }
+      }
+    }
+    > .forward-form { @include form; }
+  }
+  > .preview {
+    @include panel;
+    border-color: var(--color-primary);
+    > pre { @include code; max-height: 28em; overflow-y: auto; }
+    > .actions { display: flex; gap: 0.75em; flex-wrap: wrap; > button { @include button; } }
+  }
+  > .diagnostics {
+    @include panel;
+    > .test-form {
+      @include form;
+      > .inbound-help {
+        margin-bottom: 1em;
+        > p { font-size: 0.875em; color: var(--color-text-secondary); margin-bottom: 0.75em; }
+        > button { @include button; }
+      }
+    }
+    > .results {
+      display: flex; flex-direction: column; gap: 0.75em; margin-top: 1.25em;
+      > .token { font-size: 0.875em; > code { overflow-wrap: anywhere; } }
+      > .check {
+        padding: 1em; border: 1px solid var(--color-border-muted); border-left-width: 3px; border-radius: 0.4em;
+        &.pass { border-left-color: var(--color-success); }
+        &.fail { border-left-color: var(--color-danger); }
+        &.warning { border-left-color: var(--color-warning); }
+        > h4 { font-size: 0.95em; margin-bottom: 0.35em; }
+        > p { font-size: 0.875em; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+        > pre { @include code; }
+      }
+    }
+  }
+}
