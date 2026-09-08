@@ -1,5 +1,6 @@
 import { ImapFlow } from 'imapflow'
 import nodemailer from 'nodemailer'
+import { mailTlsOptions } from './mail-tls'
 
 const HOST = process.env.MAIL_HOST || 'localhost'
 const IMAP_PORT = parseInt(process.env.IMAP_PORT || '993')
@@ -12,9 +13,7 @@ export function createImapClient(email: string, password: string) {
     secure: IMAP_PORT === 993,
     auth: { user: email, pass: password },
     logger: false,
-    tls: {
-      rejectUnauthorized: process.env.MAIL_TLS_REJECT_UNAUTHORIZED !== 'false',
-    },
+    tls: mailTlsOptions(HOST),
   })
 }
 
@@ -26,8 +25,6 @@ export function createSmtpTransport(email: string, password: string) {
     secure,
     requireTLS: !secure,
     auth: { user: email, pass: password },
-    tls: {
-      rejectUnauthorized: process.env.MAIL_TLS_REJECT_UNAUTHORIZED !== 'false',
-    },
+    tls: mailTlsOptions(HOST),
   })
 }

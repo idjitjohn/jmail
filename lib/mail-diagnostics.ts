@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import nodemailer from 'nodemailer'
 import { ImapFlow } from 'imapflow'
 import { getMailServer } from './maddy-admin'
+import { mailTlsOptions } from './mail-tls'
 import type { Check, DiagnosticResult, Domain } from '@/components/MailServerAdmin/types'
 
 const resolver = new Resolver({ timeout: 3000, tries: 1 })
@@ -94,14 +95,14 @@ export const checkDns = async (domain: Domain): Promise<DiagnosticResult> => ({ 
 const smtp = (email: string, password: string) => nodemailer.createTransport({
   host, port: smtpPort, secure: smtpPort === 465, requireTLS: smtpPort !== 465,
   auth: { user: email, pass: password }, connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000,
-  tls: { rejectUnauthorized: process.env.MAIL_TLS_REJECT_UNAUTHORIZED !== 'false' },
+  tls: mailTlsOptions(host),
 })
 
 const imap = (email: string, password: string) => new ImapFlow({
   host, port: imapPort, secure: imapPort === 993, doSTARTTLS: imapPort !== 993,
   auth: { user: email, pass: password }, logger: false,
   connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000,
-  tls: { rejectUnauthorized: process.env.MAIL_TLS_REJECT_UNAUTHORIZED !== 'false' },
+  tls: mailTlsOptions(host),
 })
 
 export const checkMailbox = async (email: string, password: string, token?: string): Promise<DiagnosticResult> => {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createImapClient } from '@/lib/mail'
 import { createSession, extractDomain } from '@/lib/auth'
 import { rateLimit } from '@/lib/rate-limit'
+import { logLoginFailure, mailAuthenticationError } from '@/lib/mail-errors'
 
 export const POST = async (request: NextRequest) => {
   let input
@@ -37,8 +38,10 @@ export const POST = async (request: NextRequest) => {
       { status: 429, headers: { 'Retry-After': '60' } },
     )
   const client = createImapClient(email, input.password)
+  let authenticated = false
   try {
     await client.connect()
+    authenticated = true
     const token = await createSession({
       email,
       password: input.password,
@@ -53,15 +56,24 @@ export const POST = async (request: NextRequest) => {
       path: '/',
     })
     return response
-  } catch {
+  } catch (error) {
+    logLoginFailure(error, authenticated ? 'session' : 'imap')
+    if (authenticated)
+      return NextResponse.json(
+        {
+          code: 'SESSION_CONFIGURATION_ERROR',
+          error:
+            'Your password was accepted, but JMail could not create a session. Please contact your administrator.',
+        },
+        { status: 503 },
+      )
+    const failure = mailAuthenticationError(error)
     return NextResponse.json(
-      {
-        error:
-          'Could not sign in. Check your credentials or try again shortly.',
-      },
-      { status: 401 },
+      { error: failure.error, code: failure.code },
+      { status: failure.status },
     )
   } finally {
-    await client.logout().catch(() => client.close())
+    if (authenticated) await client.logout().catch(() => client.close())
+    else client.close()
   }
 }
