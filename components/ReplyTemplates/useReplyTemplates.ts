@@ -6,6 +6,7 @@ import { starterTemplates, type ReplyTemplate } from '@/lib/reply-templates'
 export const useReplyTemplates = () => {
   const [templates, setTemplates] = useState<ReplyTemplate[]>([])
   const [query, setQuery] = useState('')
+  const [editId, setEditId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState('')
   const [body, setBody] = useState('')
@@ -46,18 +47,24 @@ export const useReplyTemplates = () => {
   )
 
   const save = async () => {
-    if (busy || !name.trim() || !body.trim()) return
+    if (busy || loading || !name.trim() || !body.trim()) return
     setBusy(true)
     setError('')
     try {
       const res = await fetch('/api/settings/templates', {
-        method: 'POST',
+        method: editId ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, body }),
+        body: JSON.stringify({ id: editId, name, body }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Could not save your reply.')
-      setTemplates((prev) => [...prev, data.template])
+      setTemplates((prev) =>
+        editId
+          ? prev.map((template) =>
+              template.id === editId ? data.template : template,
+            )
+          : [...prev, data.template],
+      )
       setCreating(false)
       setName('')
       setBody('')
@@ -94,7 +101,25 @@ export const useReplyTemplates = () => {
     query,
     setQuery,
     creating,
-    setCreating,
+    startCreate: () => {
+      setEditId(null)
+      setName('')
+      setBody('')
+      setError('')
+      setCreating(true)
+    },
+    cancelEdit: () => {
+      setCreating(false)
+      setError('')
+    },
+    editTemplate: (template: ReplyTemplate & { custom: boolean }) => {
+      setEditId(template.custom ? template.id : null)
+      setName(template.name)
+      setBody(template.body)
+      setError('')
+      setCreating(true)
+    },
+    editing: editId !== null,
     name,
     setName,
     body,

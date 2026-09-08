@@ -19,6 +19,7 @@ KEYS = Path('/var/lib/maddy/dkim_keys')
 MADDY = '/usr/local/bin/maddy'
 SYSTEMCTL = '/usr/bin/systemctl'
 RUNUSER = '/usr/sbin/runuser'
+FILTER = Path('/usr/local/libexec/jmail-imap-filter')
 DOMAIN = re.compile(r'(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$')
 EMAIL = re.compile(r'[a-zA-Z0-9._%+\-]+@[^@]+$')
 
@@ -126,12 +127,38 @@ def forwarding_config(config):
     return config[:match.start()] + replacement + config[match.end():]
 
 
+def filter_config(config, enabled):
+    snippet = ('    # jmail-imap-filter-start\n'
+               '    imap_filter {\n'
+               '        command /usr/local/libexec/jmail-imap-filter {account_name}\n'
+               '    }\n'
+               '    # jmail-imap-filter-end\n')
+    if '# jmail-imap-filter-start' in config:
+        if config.count(snippet) != 1:
+            raise ValueError('Managed filter configuration changed outside JMail')
+        return config if enabled else config.replace(snippet, '')
+    if not enabled:
+        return config
+    if re.search(r'^\s*imap_filter\b', config, re.M):
+        raise ValueError('An existing custom IMAP filter must be reviewed before enabling JMail filters')
+    if not FILTER.is_file():
+        raise ValueError('Run the updated server administration installer first')
+    pattern = r'^(storage.imapsql local_mailboxes\s*\{[ \t]*\n)'
+    if len(re.findall(pattern, config, re.M)) != 1:
+        raise ValueError('Expected the standard local_mailboxes storage block')
+    return re.sub(pattern, lambda match: match.group(1) + snippet, config, count=1, flags=re.M)
+
+
 def prepare(request, accounts):
     config, state, revision = read_state()
     if request.get('revision') != revision:
         raise ValueError('Configuration changed. Refresh and preview again.')
     updated = config
-    if request.get('kind') == 'domain':
+    if request.get('kind') == 'filters':
+        if type(request.get('enabled')) is not bool:
+            raise ValueError('Choose whether to enable filters')
+        updated = filter_config(config, request['enabled'])
+    elif request.get('kind') == 'domain':
         record = validate_record(request.get('domain'))
         original = request.get('original')
         existing = next((d for d in state['domains'] if d['name'] == original), None)
@@ -152,7 +179,7 @@ def prepare(request, accounts):
         updated = signing(updated, state['domains'])
     elif request.get('kind') == 'forwarding':
         source = email(request.get('source'))
-        if source not in accounts:
+        if source not in accounts and request.get('destination'):
             raise ValueError('Forwarding source must be an existing mailbox')
         state['forwarding'] = [f for f in state['forwarding'] if f['source'] != source]
         if request.get('destination'):
@@ -259,7 +286,8 @@ def status():
     except ValueError:
         active = False
     return {**state, 'domains': records, 'revision': revision, 'active': active,
-            'forwardingReady': '# jmail-forwarding' in config}
+            'forwardingReady': '# jmail-forwarding' in config,
+            'filtersReady': '# jmail-imap-filter-start' in config and FILTER.is_file()}
 
 
 def main():
@@ -272,6 +300,22 @@ def main():
         action = request.get('action')
         if action == 'status':
             return status()
+        if action == 'logs':
+            query = request.get('messageId', '')
+            if not isinstance(query, str) or (query and not re.fullmatch(r'[a-zA-Z0-9@._<>-]{1,100}', query)):
+                raise ValueError('Invalid message ID')
+            raw = command(['/usr/bin/journalctl', '-u', 'maddy', '-n', '300', '--no-pager', '--output=json'])
+            entries = []
+            for line in raw.splitlines():
+                try:
+                    item = json.loads(line)
+                    text = str(item.get('MESSAGE', ''))
+                    if query and query.lower() not in text.lower():
+                        continue
+                    entries.append({'message': text[:4000], 'timestamp': item.get('__REALTIME_TIMESTAMP', '')})
+                except (ValueError, TypeError):
+                    continue
+            return {'entries': list(reversed(entries)), 'limit': 300}
         if action not in ['preview', 'apply']:
             raise ValueError('Unknown helper action')
         accounts = command([RUNUSER, '-u', 'maddy', '--', MADDY, '--config', str(CONFIG), 'imap-acct', 'list']).splitlines()

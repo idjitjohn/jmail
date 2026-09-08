@@ -1,0 +1,192 @@
+@mixin control {
+  padding: 0.65em 0.85em;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 0.5em;
+  background: var(--color-bg-default);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.85em;
+}
+@mixin button {
+  @include control;
+  cursor: pointer;
+  &:hover {
+    background: var(--color-bg-secondary);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  &.primary {
+    color: white;
+    background: var(--color-primary);
+  }
+}
+.WorkspacePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  .tabs {
+    display: flex;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    flex-shrink: 0;
+    gap: 0.5em;
+    border-bottom: 1px solid var(--color-border-muted);
+    padding-bottom: 1em;
+    button {
+      @include button;
+      flex-shrink: 0;
+      &.active {
+        color: var(--color-primary);
+        background: var(--color-mail-selected);
+      }
+    }
+  }
+  .error {
+    padding: 0.8em;
+    border-radius: 0.5em;
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+    font-size: 0.85em;
+  }
+  .notice {
+    padding: 0.8em;
+    border-radius: 0.5em;
+    background: var(--color-success-light);
+    color: var(--color-text);
+    font-size: 0.85em;
+  }
+  .confirmation {
+    padding: 1em;
+    background: var(--color-warning-light);
+    border-radius: 0.6em;
+    p {
+      margin-bottom: 0.75em;
+    }
+    button {
+      @include button;
+      margin-right: 0.5em;
+    }
+  }
+  .empty {
+    padding: 2em 1em;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 0.9em;
+  }
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2em;
+    .intro {
+      h3 {
+        font-size: 1.4em;
+        font-weight: 650;
+        letter-spacing: -0.025em;
+      }
+      p {
+        font-size: 0.85em;
+        color: var(--color-text-secondary);
+        margin-top: 0.4em;
+      }
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5em;
+      input {
+        @include control;
+        flex: 1;
+        min-width: 12em;
+      }
+      button {
+        @include button;
+      }
+      .file-input {
+        display: none;
+      }
+    }
+    .editor {
+      padding: 1.2em;
+      background: var(--color-bg-secondary);
+      border-radius: 0.75em;
+      h4 {
+        font-weight: 600;
+        margin-bottom: 0.8em;
+      }
+      fieldset {
+        border: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12em, 1fr));
+        gap: 0.75em;
+        margin-bottom: 1em;
+        label {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4em;
+          font-size: 0.85em;
+          input {
+            @include control;
+            width: 100%;
+          }
+        }
+      }
+      button {
+        @include button;
+        margin-right: 0.5em;
+      }
+    }
+    .items {
+      .item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1em;
+        padding: 1em 0;
+        border-bottom: 1px solid var(--color-border-muted);
+        .details {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25em;
+          overflow-wrap: anywhere;
+          strong {
+            font-size: 0.95em;
+          }
+          span {
+            font-size: 0.8em;
+            color: var(--color-text-secondary);
+          }
+          .error {
+            font-size: 0.8em;
+            color: var(--color-danger);
+          }
+        }
+        .item-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4em;
+          flex-shrink: 0;
+          button {
+            @include button;
+          }
+        }
+      }
+    }
+  }
+  @media (max-width: 40em) {
+    .section {
+      .items {
+        .item {
+          align-items: flex-start;
+          flex-direction: column;
+          .item-actions {
+            width: 100%;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,8 @@
 'use client'
 
 import Avatar from '../Avatar'
+import LaterDialog from '../LaterDialog'
+import AttachmentPreview from '../AttachmentPreview'
 import Spinner from '../Spinner'
 import Toolbar from '../Toolbar'
 import { useMailViewer } from './useMailViewer'
@@ -10,19 +12,22 @@ import {
   formatAddress,
   formatBytes,
 } from '@/lib/format'
+import type { ComposeState } from '../AppLayout/types'
 import type { MailThread, MailAttachment } from '@/lib/types'
 import './MailViewer.scss'
 
 type Props = {
+  userEmail?: string
   thread: MailThread | null
   folder: string
-  onReply: (data: { to: string; subject: string; inReplyTo?: string }) => void
+  onReply: (data: ComposeState) => void
   onDelete: () => void
   onUpdate?: () => void
   onMobileBack?: () => void
 }
 
 const MailViewer = ({
+  userEmail,
   thread,
   folder,
   onReply,
@@ -31,6 +36,12 @@ const MailViewer = ({
   onUpdate,
 }: Props) => {
   const {
+    laterMode,
+    setLaterMode,
+    latest,
+    laterSaved,
+    previewFile,
+    setPreviewFile,
     expanded,
     fullMessages,
     loading,
@@ -38,7 +49,10 @@ const MailViewer = ({
     toggleExpand,
     toolbarActions,
     actionError,
-  } = useMailViewer(thread, folder, onReply, onDelete, onUpdate)
+    composeMessage,
+    showImages,
+    busy,
+  } = useMailViewer(thread, folder, onReply, onDelete, onUpdate, userEmail)
 
   if (!thread) {
     return (
@@ -80,6 +94,20 @@ const MailViewer = ({
         </button>
       </div>
 
+      {laterMode && latest && (
+        <LaterDialog
+          message={latest}
+          mode={laterMode}
+          onClose={() => setLaterMode(null)}
+          onSaved={laterSaved}
+        />
+      )}
+      {previewFile && (
+        <AttachmentPreview
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
       <Toolbar actions={toolbarActions} />
       {actionError && (
         <p className="action-error" role="alert">
@@ -154,6 +182,20 @@ const MailViewer = ({
                           )}
                         </div>
 
+                        {full?.remoteImagesBlocked && (
+                          <div className="image-notice">
+                            <span>
+                              Remote images are hidden to protect your privacy.
+                            </span>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => showImages(full)}
+                            >
+                              Show images
+                            </button>
+                          </div>
+                        )}
                         <div className="item-content">
                           {full ? (
                             full.html ? (
@@ -196,6 +238,19 @@ const MailViewer = ({
                                       {formatBytes(att.size)}
                                     </span>
                                   </a>
+                                  <button
+                                    type="button"
+                                    className="preview-attachment"
+                                    onClick={() =>
+                                      setPreviewFile({
+                                        ...att,
+                                        uid: msg.uid,
+                                        folder: msg.folder,
+                                      })
+                                    }
+                                  >
+                                    Preview
+                                  </button>
                                 </li>
                               ))}
                             </ul>
@@ -203,27 +258,41 @@ const MailViewer = ({
                         )}
 
                         <div className="item-actions">
+                          <a
+                            href={`/api/messages/${msg.uid}/source?folder=${encodeURIComponent(msg.folder)}`}
+                            download
+                          >
+                            Export .eml
+                          </a>
+                          <button type="button" onClick={() => window.print()}>
+                            Print
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy || !full}
+                            onClick={() => composeMessage(full || msg, 'all')}
+                          >
+                            Reply all
+                          </button>
                           <button
                             className="reply-btn"
                             type="button"
+                            disabled={busy || !full}
                             onClick={() =>
-                              onReply({
-                                to: msg.from.address,
-                                subject: `Re: ${thread.subject}`,
-                                inReplyTo: msg.messageId,
-                              })
+                              composeMessage(
+                                full || msg,
+                                full?.isDraft ? 'draft' : 'reply',
+                              )
                             }
                           >
-                            Reply
+                            {full?.isDraft ? 'Edit draft' : 'Reply'}
                           </button>
                           <button
                             className="forward-btn"
                             type="button"
+                            disabled={busy || !full}
                             onClick={() =>
-                              onReply({
-                                to: '',
-                                subject: `Fwd: ${thread.subject}`,
-                              })
+                              composeMessage(full || msg, 'forward')
                             }
                           >
                             Forward

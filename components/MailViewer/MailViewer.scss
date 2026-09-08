@@ -446,3 +446,83 @@
     }
   }
 }
+
+.MailViewer {
+  .body {
+    .thread-messages {
+      .thread-item {
+        .item-body {
+          .image-notice {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75em;
+            padding: 0.8em;
+            margin-bottom: 1em;
+            border: 1px solid var(--color-border-muted);
+            border-radius: 0.6em;
+            font-size: 0.8em;
+            button {
+              color: var(--color-primary);
+              text-decoration: underline;
+              cursor: pointer;
+            }
+          }
+          .item-actions {
+            flex-wrap: wrap;
+            a,
+            button {
+              font-size: 0.85em;
+              cursor: pointer;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+@media print {
+  .Sidebar,
+  .MailList,
+  .Toolbar,
+  .resize-handle,
+  .mobile-nav,
+  .item-actions,
+  .ComposeModal {
+    display: none !important;
+  }
+  .AppLayout,
+  .MailViewer,
+  .MailViewer .body {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+  .MailViewer .body .thread-messages .thread-item {
+    break-inside: avoid;
+  }
+}
+
+.MailViewer {
+  .body {
+    .thread-messages {
+      .thread-item {
+        .item-body {
+          .item-attachments {
+            .attachments-list {
+              .attachment-chip {
+                .preview-attachment {
+                  font-size: 0.75em;
+                  color: var(--color-primary);
+                  padding: 0.5em;
+                  cursor: pointer;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

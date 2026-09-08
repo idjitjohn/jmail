@@ -17,9 +17,27 @@ export async function PUT(req: NextRequest) {
   const session = await getSession()
   if (!session) return unauthorized()
 
-  const { filters } = await req.json() as { filters: SieveFilter[] }
+  const { filters } = (await req.json()) as { filters: SieveFilter[] }
 
-  if (!Array.isArray(filters)) {
+  if (
+    !Array.isArray(filters) ||
+    filters.length > 100 ||
+    filters.some(
+      (filter) =>
+        !filter ||
+        typeof filter.id !== 'string' ||
+        !['from', 'to', 'subject'].includes(filter.field) ||
+        filter.action !== 'move' ||
+        typeof filter.enabled !== 'boolean' ||
+        typeof filter.contains !== 'string' ||
+        !filter.contains.trim() ||
+        filter.contains.length > 500 ||
+        typeof filter.destination !== 'string' ||
+        !filter.destination.trim() ||
+        filter.destination.length > 160 ||
+        /[\x00-\x1f\x7f]/.test(filter.destination),
+    )
+  ) {
     return NextResponse.json({ error: 'Invalid filters' }, { status: 400 })
   }
 

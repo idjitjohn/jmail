@@ -25,6 +25,21 @@ const MailList = ({
   onRefresh,
 }: Props) => {
   const {
+    scope,
+    setScope,
+    advancedOpen,
+    setAdvancedOpen,
+    fields,
+    setFields,
+    selected,
+    selectionMode,
+    setSelectionMode,
+    selectedCount,
+    bulkBusy,
+    bulkAction,
+    destinations,
+    toggleSelection,
+    selectAll,
     threads,
     loading,
     error,
@@ -41,6 +56,7 @@ const MailList = ({
     markAllRead,
     markingRead,
     handleSwipeDelete,
+    shortcutsEnabled,
     folderLabel,
     emptyTitle,
     emptyDescription,
@@ -84,7 +100,9 @@ const MailList = ({
           ref={searchRef}
           className="search-input"
           type="search"
-          placeholder="Search this folder"
+          placeholder={
+            scope === 'all' ? 'Search all folders' : 'Search this folder'
+          }
           aria-label="Search this folder"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -92,8 +110,111 @@ const MailList = ({
             if (e.key === 'Escape') clearSearch()
           }}
         />
-        <kbd>/</kbd>
+        {shortcutsEnabled && <kbd>/</kbd>}
       </div>
+      <div className="search-options">
+        <select
+          aria-label="Search in"
+          value={scope}
+          onChange={(event) => setScope(event.target.value)}
+        >
+          <option value="folder">This folder</option>
+          <option value="all">All folders</option>
+        </select>
+        <button
+          type="button"
+          aria-expanded={advancedOpen}
+          onClick={() => setAdvancedOpen(!advancedOpen)}
+        >
+          Search options
+        </button>
+        <button
+          type="button"
+          aria-pressed={selectionMode}
+          onClick={() => setSelectionMode(!selectionMode)}
+        >
+          {selectionMode ? 'Done' : 'Select'}
+        </button>
+      </div>
+      {advancedOpen && (
+        <div className="advanced-search">
+          {(['from', 'to', 'subject', 'after', 'before'] as const).map(
+            (field) => (
+              <label key={field}>
+                {field === 'after'
+                  ? 'On or after'
+                  : field === 'before'
+                    ? 'Before'
+                    : field === 'from'
+                      ? 'From'
+                      : field === 'to'
+                        ? 'To'
+                        : 'Subject'}
+                <input
+                  type={
+                    field === 'after' || field === 'before' ? 'date' : 'text'
+                  }
+                  value={fields[field]}
+                  onChange={(event) =>
+                    setFields((previous) => ({
+                      ...previous,
+                      [field]: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            ),
+          )}
+          <button type="button" onClick={clearSearch}>
+            Clear search
+          </button>
+        </div>
+      )}
+      {selectionMode && (
+        <div className="bulk-actions" aria-label="Selected messages">
+          <button
+            type="button"
+            onClick={selectAll}
+            disabled={loading || bulkBusy}
+          >
+            Select visible
+          </button>
+          <span>{selectedCount} selected</span>
+          {(['archive', 'trash', 'read', 'unread', 'star'] as const).map(
+            (action) => (
+              <button
+                type="button"
+                key={action}
+                disabled={!selectedCount || bulkBusy}
+                onClick={() => bulkAction(action)}
+              >
+                {action === 'trash'
+                  ? 'Move to Trash'
+                  : action === 'read'
+                    ? 'Mark read'
+                    : action === 'unread'
+                      ? 'Mark unread'
+                      : action === 'star'
+                        ? 'Star'
+                        : 'Archive'}
+              </button>
+            ),
+          )}
+          <select
+            aria-label="Move selected messages to folder"
+            value=""
+            disabled={!selectedCount || bulkBusy}
+            onChange={(event) => bulkAction('move', event.target.value)}
+          >
+            <option value="">Move to…</option>
+            {destinations.map((folder) => (
+              <option key={folder.path} value={folder.path}>
+                {folder.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="filters" role="group" aria-label="Filter messages">
         <button
           type="button"
@@ -150,13 +271,24 @@ const MailList = ({
         ) : (
           <>
             {threads.map((thread) => (
-              <MailItem
-                key={thread.id}
-                thread={thread}
-                isSelected={selectedThread?.id === thread.id}
-                onClick={onSelect}
-                onSwipeDelete={handleSwipeDelete}
-              />
+              <div className="message-row" key={thread.id}>
+                {selectionMode && (
+                  <input
+                    className="selection"
+                    type="checkbox"
+                    aria-label={`Select ${thread.subject || 'message'}`}
+                    checked={selected.has(thread.id)}
+                    disabled={bulkBusy}
+                    onChange={() => toggleSelection(thread.id)}
+                  />
+                )}
+                <MailItem
+                  thread={thread}
+                  isSelected={selectedThread?.id === thread.id}
+                  onClick={onSelect}
+                  onSwipeDelete={selectionMode ? undefined : handleSwipeDelete}
+                />
+              </div>
             ))}
             {hasMore && (
               <div className="load-more">

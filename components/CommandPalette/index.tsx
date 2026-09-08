@@ -8,6 +8,7 @@ type Props = { commands: Command[]; onClose: () => void }
 
 const CommandPalette = ({ commands, onClose }: Props) => {
   const {
+    shortcutsEnabled,
     dialogRef,
     query,
     setQuery,
@@ -90,7 +91,7 @@ const CommandPalette = ({ commands, onClose }: Props) => {
           <span>
             <kbd>↵</kbd> to choose
           </span>
-          <span>J / K to move through mail</span>
+          {shortcutsEnabled && <span>J / K to move through mail</span>}
         </div>
       </div>
     </dialog>

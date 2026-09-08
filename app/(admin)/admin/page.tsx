@@ -1,29 +1,34 @@
 import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
-import { verifySession } from '@/lib/auth'
+import { getAdminSession } from '@/lib/admin'
 import { getManagedDomains } from '@/lib/maddy-admin'
 import { listAccounts } from '@/lib/maddy'
 import AdminLayout from '@/components/AdminLayout'
-import AdminDashboard from '@/components/AdminDashboard'
+import AdminAccounts from '@/components/AdminAccounts'
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
-
-export default async function AdminDashboardPage() {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('session')?.value
-  const session = token ? await verifySession(token) : null
-
-  if (!session || session.email !== ADMIN_EMAIL) redirect('/')
-
+const AdminPage = async () => {
+  if (!(await getAdminSession())) redirect('/')
   let accounts: string[] = []
-  try { accounts = await listAccounts() } catch { /* server not reachable */ }
-
   let domains: string[] = []
-  try { domains = await getManagedDomains() } catch { domains = [...new Set(accounts.map(email => email.split('@')[1]))] }
-
+  let error = ''
+  try {
+    accounts = await listAccounts()
+  } catch {
+    error =
+      'Mailboxes could not be loaded. Check the server connection and try again.'
+  }
+  try {
+    domains = await getManagedDomains()
+  } catch {
+    domains = [...new Set(accounts.map((email) => email.split('@')[1]))]
+  }
   return (
-    <AdminLayout title="Dashboard">
-      <AdminDashboard domains={domains} accounts={accounts} />
+    <AdminLayout title="Mailboxes">
+      <AdminAccounts
+        initialAccounts={accounts}
+        domains={domains}
+        initialError={error}
+      />
     </AdminLayout>
   )
 }
+export default AdminPage

@@ -1,6 +1,7 @@
 'use client'
 
 import Input from '../Input'
+import RecipientInput from '../RecipientInput'
 import Button from '../Button'
 import RichEditor from '../RichEditor'
 import SignaturePicker from '../SignaturePicker'
@@ -15,6 +16,11 @@ type Props = {
   userEmail: string
   onSent?: (message: string) => void
   onClose: () => void
+  initialCc?: string
+  initialBcc?: string
+  initialAttachments?: File[]
+  draftUid?: number
+  references?: string[]
   initialTo?: string
   initialSubject?: string
   initialBody?: string
@@ -30,12 +36,24 @@ const ComposeModal = ({
   initialSubject = '',
   initialBody = '',
   inReplyTo,
+  initialCc,
+  initialBcc,
+  initialAttachments,
+  draftUid,
+  references,
 }: Props) => {
   const {
     to,
     setTo,
     cc,
     setCc,
+    bcc,
+    setBcc,
+    showBcc,
+    setShowBcc,
+    saving,
+    confirmDiscard,
+    setConfirmDiscard,
     subject,
     setSubject,
     bodyHtml,
@@ -87,6 +105,11 @@ const ComposeModal = ({
     subject: initialSubject,
     body: initialBody,
     inReplyTo,
+    cc: initialCc,
+    bcc: initialBcc,
+    attachments: initialAttachments,
+    draftUid,
+    references,
   })
 
   if (!isOpen) return null
@@ -128,12 +151,10 @@ const ComposeModal = ({
 
           <div className="fields" inert={busy}>
             <div className="field-row">
-              <Input
+              <RecipientInput
                 label="To"
-                type="email"
-                placeholder="recipient@example.com"
                 value={to}
-                onChange={(e) => setTo(e.target.value)}
+                onChange={setTo}
                 autoFocus
               />
               {!showCc && (
@@ -145,16 +166,22 @@ const ComposeModal = ({
                   Cc
                 </button>
               )}
+              {!showBcc && (
+                <button
+                  className="cc-toggle"
+                  type="button"
+                  onClick={() => setShowBcc(true)}
+                >
+                  Bcc
+                </button>
+              )}
             </div>
 
             {showCc && (
-              <Input
-                label="Cc"
-                type="text"
-                placeholder="cc@example.com"
-                value={cc}
-                onChange={(e) => setCc(e.target.value)}
-              />
+              <RecipientInput label="Cc" value={cc} onChange={setCc} />
+            )}
+            {showBcc && (
+              <RecipientInput label="Bcc" value={bcc} onChange={setBcc} />
             )}
 
             <Input
@@ -287,6 +314,19 @@ const ComposeModal = ({
               </button>
             </div>
           )}
+          {confirmDiscard && (
+            <div className="attachment-warning" role="alert">
+              <p>Discard this draft and its attachments?</p>
+              <div className="warning-actions">
+                <button type="button" disabled={saving} onClick={discardDraft}>
+                  Discard draft
+                </button>
+                <button type="button" onClick={() => setConfirmDiscard(false)}>
+                  Keep editing
+                </button>
+              </div>
+            </div>
+          )}
           {error && (
             <p className="send-error" role="alert">
               {error}
@@ -294,9 +334,6 @@ const ComposeModal = ({
           )}
           <div className="draft-status" role="status">
             {draftStatus}
-            {attachments.length > 0
-              ? ' · Reattach files if you close this draft'
-              : ''}
           </div>
 
           <div className="panel-footer" inert={busy}>
@@ -306,7 +343,7 @@ const ComposeModal = ({
                 className="discard-btn"
                 aria-label="Discard draft"
                 title="Discard draft"
-                onClick={discardDraft}
+                onClick={() => setConfirmDiscard(true)}
               />
               <button
                 type="button"
@@ -329,7 +366,11 @@ const ComposeModal = ({
               />
             </div>
             <div className="footer-actions">
-              <Button variant="secondary" onClick={handleClose}>
+              <Button
+                variant="secondary"
+                loading={saving}
+                onClick={handleClose}
+              >
                 Save & close
               </Button>
               <button

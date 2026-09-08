@@ -20,10 +20,13 @@ export type ServerState = {
   primaryDomain: string
   active: boolean
   forwardingReady: boolean
+  filtersReady?: boolean
+  lastWorkerRun?: string
 }
 
 export type Change = {
-  kind: 'domain' | 'forwarding'
+  kind: 'domain' | 'forwarding' | 'filters'
+  enabled?: boolean
   original?: string
   domain?: Domain
   source?: string

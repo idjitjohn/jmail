@@ -15,16 +15,6 @@ export interface SignatureTemplate {
   build: (f: Record<string, string>) => string
 }
 
-// Replace {{key}} — empty string if missing
-function r(tpl: string, f: Record<string, string>): string {
-  return tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => f[k] ?? '')
-}
-
-// Only render a block if at least one of the keys has a value
-function when(f: Record<string, string>, keys: string[], html: string): string {
-  return keys.some(k => f[k]?.trim()) ? r(html, f) : ''
-}
-
 const SOCIAL_ICON = {
   linkedin: `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2zm2-3a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>`,
   twitter: `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,

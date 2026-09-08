@@ -1,9 +1,9 @@
-export interface MailAddress {
+export type MailAddress = {
   name?: string
   address: string
 }
 
-export interface MailAttachment {
+export type MailAttachment = {
   filename: string
   contentType: string
   size: number
@@ -12,10 +12,11 @@ export interface MailAttachment {
   inline?: boolean
 }
 
-export interface MailMessage {
+export type MailMessage = {
   uid: number
   messageId?: string
   inReplyTo?: string
+  references?: string[]
   subject: string
   from: MailAddress
   to: MailAddress[]
@@ -23,6 +24,8 @@ export interface MailMessage {
   bcc?: MailAddress[]
   date: string
   preview?: string
+  remoteImagesBlocked?: boolean
+  isDraft?: boolean
   html?: string
   text?: string
   isRead: boolean
@@ -33,16 +36,16 @@ export interface MailMessage {
   size?: number
 }
 
-export interface MailThread {
-  id: string              // normalized subject key
-  subject: string         // display subject (Re:/Fwd: stripped)
+export type MailThread = {
+  id: string // normalized subject key
+  subject: string // display subject (Re:/Fwd: stripped)
   messages: MailMessage[] // oldest → newest
   latest: MailMessage
   unreadCount: number
   participants: MailAddress[]
 }
 
-export interface MailFolder {
+export type MailFolder = {
   name: string
   path: string
   unread: number
@@ -50,7 +53,7 @@ export interface MailFolder {
   specialUse?: string
 }
 
-export interface ComposeData {
+export type ComposeData = {
   to: string
   cc: string
   subject: string
@@ -59,13 +62,13 @@ export interface ComposeData {
   inReplyTo?: string
 }
 
-export interface UserSession {
+export type UserSession = {
   email: string
   domain: string
   name?: string
 }
 
-export interface MailListState {
+export type MailListState = {
   messages: MailMessage[]
   loading: boolean
   error: string | null
@@ -75,7 +78,7 @@ export interface MailListState {
   selectedUid: number | null
 }
 
-export interface FolderCounts {
+export type FolderCounts = {
   [path: string]: number
 }
 

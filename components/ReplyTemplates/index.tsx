@@ -3,15 +3,22 @@
 import { useReplyTemplates } from './useReplyTemplates'
 import './ReplyTemplates.scss'
 
-type Props = { onInsert: (body: string) => void; onClose: () => void }
+type Props = {
+  onInsert?: (body: string) => void
+  onClose?: () => void
+  mode?: 'insert' | 'manage'
+}
 
-const ReplyTemplates = ({ onInsert, onClose }: Props) => {
+const ReplyTemplates = ({ onInsert, onClose, mode = 'insert' }: Props) => {
   const {
     filtered,
     query,
     setQuery,
     creating,
-    setCreating,
+    startCreate,
+    cancelEdit,
+    editTemplate,
+    editing,
     name,
     setName,
     body,
@@ -30,17 +37,27 @@ const ReplyTemplates = ({ onInsert, onClose }: Props) => {
     <section className="ReplyTemplates" aria-label="Reply templates">
       <div className="heading">
         <div className="intro">
-          <h3>A few words, ready to go</h3>
-          <p>Insert a reply, then make it yours.</p>
+          <h3>
+            {mode === 'manage'
+              ? 'Your reply library'
+              : 'A few words, ready to go'}
+          </h3>
+          <p>
+            {mode === 'manage'
+              ? 'Edit a saved reply or make a starter template your own.'
+              : 'Insert a reply, then make it yours.'}
+          </p>
         </div>
-        <button
-          type="button"
-          className="close"
-          aria-label="Close templates"
-          onClick={onClose}
-        >
-          ×
-        </button>
+        {onClose && (
+          <button
+            type="button"
+            className="close"
+            aria-label="Close templates"
+            onClick={onClose}
+          >
+            ×
+          </button>
+        )}
       </div>
       {error && (
         <div className="error" role="alert">
@@ -73,11 +90,7 @@ const ReplyTemplates = ({ onInsert, onClose }: Props) => {
             />
           </label>
           <div className="actions">
-            <button
-              type="button"
-              onClick={() => setCreating(false)}
-              disabled={busy}
-            >
+            <button type="button" onClick={cancelEdit} disabled={busy}>
               Cancel
             </button>
             <button
@@ -86,7 +99,7 @@ const ReplyTemplates = ({ onInsert, onClose }: Props) => {
               onClick={save}
               disabled={busy || !name.trim() || !body.trim()}
             >
-              {busy ? 'Saving…' : 'Save template'}
+              {busy ? 'Saving…' : editing ? 'Save changes' : 'Save template'}
             </button>
           </div>
         </div>
@@ -100,7 +113,11 @@ const ReplyTemplates = ({ onInsert, onClose }: Props) => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <button type="button" onClick={() => setCreating(true)}>
+            <button
+              type="button"
+              disabled={loading || busy}
+              onClick={startCreate}
+            >
               + Create
             </button>
           </div>
@@ -111,7 +128,17 @@ const ReplyTemplates = ({ onInsert, onClose }: Props) => {
                 <button
                   className="insert"
                   type="button"
-                  onClick={() => onInsert(template.body)}
+                  disabled={mode === 'manage' && (loading || busy)}
+                  aria-label={
+                    mode === 'manage'
+                      ? `${template.custom ? 'Edit' : 'Customize'} ${template.name}`
+                      : undefined
+                  }
+                  onClick={() =>
+                    mode === 'manage'
+                      ? editTemplate(template)
+                      : onInsert?.(template.body)
+                  }
                 >
                   <strong>{template.name}</strong>
                   <span>{template.body}</span>

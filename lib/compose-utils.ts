@@ -7,7 +7,9 @@ export const mentionsAttachment = (html: string) => {
   const text = html
     .replace(/<blockquote[\s\S]*?<\/blockquote>/gi, '')
     .replace(/<[^>]+>/g, ' ')
-  return /\b(attach(?:ed|ment|ments|ing)?|enclosed)\b/i.test(text)
+  return /\b(attach(?:ed|ment|ments|ing)?|enclosed|pi[eè]ces?\s+jointes?|ci-joint(?:e|es|s)?|fichier\s+joint)\b/i.test(
+    text,
+  )
 }
 
 export const schedulePresets = (now = new Date()) => {

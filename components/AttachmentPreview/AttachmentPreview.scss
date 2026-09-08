@@ -1,0 +1,31 @@
+.AttachmentPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  .image {
+    min-height: 24em;
+    max-height: 36em;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+  }
+  iframe {
+    border: 0;
+    width: 100%;
+    height: 32em;
+  }
+  pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    max-height: 30em;
+    overflow: auto;
+    font-size: 0.85em;
+    padding: 1em;
+    background: var(--color-bg-secondary);
+  }
+  a {
+    color: var(--color-primary);
+    font-size: 0.9em;
+    overflow-wrap: anywhere;
+  }
+}

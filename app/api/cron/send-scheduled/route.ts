@@ -1,86 +1,57 @@
+import path from 'path'
+import { withFileLock, writeJson } from '@/lib/file-store'
 import { NextRequest, NextResponse } from 'next/server'
-import MailComposer from 'nodemailer/lib/mail-composer'
-import { getDue, removeScheduled } from '@/lib/scheduled'
-import { createSmtpTransport, createImapClient } from '@/lib/mail'
-import { htmlToText } from '@/lib/format'
+import { timingSafeEqual } from 'crypto'
+import { claimDue, finishScheduled } from '@/lib/scheduled'
+import { processLater } from '@/lib/mail-later'
+import { deliverMessage } from '@/lib/outgoing'
 
-// Protect with CRON_SECRET env var
-// Call via: GET /api/cron/send-scheduled?secret=<CRON_SECRET>
-// Add to crontab: */5 * * * * curl "http://localhost:3000/api/cron/send-scheduled?secret=..."
-
-function buildRaw(opts: ConstructorParameters<typeof MailComposer>[0]): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    new MailComposer(opts).compile().build((err, buf) => err ? reject(err) : resolve(buf))
-  })
-}
-
-export async function GET(req: NextRequest) {
-  const secret = req.nextUrl.searchParams.get('secret')
-  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
+export const GET = async (req: NextRequest) => {
+  const provided =
+    req.headers.get('authorization')?.replace(/^Bearer /, '') ||
+    req.nextUrl.searchParams.get('secret') ||
+    ''
+  const expected = process.env.CRON_SECRET || ''
+  if (
+    !expected ||
+    Buffer.byteLength(provided) !== Buffer.byteLength(expected) ||
+    !timingSafeEqual(Buffer.from(provided), Buffer.from(expected))
+  )
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const due = await getDue()
-  const results: { id: string; ok: boolean; error?: string }[] = []
-
-  for (const msg of due) {
+  const due = await claimDue()
+  const results = []
+  for (const message of due) {
     try {
-      const from = msg.name
-        ? `"${msg.name}" <${msg.userEmail}>`
-        : msg.userEmail
-
-      const attachments = msg.attachments.map(a => ({
-        filename: a.filename,
-        content: Buffer.from(a.content, 'base64'),
-        contentType: a.contentType,
-        encoding: 'base64' as const,
-      }))
-
-      const fullHtml = [
-        msg.bodyHtml,
-        msg.signatureHtml ? `<div class="signature" style="margin-top:1.5em;padding-top:1em;border-top:1px solid #e5e5ea">${msg.signatureHtml}</div>` : '',
-      ].filter(Boolean).join('\n') || undefined
-
-      const mailOpts = {
-        from,
-        to: msg.to,
-        cc: msg.cc || undefined,
-        subject: msg.subject,
-        text: htmlToText(msg.bodyHtml || ''),
-        html: fullHtml,
-        attachments,
-        inReplyTo: msg.inReplyTo || undefined,
-        references: msg.inReplyTo || undefined,
-      }
-
-      const raw = await buildRaw(mailOpts)
-      const transport = createSmtpTransport(msg.userEmail, msg.userPassword)
-
-      await transport.sendMail({
-        envelope: {
-          from: msg.userEmail,
-          to: [msg.to, ...(msg.cc ? msg.cc.split(',').map(s => s.trim()) : [])],
+      const result = await deliverMessage(
+        {
+          email: message.userEmail,
+          password: message.userPassword,
+          name: message.name,
+          domain: message.userEmail.split('@')[1],
         },
-        raw,
-      })
-
-      // Append to Sent (non-fatal)
-      const imap = createImapClient(msg.userEmail, msg.userPassword)
-      try {
-        await imap.connect()
-        for (const folder of ['Sent', 'INBOX.Sent', 'Sent Messages']) {
-          try { await imap.append(folder, raw, ['\\Seen']); break } catch { /* try next */ }
-        }
-      } catch { /* non-fatal */ } finally {
-        try { await imap.logout() } catch { /* ignore */ }
-      }
-
-      await removeScheduled(msg.id)
-      results.push({ id: msg.id, ok: true })
-    } catch (e) {
-      results.push({ id: msg.id, ok: false, error: e instanceof Error ? e.message : String(e) })
+        message,
+      )
+      await finishScheduled(
+        message.id,
+        result.rejected.length
+          ? `Some recipients were rejected: ${result.rejected.join(', ')}. Other recipients may have received this message.`
+          : undefined,
+      )
+      results.push({ id: message.id, ok: !result.rejected.length })
+    } catch {
+      await finishScheduled(
+        message.id,
+        'Delivery could not be confirmed. Check Sent and the recipient before trying again.',
+      )
+      results.push({ id: message.id, ok: false })
     }
   }
-
-  return NextResponse.json({ processed: results.length, results })
+  const reminders = await processLater()
+  const heartbeat = path.resolve(
+    process.env.JMAIL_WORKER_STATUS_FILE || '/var/lib/maddy/jmail/worker.json',
+  )
+  await withFileLock(heartbeat, () =>
+    writeJson(heartbeat, { lastRun: new Date().toISOString() }),
+  )
+  return NextResponse.json({ processed: results.length, reminders, results })
 }

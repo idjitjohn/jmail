@@ -1,5 +1,6 @@
 'use client'
 
+import InboxAppearance from '../InboxAppearance'
 import { type Theme } from '@/lib/theme'
 import { useAppearanceSettings } from './useAppearanceSettings'
 import './AppearanceSettings.scss'
@@ -15,6 +16,10 @@ export default function AppearanceSettings() {
 
   return (
     <div className="AppearanceSettings">
+      <div className="heading">
+        <h1>A space that feels like you.</h1>
+        <p>Choose your light, your spacing, and a comfortable way to read.</p>
+      </div>
       <div className="settings-section">
         <h2 className="section-title">Theme</h2>
         <div className="theme-grid">
@@ -22,6 +27,7 @@ export default function AppearanceSettings() {
             <button
               key={value}
               type="button"
+              aria-pressed={theme === value}
               className={`theme-card ${theme === value ? 'active' : ''}`}
               onClick={() => handleTheme(value)}
             >
@@ -36,13 +42,12 @@ export default function AppearanceSettings() {
                 <span className="card-label">{label}</span>
                 <span className="card-desc">{desc}</span>
               </div>
-              {theme === value && (
-                <span className="check" />
-              )}
+              {theme === value && <span className="check" />}
             </button>
           ))}
         </div>
       </div>
+      <InboxAppearance />
     </div>
   )
 }

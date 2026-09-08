@@ -1,67 +1,8 @@
 .SettingsLayout {
   display: flex;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--color-bg-default);
-
-  // ── Mobile layout ────────────────────────────────────
-  @media (max-width: 768px) {
-    flex-direction: column;
-    height: 100dvh;
-    overflow: hidden;
-
-    .sidebar {
-      width: 100%;
-      min-width: unset;
-      height: auto;
-      flex-shrink: 0;
-      overflow: visible;
-      border-right: none;
-      border-bottom: 1px solid var(--color-border-muted);
-
-      .header {
-        padding: 0.625em 1em;
-        border-bottom: none;
-
-        .mobile-signout { display: flex; }
-      }
-
-      .nav {
-        flex: none;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        padding: 0 0.75em 0.625em;
-        gap: 0.25em;
-        scrollbar-width: none;
-
-        &::-webkit-scrollbar { display: none; }
-
-        .nav-item {
-          flex-shrink: 0;
-          font-size: 0.8125em;
-          padding: 0.3125em 0.75em;
-          gap: 0.3em;
-          border-radius: var(--radius-full);
-
-          .nav-icon {
-            width: 0.8125em;
-            height: 0.8125em;
-          }
-        }
-      }
-
-      // Hide desktop footer on mobile — sign out is in header
-      .footer { display: none; }
-    }
-
-    .content {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-  }
 
   // ── Desktop layout ───────────────────────────────────
   .sidebar {
@@ -105,7 +46,9 @@
           flex-shrink: 0;
         }
 
-        &:hover { color: var(--color-text); }
+        &:hover {
+          color: var(--color-text);
+        }
       }
 
       // Hidden on desktop, shown on mobile
@@ -134,7 +77,10 @@
           mask-position: center;
         }
 
-        &:hover { background: var(--color-sidebar-item-hover); color: var(--color-text); }
+        &:hover {
+          background: var(--color-sidebar-item-hover);
+          color: var(--color-text);
+        }
       }
     }
 
@@ -168,11 +114,24 @@
           flex-shrink: 0;
         }
 
-        &[data-icon="person"] .nav-icon { mask-image: url('/icons/person.svg'); }
-        &[data-icon="appearance"] .nav-icon { mask-image: url('/icons/appearance.svg'); }
-        &[data-icon="gear"] .nav-icon { mask-image: url('/icons/gear.svg'); }
-        &[data-icon="filter"] .nav-icon { mask-image: url('/icons/filter.svg'); }
-        &[data-icon="dashboard"] .nav-icon { mask-image: url('/icons/dashboard.svg'); }
+        &[data-icon='person'] .nav-icon {
+          mask-image: url('/icons/person.svg');
+        }
+        &[data-icon='appearance'] .nav-icon {
+          mask-image: url('/icons/appearance.svg');
+        }
+        &[data-icon='gear'] .nav-icon {
+          mask-image: url('/icons/gear.svg');
+        }
+        &[data-icon='file'] .nav-icon {
+          mask-image: url('/icons/file.svg');
+        }
+        &[data-icon='filter'] .nav-icon {
+          mask-image: url('/icons/filter.svg');
+        }
+        &[data-icon='dashboard'] .nav-icon {
+          mask-image: url('/icons/dashboard.svg');
+        }
 
         &:hover {
           background: var(--color-sidebar-item-hover);
@@ -245,5 +204,69 @@
     flex: 1;
     overflow-y: auto;
     background: var(--color-bg-secondary);
+  }
+  // ── Mobile layout ────────────────────────────────────
+  @media (max-width: 48em) {
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+
+    .sidebar {
+      width: 100%;
+      min-width: unset;
+      height: auto;
+      flex-shrink: 0;
+      overflow: visible;
+      border-right: none;
+      border-bottom: 1px solid var(--color-border-muted);
+
+      .header {
+        padding: 0.625em 1em;
+        border-bottom: none;
+
+        .mobile-signout {
+          display: flex;
+        }
+      }
+
+      .nav {
+        flex: none;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 0 0.75em 0.625em;
+        gap: 0.25em;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+          display: none;
+        }
+
+        .nav-item {
+          flex-shrink: 0;
+          font-size: 0.8125em;
+          padding: 0.3125em 0.75em;
+          gap: 0.3em;
+          border-radius: 2em;
+
+          .nav-icon {
+            width: 0.8125em;
+            height: 0.8125em;
+          }
+        }
+      }
+
+      // Hide desktop footer on mobile — sign out is in header
+      .footer {
+        display: none;
+      }
+    }
+
+    .content {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
   }
 }

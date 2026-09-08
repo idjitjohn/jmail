@@ -1,11 +1,25 @@
 import { readFile, writeFile, mkdir, rename } from 'fs/promises'
+import { withFileLock } from './file-store'
 import { randomUUID } from 'crypto'
 import type { ReplyTemplate } from './reply-templates'
 import path from 'path'
+import type { Contact } from './contacts'
+import type { MailPreferences } from './preferences'
 
-const DATA_DIR = '/var/lib/maddy/userdata'
+const DATA_DIR = path.resolve(
+  process.env.JMAIL_USERDATA_DIR || '/var/lib/maddy/userdata',
+)
 
 export type UserData = {
+  contacts?: Contact[]
+  diagnosticHistory?: {
+    id: string
+    at: string
+    mode: string
+    target: string
+    result: import('@/components/MailServerAdmin/types').DiagnosticResult
+  }[]
+  preferences?: MailPreferences
   name?: string
   signature?: string
   replyTemplates?: ReplyTemplate[]
@@ -40,14 +54,16 @@ export const updateUserData = async (
     .catch(() => {})
     .then(async () => {
       await mkdir(DATA_DIR, { recursive: true })
-      const current = await getUserData(email)
-      const destination = getDataPath(email)
-      const temporary = `${destination}.${randomUUID()}.tmp`
-      await writeFile(temporary, JSON.stringify(update(current)), {
-        encoding: 'utf-8',
-        mode: 0o600,
+      await withFileLock(getDataPath(email), async () => {
+        const current = await getUserData(email)
+        const destination = getDataPath(email)
+        const temporary = `${destination}.${randomUUID()}.tmp`
+        await writeFile(temporary, JSON.stringify(update(current)), {
+          encoding: 'utf-8',
+          mode: 0o600,
+        })
+        await rename(temporary, destination)
       })
-      await rename(temporary, destination)
     })
   pendingWrites.set(email, next)
   try {

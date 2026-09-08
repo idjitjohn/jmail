@@ -1,7 +1,24 @@
 .AppearanceSettings {
   padding: 2.5em 2em;
-  max-width: 35em;
+  max-width: 44em;
   margin: 0 auto;
+
+  > .heading {
+    margin-bottom: 2em;
+    h1 {
+      color: var(--color-text);
+      font-size: 1.75em;
+      font-weight: 600;
+      line-height: 1.25;
+      letter-spacing: -0.035em;
+    }
+    p {
+      margin-top: 0.625em;
+      color: var(--color-text-secondary);
+      font-size: 0.875em;
+      line-height: 1.6;
+    }
+  }
 
   @media (max-width: 480px) {
     padding: 1.25em 1em;
@@ -44,7 +61,8 @@
     cursor: pointer;
     transition: all var(--transition-fast);
     text-align: left;
-    box-shadow: 0 0.5px 0 0 rgba(255, 255, 255, 0.06) inset,
+    box-shadow:
+      0 0.5px 0 0 rgba(255, 255, 255, 0.06) inset,
       0 1px 3px rgba(0, 0, 0, 0.2);
 
     @media (max-width: 480px) {
@@ -58,16 +76,20 @@
         aspect-ratio: 16 / 10;
       }
 
-      .card-info { flex: 1; }
+      .card-info {
+        flex: 1;
+      }
     }
 
     &:hover {
-      box-shadow: 0 0.5px 0 0 rgba(255, 255, 255, 0.06) inset,
+      box-shadow:
+        0 0.5px 0 0 rgba(255, 255, 255, 0.06) inset,
         0 2px 8px rgba(0, 0, 0, 0.3);
     }
 
     &.active {
-      box-shadow: 0 0 0 2px var(--color-primary),
+      box-shadow:
+        0 0 0 2px var(--color-primary),
         0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
@@ -112,24 +134,38 @@
       height: 0.25em;
       border-radius: 0.125em;
 
-      &.short { width: 60%; }
+      &.short {
+        width: 60%;
+      }
     }
   }
 
   .preview-light {
     background: #f2f2f7;
 
-    .preview-sidebar { background: #e5e5ea; }
-    .preview-content { background: #fff; }
-    .preview-bar { background: #c7c7cc; }
+    .preview-sidebar {
+      background: #e5e5ea;
+    }
+    .preview-content {
+      background: #fff;
+    }
+    .preview-bar {
+      background: #c7c7cc;
+    }
   }
 
   .preview-dark {
     background: #1c1c1e;
 
-    .preview-sidebar { background: #2c2c2e; }
-    .preview-content { background: #1c1c1e; }
-    .preview-bar { background: #48484a; }
+    .preview-sidebar {
+      background: #2c2c2e;
+    }
+    .preview-content {
+      background: #1c1c1e;
+    }
+    .preview-bar {
+      background: #48484a;
+    }
   }
 
   .preview-system {

@@ -196,6 +196,11 @@
       padding: 1em;
       overflow-y: auto;
       flex: 1;
+      min-height: 0;
+
+      > .RichEditor {
+        flex: 1 0 auto;
+      }
 
       .writing-tools {
         display: flex;
@@ -236,7 +241,7 @@
         align-items: flex-end;
         gap: 0.5em;
 
-        > .Input {
+        > .RecipientInput {
           flex: 1;
         }
 

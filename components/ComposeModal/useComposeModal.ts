@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/drafts'
 import { getSignatures } from '@/lib/signatures'
+import { usePreferences } from '../PreferencesProvider/usePreferences'
 import { templateToHtml } from '@/lib/reply-templates'
 import {
   mentionsAttachment,
@@ -10,6 +11,8 @@ import {
   schedulePresets,
 } from '@/lib/compose-utils'
 import type { ComposeOptions } from './types'
+
+const EMPTY_REFERENCES: string[] = []
 
 export const useComposeModal = ({
   isOpen,
@@ -20,12 +23,25 @@ export const useComposeModal = ({
   subject: initialSubject = '',
   body: initialBody = '',
   inReplyTo,
+  cc: initialCc = '',
+  bcc: initialBcc = '',
+  attachments: initialAttachments = [],
+  draftUid,
+  references = EMPTY_REFERENCES,
 }: ComposeOptions) => {
+  const { preferences } = usePreferences()
   const [draft] = useState(() =>
-    !initialTo && !initialSubject && !initialBody ? loadDraft(userEmail) : null,
+    !draftUid && !initialTo && !initialSubject && !initialBody
+      ? (() => {
+          const saved = loadDraft(userEmail)
+          return saved?.draftUid ? null : saved
+        })()
+      : null,
   )
   const [to, setTo] = useState(draft?.to ?? initialTo)
-  const [cc, setCc] = useState(draft?.cc ?? '')
+  const [cc, setCc] = useState(draft?.cc ?? initialCc)
+  const [bcc, setBcc] = useState(draft?.bcc ?? initialBcc)
+  const [showBcc, setShowBcc] = useState(Boolean(draft?.bcc || initialBcc))
   const [subject, setSubject] = useState(draft?.subject ?? initialSubject)
   const [bodyHtml, setBodyHtml] = useState(draft?.bodyHtml ?? initialBody)
   const [resetToken, setResetToken] = useState(0)
@@ -38,13 +54,13 @@ export const useComposeModal = ({
           ?.html ?? null)
       : null,
   )
-  const [showCc, setShowCc] = useState(Boolean(draft?.cc))
+  const [showCc, setShowCc] = useState(Boolean(draft?.cc || initialCc))
   const [sending, setSending] = useState(false)
   const [scheduling, setScheduling] = useState(false)
   const [error, setError] = useState('')
-  const [attachments, setAttachments] = useState<File[]>([])
+  const [attachments, setAttachments] = useState<File[]>(initialAttachments)
   const [draftBanner, setDraftBanner] = useState(Boolean(draft))
-  const [draftStatus, setDraftStatus] = useState('Draft saves on this device')
+  const [draftStatus, setDraftStatus] = useState('Draft saves to your mailbox')
   const [showSchedule, setShowSchedule] = useState(false)
   const [scheduleAt, setScheduleAt] = useState('')
   const [templatesOpen, setTemplatesOpen] = useState(false)
@@ -61,35 +77,99 @@ export const useComposeModal = ({
   const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const busyRef = useRef(false)
   const skipSave = useRef(false)
+  const serverDraft = useRef<number | undefined>(draftUid ?? draft?.draftUid)
+  const saveQueue = useRef<Promise<boolean>>(Promise.resolve(true))
+  const [saving, setSaving] = useState(false)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
 
   const resetEditor = useCallback((html: string) => {
     setBodyHtml(html)
     setResetToken((t) => t + 1)
   }, [])
 
-  const persistDraft = useCallback(() => {
-    if (skipSave.current) return
-    if (!to && !cc && !subject && !bodyHtml) {
-      clearDraft(userEmail)
-      return
+  const persistDraft = useCallback((): Promise<boolean> => {
+    if (
+      skipSave.current ||
+      (!to && !cc && !bcc && !subject && !bodyHtml && !attachments.length)
+    )
+      return Promise.resolve(true)
+    const local = {
+      to,
+      cc,
+      bcc,
+      subject,
+      bodyHtml,
+      signatureId,
+      inReplyTo: inReplyToRef.current,
+      draftUid: serverDraft.current,
     }
-    const saved = saveDraft(
-      {
-        to,
-        cc,
-        subject,
-        bodyHtml,
-        signatureId,
-        inReplyTo: inReplyToRef.current,
-      },
-      userEmail,
-    )
-    setDraftStatus(
-      saved
-        ? 'Draft saved on this device'
-        : 'Draft could not be saved on this device',
-    )
-  }, [to, cc, subject, bodyHtml, signatureId, userEmail])
+    saveDraft(local, userEmail)
+    const fd = new FormData()
+    for (const [key, value] of Object.entries({
+      to,
+      cc,
+      bcc,
+      subject,
+      bodyHtml,
+      inReplyTo: inReplyToRef.current || '',
+      references: references.join(' '),
+    }))
+      fd.set(key, value)
+    attachments.forEach((file) => fd.append('attachments', file))
+    const next = saveQueue.current
+      .catch(() => false)
+      .then(async () => {
+        if (skipSave.current) return true
+        try {
+          if (serverDraft.current) fd.set('uid', String(serverDraft.current))
+          setDraftStatus('Saving draft…')
+          const response = await fetch('/api/messages/drafts', {
+            method: 'PUT',
+            body: fd,
+          })
+          const data = await response.json()
+          if (!response.ok)
+            throw new Error(data.error || 'Could not save this draft.')
+          serverDraft.current = data.uid
+          saveDraft({ ...local, draftUid: data.uid }, userEmail)
+          setDraftStatus('Saved to Drafts · available on your other devices')
+          return true
+        } catch {
+          setDraftStatus(
+            'Mailbox save failed. Keep this window open and try Save & close again.',
+          )
+          return false
+        }
+      })
+    saveQueue.current = next
+    return next
+  }, [
+    to,
+    cc,
+    bcc,
+    subject,
+    bodyHtml,
+    signatureId,
+    userEmail,
+    attachments,
+    references,
+  ])
+
+  const removeServerDraft = async () => {
+    await saveQueue.current
+    if (!serverDraft.current) return
+    const fd = new FormData()
+    fd.set('uid', String(serverDraft.current))
+    const response = await fetch('/api/messages/drafts', {
+      method: 'DELETE',
+      body: fd,
+    })
+    if (!response.ok)
+      throw new Error(
+        'The message was saved, but its old draft could not be removed. Check Drafts.',
+      )
+    serverDraft.current = undefined
+  }
 
   useEffect(() => {
     if (!isOpen || skipSave.current) return
@@ -131,13 +211,18 @@ export const useComposeModal = ({
     focusEditor()
   }, [clearTimers, focusEditor])
 
-  const handleClose = useCallback(() => {
-    if (sending || scheduling) return
+  const handleClose = useCallback(async () => {
+    if (sending || scheduling || saving) return
     undoSend()
     if (draftTimer.current) clearTimeout(draftTimer.current)
-    persistDraft()
-    onClose()
-  }, [sending, scheduling, undoSend, persistDraft, onClose])
+    setSaving(true)
+    const saved = await persistDraft()
+    setSaving(false)
+    if (saved) {
+      clearDraft(userEmail)
+      onClose()
+    }
+  }, [sending, scheduling, saving, undoSend, persistDraft, onClose, userEmail])
 
   useEffect(() => {
     if (!isOpen) return
@@ -208,6 +293,8 @@ export const useComposeModal = ({
     const fd = new FormData()
     fd.append('to', to)
     fd.append('cc', cc)
+    fd.append('bcc', bcc)
+    fd.append('references', references.join(' '))
     fd.append('subject', subject)
     fd.append('bodyHtml', bodyHtml)
     fd.append('signatureHtml', signatureHtml ?? '')
@@ -217,7 +304,7 @@ export const useComposeModal = ({
   }
 
   const validate = () => {
-    if (!to.trim()) {
+    if (!to.trim() && !cc.trim() && !bcc.trim()) {
       setError('Add a recipient to send your message.')
       return false
     }
@@ -228,9 +315,14 @@ export const useComposeModal = ({
     return true
   }
 
-  const finish = (message: string) => {
+  const finish = async (message: string) => {
     skipSave.current = true
     if (draftTimer.current) clearTimeout(draftTimer.current)
+    try {
+      await removeServerDraft()
+    } catch {
+      message += ' The old draft could not be removed; check Drafts.'
+    }
     clearDraft(userEmail)
     onSent?.(message)
     onClose()
@@ -246,7 +338,13 @@ export const useComposeModal = ({
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Could not send your message.')
-      finish('Message sent. Nicely done.')
+      await finish(
+        data.rejected?.length
+          ? `Sent with some recipients rejected: ${data.rejected.join(', ')}`
+          : data.savedToSent === false
+            ? 'Message sent. A copy could not be saved to Sent.'
+            : 'Message sent.',
+      )
     } catch (e) {
       setError(
         e instanceof Error
@@ -262,6 +360,7 @@ export const useComposeModal = ({
   const handleSend = (skipAttachmentCheck = false) => {
     if (busyRef.current || !validate()) return
     if (
+      preferences.attachmentReminder &&
       !skipAttachmentCheck &&
       !attachments.length &&
       mentionsAttachment(bodyHtml)
@@ -274,8 +373,13 @@ export const useComposeModal = ({
     setShowSchedule(false)
     busyRef.current = true
     const formData = buildFormData()
-    const deadline = Date.now() + 8000
-    setCountdown(8)
+    const delay = preferences.undoSendSeconds * 1000
+    if (!delay) {
+      void deliver(formData)
+      return
+    }
+    const deadline = Date.now() + delay
+    setCountdown(preferences.undoSendSeconds)
     countdownTimer.current = setInterval(
       () =>
         setCountdown(Math.max(1, Math.ceil((deadline - Date.now()) / 1000))),
@@ -284,7 +388,7 @@ export const useComposeModal = ({
     sendTimer.current = setTimeout(() => {
       clearTimers()
       void deliver(formData)
-    }, 8000)
+    }, delay)
   }
 
   const handleSchedule = async (skipAttachmentCheck = false) => {
@@ -298,6 +402,7 @@ export const useComposeModal = ({
       return
     }
     if (
+      preferences.attachmentReminder &&
       !skipAttachmentCheck &&
       !attachments.length &&
       mentionsAttachment(bodyHtml)
@@ -319,7 +424,7 @@ export const useComposeModal = ({
       const data = await res.json()
       if (!res.ok)
         throw new Error(data.error || 'Could not schedule your message.')
-      finish(
+      await finish(
         `Message scheduled for ${new Date(scheduleAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}.`,
       )
     } catch (e) {
@@ -344,6 +449,14 @@ export const useComposeModal = ({
 
   const addAttachments = (files: FileList | null) => {
     if (!files) return
+    if (
+      attachments.reduce((sum, file) => sum + file.size, 0) +
+        Array.from(files).reduce((sum, file) => sum + file.size, 0) >
+      25 * 1024 * 1024
+    ) {
+      setError('Attachments must total less than 25 MB.')
+      return
+    }
     setAttachments((prev) => [...prev, ...Array.from(files)])
     setAttachmentWarning(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -354,6 +467,13 @@ export const useComposeModal = ({
     setTo,
     cc,
     setCc,
+    bcc,
+    setBcc,
+    showBcc,
+    setShowBcc,
+    saving,
+    confirmDiscard,
+    setConfirmDiscard,
     subject,
     setSubject,
     bodyHtml,
@@ -384,12 +504,23 @@ export const useComposeModal = ({
     handleSend: () => handleSend(),
     handleSchedule: () => handleSchedule(),
     handleClose,
-    discardDraft: () => {
-      if (busyRef.current) return
+    discardDraft: async () => {
+      if (busyRef.current || saving) return
       skipSave.current = true
       if (draftTimer.current) clearTimeout(draftTimer.current)
-      clearDraft(userEmail)
-      onClose()
+      setSaving(true)
+      try {
+        await removeServerDraft()
+        clearDraft(userEmail)
+        onClose()
+      } catch (error) {
+        skipSave.current = false
+        setError(
+          error instanceof Error ? error.message : 'Could not discard draft.',
+        )
+      } finally {
+        setSaving(false)
+      }
     },
     templatesOpen,
     setTemplatesOpen,
@@ -400,7 +531,7 @@ export const useComposeModal = ({
     panelRef,
     countdown,
     undoSend,
-    busy: countdown !== null || sending || scheduling,
+    busy: countdown !== null || sending || scheduling || saving,
     attachmentWarning,
     sendWithoutAttachment: () =>
       attachmentWarning === 'schedule'

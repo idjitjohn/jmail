@@ -14,6 +14,7 @@ export function useSignatureManager() {
   const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Browser signature hydration
     setSignatures(getSignatures())
   }, [])
 
@@ -39,7 +40,9 @@ export function useSignatureManager() {
 
   const save = (name: string, html: string) => {
     if (editing) {
-      persist(signatures.map(s => s.id === editing.id ? { ...s, name, html } : s))
+      persist(
+        signatures.map((s) => (s.id === editing.id ? { ...s, name, html } : s)),
+      )
     } else {
       persist([...signatures, createSignature(name, html)])
     }
@@ -48,7 +51,7 @@ export function useSignatureManager() {
   }
 
   const remove = (id: string) => {
-    persist(signatures.filter(s => s.id !== id))
+    persist(signatures.filter((s) => s.id !== id))
   }
 
   return {

@@ -13,7 +13,7 @@ export function createImapClient(email: string, password: string) {
     auth: { user: email, pass: password },
     logger: false,
     tls: {
-      rejectUnauthorized: false,
+      rejectUnauthorized: process.env.MAIL_TLS_REJECT_UNAUTHORIZED !== 'false',
     },
   })
 }
@@ -27,7 +27,7 @@ export function createSmtpTransport(email: string, password: string) {
     requireTLS: !secure,
     auth: { user: email, pass: password },
     tls: {
-      rejectUnauthorized: false,
+      rejectUnauthorized: process.env.MAIL_TLS_REJECT_UNAUTHORIZED !== 'false',
     },
   })
 }

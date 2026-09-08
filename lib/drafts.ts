@@ -3,6 +3,8 @@
 export type DraftData = {
   to: string
   cc: string
+  bcc?: string
+  draftUid?: number
   subject: string
   bodyHtml: string
   signatureId: string | null

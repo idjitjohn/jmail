@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { MailMessage, MailThread } from '@/lib/types'
+import type { PreviewFile } from '../AttachmentPreview/types'
+import { templateToHtml } from '@/lib/reply-templates'
+import { replyContext, loadMessageFiles } from '@/lib/replies'
 import type { ComposeState } from '../AppLayout/types'
 
 export const useMailViewer = (
@@ -10,7 +13,10 @@ export const useMailViewer = (
   onReply: (data: ComposeState) => void,
   onDelete: () => void,
   onUpdate?: () => void,
+  userEmail = '',
 ) => {
+  const [laterMode, setLaterMode] = useState<'snooze' | 'reminder' | null>(null)
+  const [previewFile, setPreviewFile] = useState<PreviewFile | null>(null)
   const [actionError, setActionError] = useState('')
   const [busy, setBusy] = useState(false)
   const actionBusy = useRef(false)
@@ -159,26 +165,87 @@ export const useMailViewer = (
       else onUpdate?.()
     })
 
+  const composeMessage = (
+    message: MailMessage,
+    mode: 'reply' | 'all' | 'forward' | 'draft',
+  ) =>
+    runAction(async () => {
+      const response = await fetch(
+        `/api/messages/${message.uid}?folder=${encodeURIComponent(message.folder)}`,
+      )
+      if (!response.ok)
+        throw new Error(
+          'Could not load the original message. Please try again.',
+        )
+      const full: MailMessage = await response.json()
+      if (mode === 'draft') {
+        onReply({
+          to: full.to.map((item) => item.address).join(', '),
+          cc: full.cc?.map((item) => item.address).join(', '),
+          bcc: full.bcc?.map((item) => item.address).join(', '),
+          subject: full.subject,
+          body: full.html || templateToHtml(full.text || ''),
+          inReplyTo: full.inReplyTo,
+          references: full.references,
+          attachments: await loadMessageFiles(full),
+          draftUid: full.uid,
+        })
+      } else {
+        onReply({
+          ...replyContext(full, userEmail, mode),
+          attachments: mode === 'forward' ? await loadMessageFiles(full) : [],
+        })
+      }
+    })
+
+  const showImages = (message: MailMessage) =>
+    runAction(async () => {
+      const response = await fetch(
+        `/api/messages/${message.uid}?folder=${encodeURIComponent(message.folder)}&images=show`,
+      )
+      if (!response.ok) throw new Error('Could not load the images.')
+      const data = await response.json()
+      setFullMessages((previous) => new Map([...previous, [message.uid, data]]))
+    })
+
   const toolbarActions =
     latest && thread
       ? [
           {
             id: 'reply',
-            label: 'Reply',
+            label: latest.isDraft ? 'Edit draft' : 'Reply',
             icon: 'reply',
+            disabled: busy || loading,
             onClick: () =>
-              onReply({
-                to: latest.from.address,
-                subject: `Re: ${thread.subject}`,
-                inReplyTo: latest.messageId,
-              }),
+              composeMessage(latest, latest.isDraft ? 'draft' : 'reply'),
+          },
+          {
+            id: 'reply-all',
+            label: 'Reply all',
+            icon: 'reply',
+            disabled: busy || loading,
+            onClick: () => composeMessage(latest, 'all'),
           },
           {
             id: 'forward',
             label: 'Forward',
             icon: 'forward',
-            onClick: () =>
-              onReply({ to: '', subject: `Fwd: ${thread.subject}` }),
+            disabled: busy || loading,
+            onClick: () => composeMessage(latest, 'forward'),
+          },
+          {
+            id: 'snooze',
+            label: 'Snooze',
+            icon: 'clock',
+            disabled: busy || loading || latest.isDraft,
+            onClick: () => setLaterMode('snooze'),
+          },
+          {
+            id: 'reminder',
+            label: 'Remind me',
+            icon: 'clock',
+            disabled: busy || loading || latest.isDraft,
+            onClick: () => setLaterMode('reminder'),
           },
           {
             id: 'archive',
@@ -227,12 +294,26 @@ export const useMailViewer = (
       : []
 
   return {
+    laterMode,
+    setLaterMode,
+    latest,
+    laterSaved: () => {
+      const snoozed = laterMode === 'snooze'
+      setLaterMode(null)
+      if (snoozed) onDelete()
+      else onUpdate?.()
+    },
+    previewFile,
+    setPreviewFile,
     expanded,
     fullMessages,
     loading,
     error,
     toggleExpand,
     toolbarActions,
+    composeMessage,
+    showImages,
+    busy,
     actionError,
   }
 }

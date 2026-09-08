@@ -216,3 +216,61 @@
     }
   }
 }
+
+.AppLayout {
+  &[data-density='compact'] {
+    .MailList {
+      .messages {
+        .MailItem {
+          .item-content {
+            padding-top: 0.5em;
+            padding-bottom: 0.5em;
+            gap: 0.5em;
+            .Avatar {
+              font-size: 0.8em;
+            }
+          }
+        }
+      }
+    }
+  }
+  &[data-previews='false'] {
+    .MailList {
+      .messages {
+        .MailItem {
+          .item-content {
+            .content {
+              .preview {
+                display: none;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  &[data-reading-size='large'] {
+    .MailViewer {
+      .body {
+        .thread-messages {
+          .thread-item {
+            .item-body {
+              .item-content {
+                font-size: 1.2em;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  &[data-shortcuts='false'] {
+    .MailViewer {
+      .placeholder {
+        .shortcut-hints {
+          display: none;
+        }
+      }
+    }
+  }
+}

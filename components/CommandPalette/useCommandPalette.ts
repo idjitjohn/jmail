@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
+import { usePreferences } from '../PreferencesProvider/usePreferences'
 import type { Command } from './types'
 
 export const useCommandPalette = (commands: Command[], onClose: () => void) => {
+  const { preferences } = usePreferences()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
@@ -53,6 +55,7 @@ export const useCommandPalette = (commands: Command[], onClose: () => void) => {
   }
 
   return {
+    shortcutsEnabled: preferences.keyboardShortcuts,
     dialogRef,
     query,
     setQuery: (value: string) => {

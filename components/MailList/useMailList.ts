@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import type { MailMessage } from '@/lib/types'
+import type { MailMessage, MailFolder } from '@/lib/types'
 import type { MailFilter } from '@/lib/mail-search'
+import { usePreferences } from '../PreferencesProvider/usePreferences'
 import { groupIntoThreads } from '@/lib/threads'
 import type { MailListOptions } from './types'
 
@@ -13,6 +14,7 @@ export const useMailList = ({
   onSelect,
   onRefresh,
 }: MailListOptions) => {
+  const { preferences } = usePreferences()
   const [messages, setMessages] = useState<MailMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,6 +24,19 @@ export const useMailList = ({
   const [resultKey, setResultKey] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [query, setQuery] = useState('')
+  const [scope, setScope] = useState('folder')
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [fields, setFields] = useState({
+    from: '',
+    to: '',
+    subject: '',
+    after: '',
+    before: '',
+  })
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const [destinations, setDestinations] = useState<MailFolder[]>([])
+  const [selectionMode, setSelectionMode] = useState(false)
   const [filter, setFilter] = useState<MailFilter>('all')
   const [refreshCount, setRefreshCount] = useState(0)
   const [markingRead, setMarkingRead] = useState(false)
@@ -48,9 +63,10 @@ export const useMailList = ({
           page: String(pg),
           q: query,
           filter,
+          scope,
+          ...fields,
         })
-        const endpoint =
-          query || filter !== 'all' ? '/api/messages/search' : '/api/messages'
+        const endpoint = '/api/messages/search'
         const res = await fetch(`${endpoint}?${params}`, {
           signal: controller.signal,
         })
@@ -64,11 +80,14 @@ export const useMailList = ({
             : [
                 ...prev,
                 ...data.messages.filter(
-                  (m: MailMessage) => !prev.some((p) => p.uid === m.uid),
+                  (m: MailMessage) =>
+                    !prev.some((p) => p.uid === m.uid && p.folder === m.folder),
                 ),
               ],
         )
-        setResultKey(`${folder}:${query}:${filter}`)
+        setResultKey(
+          `${folder}:${query}:${filter}:${scope}:${JSON.stringify(fields)}`,
+        )
         setHasMore(data.hasMore)
         setTotal(data.total)
         setPage(pg)
@@ -82,7 +101,7 @@ export const useMailList = ({
         }
       }
     },
-    [folder, query, filter],
+    [folder, query, filter, scope, fields],
   )
 
   useEffect(() => {
@@ -95,13 +114,17 @@ export const useMailList = ({
   const threads = useMemo(
     () =>
       groupIntoThreads(
-        resultKey === `${folder}:${query}:${filter}` ? messages : [],
+        resultKey ===
+          `${folder}:${query}:${filter}:${scope}:${JSON.stringify(fields)}`
+          ? messages
+          : [],
       ),
-    [messages, resultKey, folder, query, filter],
+    [messages, resultKey, folder, query, filter, scope, fields],
   )
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
+      if (!preferences.keyboardShortcuts) return
       if (
         event.defaultPrevented ||
         event.metaKey ||
@@ -142,7 +165,7 @@ export const useMailList = ({
       window.removeEventListener('keydown', handleKey)
       window.removeEventListener('jmail:search', focusSearch)
     }
-  }, [threads, selectedThread, onSelect])
+  }, [threads, selectedThread, onSelect, preferences.keyboardShortcuts])
 
   useEffect(() => {
     document
@@ -177,7 +200,7 @@ export const useMailList = ({
       const results = await Promise.all(
         thread.messages.map((message) =>
           fetch(
-            `/api/messages/${message.uid}?folder=${encodeURIComponent(folder)}`,
+            `/api/messages/${message.uid}?folder=${encodeURIComponent(message.folder)}`,
             { method: 'DELETE' },
           ),
         ),
@@ -195,13 +218,85 @@ export const useMailList = ({
     }
   }
 
+  useEffect(() => {
+    fetch('/api/folders')
+      .then((response) => response.json())
+      .then((data) => {
+        if (Array.isArray(data)) setDestinations(data)
+      })
+      .catch(() => {})
+  }, [refreshTrigger])
+  const selectedThreads = threads.filter((thread) => selected.has(thread.id))
+  const toggleSelection = (id: string) =>
+    setSelected((previous) => {
+      const next = new Set(previous)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  const bulkAction = async (action: string, destination?: string) => {
+    if (bulkBusy || !selectedThreads.length) return
+    setBulkBusy(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/messages/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          destination,
+          messages: selectedThreads.flatMap((thread) =>
+            thread.messages.map((message) => ({
+              uid: message.uid,
+              folder: message.folder,
+            })),
+          ),
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok)
+        throw new Error(data.error || 'Could not update these messages.')
+      setSelected(new Set())
+      refresh()
+      onRefresh?.()
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Could not update these messages.',
+      )
+    } finally {
+      setBulkBusy(false)
+    }
+  }
   const clearSearch = () => {
     setSearchQuery('')
     setQuery('')
+    setFields({ from: '', to: '', subject: '', after: '', before: '' })
     searchRef.current?.focus()
   }
 
   return {
+    scope,
+    setScope,
+    advancedOpen,
+    setAdvancedOpen,
+    fields,
+    setFields,
+    selected,
+    selectionMode,
+    setSelectionMode,
+    selectedCount: selectedThreads.length,
+    bulkBusy,
+    bulkAction,
+    destinations,
+    toggleSelection,
+    selectAll: () =>
+      setSelected(
+        selectedThreads.length === threads.length
+          ? new Set()
+          : new Set(threads.map((thread) => thread.id)),
+      ),
     threads,
     loading,
     error,
@@ -219,7 +314,10 @@ export const useMailList = ({
     loadMore: () => {
       if (!loadingRef.current && hasMore) void fetchMessages(page + 1)
     },
-    handleSwipeDelete,
+    handleSwipeDelete: preferences.swipeToDelete
+      ? handleSwipeDelete
+      : undefined,
+    shortcutsEnabled: preferences.keyboardShortcuts,
     folderLabel: folder === 'INBOX' ? 'Inbox' : folder,
     emptyTitle: query
       ? 'No matches just yet'

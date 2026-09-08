@@ -1,4 +1,9 @@
 export type ComposeInit = {
+  cc?: string
+  bcc?: string
+  attachments?: File[]
+  draftUid?: number
+  references?: string[]
   to?: string
   subject?: string
   body?: string

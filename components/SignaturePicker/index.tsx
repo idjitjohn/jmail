@@ -14,12 +14,13 @@ export default function SignaturePicker({ value, onChange, onManage }: Props) {
   const [signatures, setSignatures] = useState<Signature[]>([])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Browser signature hydration
     setSignatures(getSignatures())
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value || null
-    const sig = signatures.find(s => s.id === id) ?? null
+    const sig = signatures.find((s) => s.id === id) ?? null
     onChange(id, sig?.html ?? null)
   }
 
@@ -27,11 +28,18 @@ export default function SignaturePicker({ value, onChange, onManage }: Props) {
     <div className="SignaturePicker">
       <select className="select" value={value ?? ''} onChange={handleChange}>
         <option value="">No signature</option>
-        {signatures.map(s => (
-          <option key={s.id} value={s.id}>{s.name}</option>
+        {signatures.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
         ))}
       </select>
-      <button className="manage-btn" onClick={onManage} type="button" title="Manage signatures" />
+      <button
+        className="manage-btn"
+        onClick={onManage}
+        type="button"
+        title="Manage signatures"
+      />
     </div>
   )
 }

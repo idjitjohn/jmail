@@ -58,6 +58,13 @@ class MaddyAdminTests(unittest.TestCase):
     def record(self, name='new.org'):
         return {'name': name, 'mxHost': 'smtp.example.org', 'ipv4': '192.0.2.1', 'ipv6': '2001:db8::1', 'selector': 'default'}
 
+    def test_removes_orphaned_forwarding_after_mailbox_deletion(self):
+        admin.STATE.write_text(json.dumps({'domains': [], 'forwarding': [
+            {'source': 'deleted@example.org', 'destination': 'outside@remote.org', 'keepCopy': True}
+        ]}))
+        files, _ = admin.prepare(self.change(kind='forwarding', source='deleted@example.org', destination='', keepCopy=True), self.accounts)
+        self.assertEqual(json.loads(files[admin.STATE])['forwarding'], [])
+
     def test_imports_live_domains(self):
         self.assertEqual([d['name'] for d in admin.read_state()[1]['domains']], ['example.org', 'existing.org'])
 

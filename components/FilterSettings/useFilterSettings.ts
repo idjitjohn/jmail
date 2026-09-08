@@ -12,14 +12,14 @@ export function useFilterSettings() {
 
   useEffect(() => {
     fetch('/api/settings/filters')
-      .then(r => r.json())
-      .then(d => setFilters(d.filters || []))
+      .then((r) => r.json())
+      .then((d) => setFilters(d.filters || []))
       .catch(() => setError('Failed to load filters'))
       .finally(() => setLoading(false))
   }, [])
 
   const addFilter = useCallback(() => {
-    setFilters(prev => [
+    setFilters((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
@@ -33,13 +33,18 @@ export function useFilterSettings() {
     setSaved(false)
   }, [])
 
-  const updateFilter = useCallback((id: string, patch: Partial<SieveFilter>) => {
-    setFilters(prev => prev.map(f => f.id === id ? { ...f, ...patch } : f))
-    setSaved(false)
-  }, [])
+  const updateFilter = useCallback(
+    (id: string, patch: Partial<SieveFilter>) => {
+      setFilters((prev) =>
+        prev.map((f) => (f.id === id ? { ...f, ...patch } : f)),
+      )
+      setSaved(false)
+    },
+    [],
+  )
 
   const removeFilter = useCallback((id: string) => {
-    setFilters(prev => prev.filter(f => f.id !== id))
+    setFilters((prev) => prev.filter((f) => f.id !== id))
     setSaved(false)
   }, [])
 
@@ -53,14 +58,27 @@ export function useFilterSettings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filters }),
       })
-      if (!res.ok) throw new Error('Save failed')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Save failed')
       setSaved(true)
-    } catch {
-      setError('Failed to save filters')
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : 'Failed to save filters',
+      )
     } finally {
       setSaving(false)
     }
   }, [filters])
 
-  return { filters, loading, saving, error, saved, addFilter, updateFilter, removeFilter, save }
+  return {
+    filters,
+    loading,
+    saving,
+    error,
+    saved,
+    addFilter,
+    updateFilter,
+    removeFilter,
+    save,
+  }
 }

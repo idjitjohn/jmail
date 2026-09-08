@@ -3,7 +3,9 @@ import type { SSEEvent } from './types'
 type Sender = (event: SSEEvent) => void
 
 // Global singleton — survives hot reload in dev
-const g = globalThis as any
+const g = globalThis as typeof globalThis & {
+  _sseSubs?: Map<string, Set<Sender>>
+}
 if (!g._sseSubs) g._sseSubs = new Map<string, Set<Sender>>()
 const subs: Map<string, Set<Sender>> = g._sseSubs
 
@@ -18,8 +20,12 @@ export function unsubscribe(email: string, send: Sender): void {
 }
 
 export function broadcast(email: string, event: SSEEvent): void {
-  subs.get(email)?.forEach(send => {
-    try { send(event) } catch { /* disconnected */ }
+  subs.get(email)?.forEach((send) => {
+    try {
+      send(event)
+    } catch {
+      /* disconnected */
+    }
   })
 }
 

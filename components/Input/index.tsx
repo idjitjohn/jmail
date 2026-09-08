@@ -1,7 +1,10 @@
+'use client'
+
+import { useInput } from './useInput'
 import clsx from 'clsx'
 import './Input.scss'
 
-interface Props {
+type Props = {
   type?: string
   placeholder?: string
   value?: string
@@ -17,7 +20,7 @@ interface Props {
   className?: string
 }
 
-export default function Input({
+const Input = ({
   type = 'text',
   placeholder,
   value,
@@ -31,11 +34,17 @@ export default function Input({
   autoComplete,
   autoFocus,
   className = '',
-}: Props) {
+}: Props) => {
+  const { id } = useInput()
   return (
     <div className={clsx('Input', className)}>
-      {label && <label className="label">{label}</label>}
+      {label && (
+        <label className="label" htmlFor={id}>
+          {label}
+        </label>
+      )}
       <input
+        id={id}
         type={type}
         className={clsx('field', { error: !!error })}
         placeholder={placeholder}
@@ -52,3 +61,5 @@ export default function Input({
     </div>
   )
 }
+
+export default Input

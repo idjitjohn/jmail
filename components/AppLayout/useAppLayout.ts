@@ -1,14 +1,18 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { usePreferences } from '../PreferencesProvider/usePreferences'
 import { useRouter } from 'next/navigation'
 import { useRealtimeSync } from '../useRealtimeSync'
 import { useSwipe } from '@/lib/useSwipe'
+import type { WorkspaceTab } from '../WorkspacePanel/types'
 import type { MailThread } from '@/lib/types'
 import type { Command } from '../CommandPalette/types'
 import type { ComposeState, MobilePanel } from './types'
 
 export const useAppLayout = () => {
+  const { preferences } = usePreferences()
+  const [workspace, setWorkspace] = useState<WorkspaceTab | null>(null)
   const [activeFolder, setActiveFolder] = useState('INBOX')
   const [commandsOpen, setCommandsOpen] = useState(false)
   const composeOrigin = useRef<HTMLElement | null>(null)
@@ -98,6 +102,25 @@ export const useAppLayout = () => {
 
   useRealtimeSync({
     onNewMail: (folder) => {
+      if (
+        preferences.desktopNotifications &&
+        document.hidden &&
+        'Notification' in window &&
+        Notification.permission === 'granted'
+      ) {
+        try {
+          const notification = new Notification('New mail in JMail', {
+            body: 'Your inbox has new mail.',
+            tag: 'jmail-new-mail',
+          })
+          notification.onclick = () => {
+            window.focus()
+            notification.close()
+          }
+        } catch {
+          /* Browser notification availability */
+        }
+      }
       if (folder === activeFolder) setRefreshKey((k) => k + 1)
       setSidebarRefreshTrigger((k) => k + 1)
     },
@@ -165,25 +188,34 @@ export const useAppLayout = () => {
       )
         return
       const target = event.target as HTMLElement
-      if (target.closest('input, textarea, select, [contenteditable="true"]'))
-        return
-      if (
-        ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') ||
-        event.key === '?'
-      ) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setCommandsOpen(true)
-      } else if (!event.metaKey && !event.ctrlKey && !event.altKey) {
-        if (event.key.toLowerCase() === 'c') {
-          event.preventDefault()
-          handleCompose()
-        }
-        if (event.key === '/') setMobilePanel('list')
-        if (event.key === 'Escape') {
-          setSelectedThread(null)
-          setMobilePanel('list')
-        }
+        return
       }
+      if (target.closest('input, textarea, select, [contenteditable="true"]'))
+        return
+      if (event.key === 'Escape') {
+        setSelectedThread(null)
+        setMobilePanel('list')
+        return
+      }
+      if (
+        !preferences.keyboardShortcuts ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      )
+        return
+      if (event.key === '?') {
+        event.preventDefault()
+        setCommandsOpen(true)
+      }
+      if (event.key.toLowerCase() === 'c') {
+        event.preventDefault()
+        handleCompose()
+      }
+      if (event.key === '/') setMobilePanel('list')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -195,15 +227,15 @@ export const useAppLayout = () => {
       label: 'Write a message',
       description: 'Start a new conversation',
       icon: 'compose',
-      shortcut: 'C',
+      shortcut: preferences.keyboardShortcuts ? 'C' : undefined,
       run: handleCompose,
     },
     {
       id: 'search',
-      label: 'Search this folder',
+      label: 'Search messages',
       description: 'Find a person, subject, or phrase',
       icon: 'find',
-      shortcut: '/',
+      shortcut: preferences.keyboardShortcuts ? '/' : undefined,
       run: focusSearch,
     },
     {
@@ -229,6 +261,7 @@ export const useAppLayout = () => {
   }
 
   return {
+    preferences,
     activeFolder,
     selectedThread,
     composeOpen,
@@ -252,6 +285,17 @@ export const useAppLayout = () => {
     commandsOpen,
     setCommandsOpen,
     commands,
+    workspace,
+    setWorkspace,
+    closeWorkspace: () => {
+      setWorkspace(null)
+      setSidebarRefreshTrigger((k) => k + 1)
+      setRefreshKey((k) => k + 1)
+    },
+    writeToContact: (to: string) => {
+      setWorkspace(null)
+      handleReply({ to, subject: '' })
+    },
     notice,
     setNotice,
     handleSent,

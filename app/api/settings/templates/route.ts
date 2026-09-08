@@ -83,3 +83,52 @@ export const DELETE = async (request: Request) => {
     )
   }
 }
+
+export const PATCH = async (request: Request) => {
+  const session = await getSession()
+  if (!session) return unauthorized()
+  const payload = await request.json().catch(() => null)
+  if (
+    typeof payload?.id !== 'string' ||
+    !payload.id ||
+    payload.id.length > 100 ||
+    typeof payload.name !== 'string' ||
+    typeof payload.body !== 'string' ||
+    !payload.name.trim() ||
+    !payload.body.trim() ||
+    payload.name.length > 80 ||
+    payload.body.length > 10000
+  ) {
+    return NextResponse.json(
+      { error: 'Add a valid name and reply.' },
+      { status: 400 },
+    )
+  }
+  const template = {
+    id: payload.id,
+    name: payload.name.trim(),
+    body: payload.body.trim(),
+  }
+  try {
+    let found = false
+    await updateUserData(session.email, (current) => ({
+      ...current,
+      replyTemplates: (current.replyTemplates ?? []).map((existing) => {
+        if (existing.id !== template.id) return existing
+        found = true
+        return template
+      }),
+    }))
+    if (!found)
+      return NextResponse.json(
+        { error: 'This template no longer exists. Reload your library.' },
+        { status: 404 },
+      )
+    return NextResponse.json({ template })
+  } catch {
+    return NextResponse.json(
+      { error: 'Could not update this template. Please try again.' },
+      { status: 500 },
+    )
+  }
+}

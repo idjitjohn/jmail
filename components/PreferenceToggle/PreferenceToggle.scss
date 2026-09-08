@@ -1,0 +1,60 @@
+.PreferenceToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5em;
+  padding: 1.125em 1.25em;
+  cursor: pointer;
+  .copy {
+    flex: 1;
+    min-width: 0;
+    strong {
+      display: block;
+      font-size: 0.875em;
+      font-weight: 500;
+      color: var(--color-text);
+    }
+    span {
+      display: block;
+      margin-top: 0.25em;
+      font-size: 0.75em;
+      line-height: 1.6;
+      color: var(--color-text-secondary);
+    }
+  }
+  input {
+    appearance: none;
+    position: relative;
+    flex-shrink: 0;
+    width: 2.75em;
+    height: 1.625em;
+    border: 1px solid var(--color-border-default);
+    border-radius: 1em;
+    background: var(--color-bg-tertiary);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0.1875em;
+      left: 0.1875em;
+      width: 1.125em;
+      height: 1.125em;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 0.0625em 0.1875em #0002;
+      transition: transform var(--transition-fast);
+    }
+    &:checked {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      &::before {
+        transform: translateX(1.125em);
+      }
+    }
+    &:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+  }
+}

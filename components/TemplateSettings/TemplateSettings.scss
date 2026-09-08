@@ -1,0 +1,46 @@
+.TemplateSettings {
+  max-width: 44em;
+  margin: 0 auto;
+  padding: 2.5em 2em;
+  .heading {
+    margin-bottom: 2em;
+    .eyebrow {
+      color: var(--color-primary);
+      font-size: 0.75em;
+      font-weight: 500;
+    }
+    h1 {
+      margin: 0.4em 0;
+      font-size: 1.75em;
+      font-weight: 600;
+      letter-spacing: -0.035em;
+      line-height: 1.25;
+    }
+    p {
+      color: var(--color-text-secondary);
+      font-size: 0.875em;
+      line-height: 1.6;
+    }
+  }
+  .ReplyTemplates {
+    background: var(--color-bg-default);
+    .templates {
+      max-height: 30em;
+      .template {
+        .insert {
+          padding-block: 1em;
+        }
+      }
+    }
+    .create-form {
+      .field {
+        textarea {
+          min-height: 12em;
+        }
+      }
+    }
+  }
+  @media (max-width: 40em) {
+    padding: 1.5em 1em;
+  }
+}

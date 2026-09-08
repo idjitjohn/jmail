@@ -32,6 +32,9 @@
       mask-position: center;
       flex-shrink: 0;
 
+      &.icon-clock {
+        mask-image: url('/icons/clock.svg');
+      }
       &.icon-archive {
         mask-image: url('/icons/folder-archive.svg');
       }
@@ -56,7 +59,7 @@
     }
 
     .label {
-      @media (max-width: 768px) {
+      @media (max-width: 48em) {
         display: none;
       }
     }

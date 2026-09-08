@@ -27,11 +27,13 @@ export default function SignatureEditor({ initial, onSave, onCancel }: Props) {
   const [sigName, setSigName] = useState(initial?.name ?? '')
   const [html, setHtml] = useState(initial?.html ?? '')
   const [tab, setTab] = useState<Tab>('templates')
-  const [selectedTemplate, setSelectedTemplate] = useState<SignatureTemplate | null>(null)
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<SignatureTemplate | null>(null)
   const [fields, setFields] = useState<Record<string, string>>({})
   const [nameError, setNameError] = useState('')
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Signature selection synchronization
     setSigName(initial?.name ?? '')
     setHtml(initial?.html ?? '')
     setNameError('')
@@ -45,7 +47,7 @@ export default function SignatureEditor({ initial, onSave, onCancel }: Props) {
   const pickTemplate = (tpl: SignatureTemplate) => {
     setSelectedTemplate(tpl)
     const defaults: Record<string, string> = {}
-    tpl.fields.forEach(f => {
+    tpl.fields.forEach((f) => {
       if (f.type === 'color') defaults[f.key] = tpl.defaultColor ?? '#007aff'
     })
     setFields(defaults)
@@ -59,12 +61,17 @@ export default function SignatureEditor({ initial, onSave, onCancel }: Props) {
   }
 
   const handleSave = () => {
-    if (!sigName.trim()) { setNameError('Name is required'); return }
+    if (!sigName.trim()) {
+      setNameError('Name is required')
+      return
+    }
     if (!html.trim()) return
     onSave(sigName.trim(), html.trim())
   }
 
-  const previewHtml = html || '<p style="color:#aeaeb2;font-family:sans-serif;font-size:13px">Preview will appear here</p>'
+  const previewHtml =
+    html ||
+    '<p style="color:#aeaeb2;font-family:sans-serif;font-size:13px">Preview will appear here</p>'
 
   return (
     <div className="SignatureEditor">
@@ -73,7 +80,10 @@ export default function SignatureEditor({ initial, onSave, onCancel }: Props) {
           label="Signature name"
           placeholder="e.g. Work, Personal…"
           value={sigName}
-          onChange={e => { setSigName(e.target.value); setNameError('') }}
+          onChange={(e) => {
+            setSigName(e.target.value)
+            setNameError('')
+          }}
           error={nameError || undefined}
           autoFocus
         />
@@ -101,23 +111,27 @@ export default function SignatureEditor({ initial, onSave, onCancel }: Props) {
           {tab === 'templates' ? (
             <>
               <div className="template-grid">
-                {TEMPLATES.map(tpl => (
+                {TEMPLATES.map((tpl) => (
                   <button
                     key={tpl.id}
-                    className={clsx('template-card', { active: selectedTemplate?.id === tpl.id })}
+                    className={clsx('template-card', {
+                      active: selectedTemplate?.id === tpl.id,
+                    })}
                     onClick={() => pickTemplate(tpl)}
                     type="button"
                   >
                     <div
                       className="template-thumb"
-                      dangerouslySetInnerHTML={{ __html: tpl.build({
-                        name: 'Jane Doe',
-                        title: 'Designer',
-                        company: 'Acme',
-                        email: 'jane@example.com',
-                        phone: '+1 234 567',
-                        color: tpl.defaultColor ?? '#007aff',
-                      }) }}
+                      dangerouslySetInnerHTML={{
+                        __html: tpl.build({
+                          name: 'Jane Doe',
+                          title: 'Designer',
+                          company: 'Acme',
+                          email: 'jane@example.com',
+                          phone: '+1 234 567',
+                          color: tpl.defaultColor ?? '#007aff',
+                        }),
+                      }}
                     />
                     <span className="template-name">{tpl.name}</span>
                   </button>
@@ -126,31 +140,39 @@ export default function SignatureEditor({ initial, onSave, onCancel }: Props) {
 
               {selectedTemplate && (
                 <div className="fields-panel">
-                  {FIELD_GROUPS.map(group => {
-                    const groupFields = selectedTemplate.fields.filter(f => f.group === group.key)
+                  {FIELD_GROUPS.map((group) => {
+                    const groupFields = selectedTemplate.fields.filter(
+                      (f) => f.group === group.key,
+                    )
                     if (!groupFields.length) return null
                     return (
                       <div key={group.key} className="field-group">
                         <p className="group-label">{group.label}</p>
                         <div className="group-fields">
-                          {groupFields.map(f => (
+                          {groupFields.map((f) => (
                             <div key={f.key} className="field-item">
                               {f.type === 'color' ? (
                                 <div className="color-row">
-                                  <label className="color-label">{f.label}</label>
+                                  <label className="color-label">
+                                    {f.label}
+                                  </label>
                                   <div className="color-input-wrap">
                                     <input
                                       type="color"
                                       className="color-swatch"
                                       value={fields[f.key] || f.placeholder}
-                                      onChange={e => setField(f.key, e.target.value)}
+                                      onChange={(e) =>
+                                        setField(f.key, e.target.value)
+                                      }
                                     />
                                     <input
                                       type="text"
                                       className="color-text"
                                       value={fields[f.key] || ''}
                                       placeholder={f.placeholder}
-                                      onChange={e => setField(f.key, e.target.value)}
+                                      onChange={(e) =>
+                                        setField(f.key, e.target.value)
+                                      }
                                     />
                                   </div>
                                 </div>
@@ -160,7 +182,9 @@ export default function SignatureEditor({ initial, onSave, onCancel }: Props) {
                                   type={f.type ?? 'text'}
                                   placeholder={f.placeholder}
                                   value={fields[f.key] || ''}
-                                  onChange={e => setField(f.key, e.target.value)}
+                                  onChange={(e) =>
+                                    setField(f.key, e.target.value)
+                                  }
                                 />
                               )}
                             </div>
@@ -184,7 +208,10 @@ export default function SignatureEditor({ initial, onSave, onCancel }: Props) {
             <textarea
               className="code-input"
               value={html}
-              onChange={e => { setHtml(e.target.value); setSelectedTemplate(null) }}
+              onChange={(e) => {
+                setHtml(e.target.value)
+                setSelectedTemplate(null)
+              }}
               spellCheck={false}
               placeholder="<p>Your signature HTML…</p>"
             />
@@ -202,7 +229,9 @@ export default function SignatureEditor({ initial, onSave, onCancel }: Props) {
       </div>
 
       <div className="editor-actions">
-        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+        <Button variant="secondary" onClick={onCancel}>
+          Cancel
+        </Button>
         <Button onClick={handleSave} disabled={!html.trim()}>
           {initial ? 'Save changes' : 'Create signature'}
         </Button>

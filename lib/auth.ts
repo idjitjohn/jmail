@@ -1,27 +1,25 @@
-import { SignJWT, jwtVerify } from 'jose'
+import { seal, unseal } from './secrets'
 import type { UserSession } from './types'
 
-const SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || ''
-)
-
-export interface SessionPayload extends UserSession {
+export type SessionPayload = UserSession & {
   password: string
 }
 
 export async function createSession(payload: SessionPayload): Promise<string> {
-  if (SECRET.length < 32) throw new Error('NEXTAUTH_SECRET must contain at least 32 bytes')
-  return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('24h')
-    .sign(SECRET)
+  return seal({ ...payload }, 'jmail-session', '24h')
 }
 
-export async function verifySession(token: string): Promise<SessionPayload | null> {
+export async function verifySession(
+  token: string,
+): Promise<SessionPayload | null> {
   try {
-    if (SECRET.length < 32) return null
-    const { payload } = await jwtVerify(token, SECRET)
+    const payload = await unseal(token, 'jmail-session')
+    if (
+      typeof payload.email !== 'string' ||
+      typeof payload.password !== 'string' ||
+      typeof payload.domain !== 'string'
+    )
+      return null
     return {
       email: payload.email as string,
       domain: payload.domain as string,

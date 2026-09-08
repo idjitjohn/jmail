@@ -13,7 +13,9 @@ interface Handlers {
 export function useRealtimeSync(handlers: Handlers): void {
   // Stable ref — handlers can change without restarting EventSource
   const ref = useRef(handlers)
-  ref.current = handlers
+  useEffect(() => {
+    ref.current = handlers
+  }, [handlers])
 
   useEffect(() => {
     const es = new EventSource('/api/stream')
@@ -36,7 +38,9 @@ export function useRealtimeSync(handlers: Handlers): void {
             h.onUnreadCounts?.(event.counts)
             break
         }
-      } catch { /* ignore parse errors */ }
+      } catch {
+        /* ignore parse errors */
+      }
     }
 
     // EventSource auto-reconnects on error — no manual handling needed

@@ -1,6 +1,7 @@
 'use client'
 
 import Sidebar from '../Sidebar'
+import WorkspacePanel from '../WorkspacePanel'
 import MailList from '../MailList'
 import MailViewer from '../MailViewer'
 import ComposeModal from '../ComposeModal'
@@ -15,6 +16,11 @@ type Props = {
 
 const AppLayout = ({ userEmail, isAdmin }: Props) => {
   const {
+    workspace,
+    setWorkspace,
+    closeWorkspace,
+    writeToContact,
+    preferences,
     activeFolder,
     selectedThread,
     composeOpen,
@@ -47,6 +53,10 @@ const AppLayout = ({ userEmail, isAdmin }: Props) => {
   return (
     <div
       ref={swipeRef}
+      data-density={preferences.density}
+      data-previews={preferences.showPreviews}
+      data-reading-size={preferences.readingSize}
+      data-shortcuts={preferences.keyboardShortcuts}
       className={`AppLayout mobile-${mobilePanel}${swipingDir ? ` swiping-${swipingDir}` : ''}`}
       style={
         {
@@ -56,6 +66,7 @@ const AppLayout = ({ userEmail, isAdmin }: Props) => {
       }
     >
       <Sidebar
+        onWorkspace={setWorkspace}
         activeFolder={activeFolder}
         onFolderChange={handleFolderChange}
         onCompose={handleCompose}
@@ -78,8 +89,9 @@ const AppLayout = ({ userEmail, isAdmin }: Props) => {
       <div className="resize-handle" onMouseDown={startResize} />
 
       <MailViewer
+        userEmail={userEmail}
         thread={selectedThread}
-        folder={activeFolder}
+        folder={selectedThread?.latest.folder || activeFolder}
         onReply={handleReply}
         onDelete={handleDelete}
         onUpdate={() => {
@@ -89,12 +101,24 @@ const AppLayout = ({ userEmail, isAdmin }: Props) => {
         onMobileBack={() => setMobilePanel('list')}
       />
 
+      {workspace && (
+        <WorkspacePanel
+          initialTab={workspace}
+          onClose={closeWorkspace}
+          onCompose={writeToContact}
+        />
+      )}
       {composeOpen && (
         <ComposeModal
           isOpen={composeOpen}
           userEmail={userEmail || ''}
           onSent={handleSent}
           onClose={closeCompose}
+          initialCc={composeState.cc}
+          initialBcc={composeState.bcc}
+          initialAttachments={composeState.attachments}
+          draftUid={composeState.draftUid}
+          references={composeState.references}
           initialTo={composeState.to}
           initialSubject={composeState.subject}
           initialBody={composeState.body}

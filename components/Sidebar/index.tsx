@@ -8,9 +8,11 @@ import ThemeToggle from '../ThemeToggle'
 import Spinner from '../Spinner'
 import { useSidebar } from './useSidebar'
 import { useLogout } from '@/lib/useLogout'
+import type { WorkspaceTab } from '../WorkspacePanel/types'
 import './Sidebar.scss'
 
-interface Props {
+type Props = {
+  onWorkspace?: (tab: WorkspaceTab) => void
   activeFolder: string
   onFolderChange: (folder: string) => void
   onCompose: () => void
@@ -22,6 +24,7 @@ interface Props {
 }
 
 export default function Sidebar({
+  onWorkspace,
   activeFolder,
   onFolderChange,
   onCompose,
@@ -30,7 +33,7 @@ export default function Sidebar({
   refreshTrigger,
   onCommands,
 }: Props) {
-  const { folders, loading, refetch } = useSidebar()
+  const { folders, loading, error, refetch } = useSidebar()
   const logout = useLogout()
 
   useEffect(() => {
@@ -60,6 +63,14 @@ export default function Sidebar({
         </button>
       </div>
       <p className="section-label">Your workspace</p>
+      {error && (
+        <div className="folder-error" role="alert">
+          <p>{error}</p>
+          <button type="button" onClick={refetch}>
+            Try again
+          </button>
+        </div>
+      )}
       <nav className="folders" aria-label="Mail folders">
         {loading ? (
           <div className="loading">
@@ -77,6 +88,36 @@ export default function Sidebar({
         )}
       </nav>
 
+      <nav className="workspace-links" aria-label="Organize your workspace">
+        <button
+          type="button"
+          data-icon="person"
+          onClick={() => onWorkspace?.('contacts')}
+        >
+          Contacts
+        </button>
+        <button
+          type="button"
+          data-icon="clock"
+          onClick={() => onWorkspace?.('scheduled')}
+        >
+          Scheduled
+        </button>
+        <button
+          type="button"
+          data-icon="clock"
+          onClick={() => onWorkspace?.('later')}
+        >
+          Later & reminders
+        </button>
+        <button
+          type="button"
+          data-icon="folder-default"
+          onClick={() => onWorkspace?.('folders')}
+        >
+          Manage folders
+        </button>
+      </nav>
       <div className="footer">
         {userEmail && (
           <div className="user-info">

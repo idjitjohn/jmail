@@ -7,8 +7,7 @@ import ThemeToggle from '../ThemeToggle'
 import './AdminSidebar.scss'
 
 const NAV = [
-  { href: '/admin', label: 'Dashboard', icon: 'dashboard' },
-  { href: '/admin/accounts', label: 'Accounts', icon: 'accounts' },
+  { href: '/admin', label: 'Mailboxes', icon: 'accounts' },
   { href: '/admin/mail-server', label: 'Mail server', icon: 'system' },
 ]
 
@@ -29,15 +28,27 @@ export default function AdminSidebar() {
       </div>
 
       <nav className="nav">
-        {NAV.map(item => (
+        {NAV.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={clsx('nav-item', {
-              active: item.href === '/admin'
-                ? pathname === '/admin'
-                : pathname.startsWith(item.href),
+              active:
+                item.href === '/admin'
+                  ? pathname === '/admin' ||
+                    pathname.startsWith('/admin/accounts')
+                  : pathname.startsWith(item.href),
             })}
+            aria-current={
+              (
+                item.href === '/admin'
+                  ? pathname === '/admin' ||
+                    pathname.startsWith('/admin/accounts')
+                  : pathname.startsWith(item.href)
+              )
+                ? 'page'
+                : undefined
+            }
             data-icon={item.icon}
           >
             <span className="nav-icon" />

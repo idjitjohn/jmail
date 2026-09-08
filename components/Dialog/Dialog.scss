@@ -1,0 +1,41 @@
+.Dialog {
+  width: min(60em, calc(100% - 2em));
+  max-height: calc(100dvh - 2em);
+  padding: 0;
+  margin: auto;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 1em;
+  background: var(--color-bg-default);
+  color: var(--color-text);
+  &::backdrop {
+    background: #0008;
+    backdrop-filter: blur(0.2em);
+  }
+  .heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+    padding: 1.2em 1.5em;
+    border-bottom: 1px solid var(--color-border-muted);
+    h2 {
+      font-size: 1.1em;
+      font-weight: 650;
+    }
+    button {
+      padding: 0.5em;
+      color: var(--color-primary);
+      cursor: pointer;
+      font-size: 0.85em;
+    }
+  }
+  .content {
+    padding: 1.5em;
+  }
+  @media (max-width: 40em) {
+    width: calc(100% - 1em);
+    .content {
+      padding: 1em;
+    }
+  }
+}
