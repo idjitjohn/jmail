@@ -1,5 +1,7 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import { createContext, useContext, useReducer, useCallback } from 'react'
 import './Toast.scss'
 
@@ -17,16 +19,16 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue>({ toast: () => {} })
 
-type Action =
-  | { type: 'ADD'; item: ToastItem }
-  | { type: 'REMOVE'; id: string }
+type Action = { type: 'ADD'; item: ToastItem } | { type: 'REMOVE'; id: string }
 
 function reducer(state: ToastItem[], action: Action): ToastItem[] {
   if (action.type === 'ADD') return [...state, action.item]
-  return state.filter(t => t.id !== action.id)
+  return state.filter((t) => t.id !== action.id)
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useLocale()
+
   const [toasts, dispatch] = useReducer(reducer, [])
 
   const toast = useCallback((message: string, type: ToastType = 'info') => {
@@ -39,15 +41,19 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ toast }}>
       {children}
       <div className="ToastContainer" aria-live="polite">
-        {toasts.map(t => (
-          <div key={t.id} className={`toast ${t.type}`}>
+        {toasts.map((item) => (
+          <div key={item.id} className={`toast ${item.type}`}>
             <span className="toast-icon">
-              {t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : 'ℹ'}
+              {item.type === 'success'
+                ? '✓'
+                : item.type === 'error'
+                  ? '✕'
+                  : 'ℹ'}
             </span>
-            <span className="toast-msg">{t.message}</span>
+            <span className="toast-msg">{t(item.message)}</span>
             <button
               className="toast-close"
-              onClick={() => dispatch({ type: 'REMOVE', id: t.id })}
+              onClick={() => dispatch({ type: 'REMOVE', id: item.id })}
               type="button"
             >
               ×

@@ -1,4 +1,6 @@
 'use client'
+
+import { useLocale } from '@/components/LocaleProvider/useLocale'
 import { useDialog } from './useDialog'
 import './Dialog.scss'
 
@@ -9,6 +11,8 @@ type Props = {
   children: React.ReactNode
 }
 const Dialog = ({ title, onClose, busy = false, children }: Props) => {
+  const { t } = useLocale()
+
   const { ref, id, cancel } = useDialog(onClose, busy)
   return (
     <dialog
@@ -22,11 +26,11 @@ const Dialog = ({ title, onClose, busy = false, children }: Props) => {
         <h2 id={id}>{title}</h2>
         <button
           type="button"
-          aria-label="Close"
+          aria-label={t('Close')}
           disabled={busy}
           onClick={onClose}
         >
-          Close
+          {t('Close')}
         </button>
       </div>
       <div className="content">{children}</div>

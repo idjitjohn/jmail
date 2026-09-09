@@ -1,3 +1,7 @@
+'use client'
+
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import './Badge.scss'
 
 interface Props {
@@ -6,8 +10,10 @@ interface Props {
 }
 
 export default function Badge({ count, max = 99 }: Props) {
+  const { t } = useLocale()
+
   if (count <= 0) return null
   const label = count > max ? `${max}+` : String(count)
 
-  return <span className="Badge">{label}</span>
+  return <span className="Badge">{t(label)}</span>
 }

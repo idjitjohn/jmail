@@ -11,10 +11,21 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (!session) return unauthorized()
 
   const { uid } = await params
-  const { folder, targetFolder } = await req.json()
+  const { folder, targetFolder } = (await req.json().catch(() => ({}))) || {}
 
-  if (!folder || !targetFolder) {
-    return NextResponse.json({ error: 'folder and targetFolder required' }, { status: 400 })
+  if (
+    !/^[1-9]\d*$/.test(uid) ||
+    !Number.isSafeInteger(Number(uid)) ||
+    typeof folder !== 'string' ||
+    !folder ||
+    typeof targetFolder !== 'string' ||
+    !targetFolder ||
+    folder === targetFolder
+  ) {
+    return NextResponse.json(
+      { error: 'folder and targetFolder required' },
+      { status: 400 },
+    )
   }
 
   const client = createImapClient(session.email, session.password)
@@ -22,14 +33,19 @@ export async function POST(req: NextRequest, { params }: Params) {
   try {
     await client.connect()
     await client.mailboxOpen(folder)
-    await client.messageMove(`${uid}`, targetFolder, { uid: true })
-    await client.logout()
+    const moved = await client.messageMove(uid, targetFolder, { uid: true })
+    if (!moved)
+      throw new Error(
+        'This message could not be moved. Refresh the folder and try again.',
+      )
 
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Failed to move message' },
-      { status: 500 }
+      { status: 500 },
     )
+  } finally {
+    await client.logout().catch(() => client.close())
   }
 }

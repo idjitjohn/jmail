@@ -4,6 +4,9 @@ import { resetPassword } from '@/lib/maddy'
 import { createImapClient } from '@/lib/mail'
 import { mailAuthenticationError } from '@/lib/mail-errors'
 import { cookies } from 'next/headers'
+import { stopIdleMonitor } from '@/lib/imap-pool'
+import { randomUUID } from 'crypto'
+import { revokeSessions } from '@/lib/session-revisions'
 
 export async function POST(req: Request) {
   const session = await getSession()
@@ -18,7 +21,8 @@ export async function POST(req: Request) {
     !currentPassword ||
     !newPassword ||
     currentPassword.length > 1000 ||
-    newPassword.length > 1000
+    newPassword.length > 1000 ||
+    /[\r\n\x00]/.test(newPassword)
   ) {
     return NextResponse.json(
       { error: 'Both passwords are required' },
@@ -47,8 +51,10 @@ export async function POST(req: Request) {
   }
 
   let token: string
+  const revision = randomUUID()
   try {
-    token = await createSession({ ...session, password: newPassword })
+    token = await createSession({ ...session, password: newPassword }, revision)
+    await revokeSessions(session.email)
   } catch {
     return NextResponse.json(
       {
@@ -60,7 +66,29 @@ export async function POST(req: Request) {
     )
   }
 
-  await resetPassword(session.email, newPassword)
+  try {
+    await resetPassword(session.email, newPassword)
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          'Could not update the password on the mail server. Please try again.',
+      },
+      { status: 503 },
+    )
+  }
+  stopIdleMonitor(session.email)
+  try {
+    await revokeSessions(session.email, revision)
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          'Your password was changed. JMail could not finish updating your session. Sign in with your new password.',
+      },
+      { status: 503 },
+    )
+  }
   const store = await cookies()
   store.set('session', token, {
     httpOnly: true,

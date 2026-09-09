@@ -6,11 +6,13 @@ import { claimDue, finishScheduled } from '@/lib/scheduled'
 import { processLater } from '@/lib/mail-later'
 import { deliverMessage } from '@/lib/outgoing'
 
+const heartbeat = path.resolve(
+  process.env.JMAIL_WORKER_STATUS_FILE || '/var/lib/maddy/jmail/worker.json',
+)
+
 export const GET = async (req: NextRequest) => {
   const provided =
-    req.headers.get('authorization')?.replace(/^Bearer /, '') ||
-    req.nextUrl.searchParams.get('secret') ||
-    ''
+    req.headers.get('authorization')?.replace(/^Bearer /, '') || ''
   const expected = process.env.CRON_SECRET || ''
   if (
     !expected ||
@@ -47,9 +49,6 @@ export const GET = async (req: NextRequest) => {
     }
   }
   const reminders = await processLater()
-  const heartbeat = path.resolve(
-    process.env.JMAIL_WORKER_STATUS_FILE || '/var/lib/maddy/jmail/worker.json',
-  )
   await withFileLock(heartbeat, () =>
     writeJson(heartbeat, { lastRun: new Date().toISOString() }),
   )

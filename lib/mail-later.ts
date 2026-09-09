@@ -136,14 +136,22 @@ export const createLater = async (
     await client.logout().catch(() => client.close())
   }
 }
-export const changeLater = (email: string, id: string, action: string) =>
+export const changeLater = (
+  email: string,
+  id: string,
+  action: string,
+  password?: string,
+) =>
   update(async (rows) => {
+    if (typeof id !== 'string' || !['restore', 'dismiss'].includes(action))
+      throw new Error('Choose a valid reminder action.')
     const index = rows.findIndex((row) => row.id === id && row.email === email)
     if (index < 0) throw new Error('Reminder not found.')
     const row = rows[index]
     if (row.status === 'processing')
       throw new Error('This message is being processed. Try again shortly.')
     if (row.mode === 'snooze' && action === 'restore') {
+      if (password) row.credential = await seal({ password }, 'jmail-later')
       row.dueAt = new Date().toISOString()
       row.status = 'pending'
       delete row.error

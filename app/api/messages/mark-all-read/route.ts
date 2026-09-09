@@ -18,12 +18,13 @@ export async function POST(req: NextRequest) {
       await client.messageFlagsAdd('1:*', ['\\Seen'])
     }
 
-    await client.logout()
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Failed to mark all as read' },
-      { status: 500 }
+      { status: 500 },
     )
+  } finally {
+    await client.logout().catch(() => client.close())
   }
 }

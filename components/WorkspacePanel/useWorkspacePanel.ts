@@ -1,4 +1,5 @@
 'use client'
+import { readApiResponse } from '@/lib/api-client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Contact } from '@/lib/contacts'
 import type { MailFolder } from '@/lib/types'
@@ -25,10 +26,7 @@ const request = async <T>(
     headers: { 'Content-Type': 'application/json' },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   })
-  const data = await response.json()
-  if (!response.ok)
-    throw new Error(data.error || 'Could not complete this action.')
-  return data
+  return readApiResponse<T>(response, 'Could not complete this action.')
 }
 export const useWorkspacePanel = (
   initialTab: WorkspaceTab,
@@ -263,7 +261,9 @@ export const useWorkspacePanel = (
     protectedFolder: (folder: MailFolder) =>
       Boolean(
         folder.specialUse ||
-        /^(inbox|sent|drafts|trash|spam|junk|archive)$/i.test(folder.path),
+        /^(inbox|sent|drafts|trash|spam|junk|archive|snoozed)$/i.test(
+          folder.path,
+        ),
       ),
   }
 }

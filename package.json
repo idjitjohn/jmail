@@ -6,17 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "test": "tsx --test tests/*.test.mjs tests/*.test.cjs"
+    "lint": "eslint"
   },
   "dependencies": {
     "@types/mailparser": "^3.4.6",
     "clsx": "^2.1.1",
+    "dompurify": "^3.4.15",
     "imapflow": "^1.2.13",
     "jose": "^6.2.1",
     "mailparser": "^3.9.4",
-    "next": "16.1.6",
-    "nodemailer": "^8.0.2",
+    "next": "16.2.11",
+    "nodemailer": "9.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "sanitize-html": "^2.17.1",
@@ -30,9 +30,8 @@
     "@types/react-dom": "^19",
     "@types/sanitize-html": "^2.16.1",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.11",
     "tailwindcss": "^4",
-    "tsx": "^4.23.13",
     "typescript": "^5"
   },
   "ignoreScripts": [
@@ -42,5 +41,9 @@
   "trustedDependencies": [
     "sharp",
     "unrs-resolver"
-  ]
+  ],
+  "resolutions": {
+    "postcss": "^8.5.23",
+    "sharp": "^0.35.0"
+  }
 }

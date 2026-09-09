@@ -54,10 +54,10 @@ export const readJson = async <T>(file: string, fallback: T): Promise<T> => {
   }
 }
 
-export const writeJson = async (file: string, value: unknown) => {
+export const writeJson = async (file: string, value: unknown, mode = 0o600) => {
   const temp = `${file}.${randomUUID()}.tmp`
   try {
-    await writeFile(temp, JSON.stringify(value), { mode: 0o600 })
+    await writeFile(temp, JSON.stringify(value), { mode })
     await rename(temp, file)
   } finally {
     await rm(temp, { force: true })

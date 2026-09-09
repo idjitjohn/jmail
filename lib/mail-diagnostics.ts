@@ -98,12 +98,17 @@ const smtp = (email: string, password: string) => nodemailer.createTransport({
   tls: mailTlsOptions(host),
 })
 
-const imap = (email: string, password: string) => new ImapFlow({
+const imap = (email: string, password: string) => {
+  const client = new ImapFlow({
   host, port: imapPort, secure: imapPort === 993, doSTARTTLS: imapPort !== 993,
   auth: { user: email, pass: password }, logger: false,
   connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000,
   tls: mailTlsOptions(host),
-})
+  })
+  // Command-level error reporting
+  client.on('error', () => {})
+  return client
+}
 
 export const checkMailbox = async (email: string, password: string, token?: string): Promise<DiagnosticResult> => {
   const client = imap(email, password)

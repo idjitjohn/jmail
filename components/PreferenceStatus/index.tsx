@@ -1,9 +1,13 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import { usePreferences } from '../PreferencesProvider/usePreferences'
 import './PreferenceStatus.scss'
 
 const PreferenceStatus = () => {
+  const { t } = useLocale()
+
   const { saving, saved, error, retry } = usePreferences()
   return (
     <div
@@ -11,16 +15,18 @@ const PreferenceStatus = () => {
       role={error ? 'alert' : 'status'}
     >
       <span>
-        {error ||
-          (saving
-            ? 'Saving your preference…'
-            : saved
-              ? 'Saved to your account'
-              : 'Changes save automatically to your account')}
+        {t(
+          error ||
+            (saving
+              ? 'Saving your preference…'
+              : saved
+                ? 'Saved to your account'
+                : 'Changes save automatically to your account'),
+        )}
       </span>
       {error && (
         <button type="button" disabled={saving} onClick={retry}>
-          Reload preferences
+          {t('Reload preferences')}
         </button>
       )}
     </div>

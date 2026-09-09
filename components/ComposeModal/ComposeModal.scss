@@ -459,12 +459,15 @@
       flex-shrink: 0;
 
       .footer-left {
+        min-width: 0;
+        max-width: 100%;
         display: flex;
         align-items: center;
         gap: 0.5em;
 
         .attach-btn,
         .discard-btn {
+          flex-shrink: 0;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -510,12 +513,15 @@
       }
 
       .footer-actions {
+        max-width: 100%;
+        min-width: 0;
         display: flex;
         margin-left: auto;
         align-items: center;
         gap: 0.5em;
 
         .schedule-toggle {
+          flex-shrink: 0;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -606,6 +612,34 @@
           .schedule-toggle {
             width: 2.75em;
             height: 2.75em;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 26em) {
+  .ComposeModal {
+    .panel {
+      .panel-footer {
+        .footer-left {
+          width: 100%;
+          .SignaturePicker {
+            flex: 1;
+          }
+        }
+        .footer-actions {
+          width: 100%;
+          > .Button {
+            white-space: normal;
+            min-width: 0;
+            &:first-child {
+              flex: 1;
+            }
+            &:last-child {
+              flex-shrink: 0;
+            }
           }
         }
       }

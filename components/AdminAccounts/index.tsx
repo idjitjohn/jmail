@@ -1,4 +1,6 @@
 'use client'
+
+import { useLocale } from '@/components/LocaleProvider/useLocale'
 import Link from 'next/link'
 import AccountTable from '../AccountTable'
 import { useAdminAccounts } from './useAdminAccounts'
@@ -14,56 +16,58 @@ const AdminAccounts = ({
   domains = [],
   initialError = '',
 }: Props) => {
+  const { t, number } = useLocale()
+
   const vm = useAdminAccounts(initialAccounts, initialError, domains)
   return (
     <div className="AdminAccounts">
       <div className="welcome">
         <div className="copy">
-          <p className="eyebrow">Your mail, together</p>
-          <h2>A mailbox for everyone.</h2>
+          <p className="eyebrow">{t('Your mail, together')}</p>
+          <h2>{t('A mailbox for everyone.')}</h2>
           <p>
-            Create addresses, find a person, and help them get back into their
-            mail.
+            {t(
+              'Create addresses, find a person, and help them get back into their mail.',
+            )}
           </p>
         </div>
         <Link href="/admin/accounts/new" className="new-btn">
-          Create mailbox
+          {t('Create mailbox')}
         </Link>
       </div>
       <div className="overview">
         <div className="metric">
-          <strong>{vm.error ? '—' : vm.accounts.length}</strong>
-          <span>Mailboxes</span>
+          <strong>{vm.error ? '—' : number(vm.accounts.length)}</strong>
+          <span>{t('Mailboxes')}</span>
         </div>
         <Link href="/admin/mail-server" className="metric">
           <strong>
-            {
-              new Set([
-                ...domains,
-                ...vm.accounts.map((email) => email.split('@')[1]),
-              ]).size
-            }
+            {typeof vm.domainCount === 'number'
+              ? number(vm.domainCount)
+              : vm.domainCount}
           </strong>
-          <span>Domains · manage</span>
+          <span>{t('Domains · manage')}</span>
         </Link>
         <Link href="/admin/mail-server?tab=diagnostics" className="help-card">
-          <strong>A message didn’t arrive?</strong>
-          <span>Check delivery and domain authentication →</span>
+          <strong>{t('A message didn’t arrive?')}</strong>
+          <span>{t('Check delivery and domain authentication →')}</span>
         </Link>
       </div>
       {vm.error && (
         <div className="error" role="alert">
-          <p>{vm.error}</p>
+          <p>{t(vm.error)}</p>
           <button type="button" disabled={vm.loading} onClick={vm.refresh}>
-            Try again
+            {t('Try again')}
           </button>
         </div>
       )}
       {!vm.error && vm.accounts.length === 0 ? (
         <div className="empty">
-          <h3>Welcome to your mail workspace</h3>
-          <p>Start by connecting a domain, then create the first mailbox.</p>
-          <Link href="/admin/mail-server">Set up a domain →</Link>
+          <h3>{t('Welcome to your mail workspace')}</h3>
+          <p>
+            {t('Start by connecting a domain, then create the first mailbox.')}
+          </p>
+          <Link href="/admin/mail-server">{t('Set up a domain →')}</Link>
         </div>
       ) : (
         !vm.error && (

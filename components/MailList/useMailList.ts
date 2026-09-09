@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useLocale } from '../LocaleProvider/useLocale'
+import { folderLabel as localizedFolderName } from '@/lib/i18n/folders'
+import { useState, useEffect, useCallback, useMemo, useRef, useId } from 'react'
 import type { MailMessage, MailFolder } from '@/lib/types'
 import type { MailFilter } from '@/lib/mail-search'
 import { usePreferences } from '../PreferencesProvider/usePreferences'
@@ -14,6 +16,7 @@ export const useMailList = ({
   onSelect,
   onRefresh,
 }: MailListOptions) => {
+  const { locale } = useLocale()
   const { preferences } = usePreferences()
   const [messages, setMessages] = useState<MailMessage[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,10 +40,17 @@ export const useMailList = ({
   const [bulkBusy, setBulkBusy] = useState(false)
   const [destinations, setDestinations] = useState<MailFolder[]>([])
   const [selectionMode, setSelectionMode] = useState(false)
+  const [moveOpen, setMoveOpen] = useState(false)
+  const [folderQuery, setFolderQuery] = useState('')
   const [filter, setFilter] = useState<MailFilter>('all')
   const [refreshCount, setRefreshCount] = useState(0)
   const [markingRead, setMarkingRead] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
+  const searchOptionsRef = useRef<HTMLButtonElement>(null)
+  const selectAllRef = useRef<HTMLInputElement>(null)
+  const moveButtonRef = useRef<HTMLButtonElement>(null)
+  const searchOptionsId = useId()
+  const folderPickerId = useId()
   const requestRef = useRef<AbortController | null>(null)
   const loadingRef = useRef(false)
 
@@ -57,6 +67,10 @@ export const useMailList = ({
       loadingRef.current = true
       setLoading(true)
       setError(null)
+      if (pg === 1) {
+        setSelected(new Set())
+        setMoveOpen(false)
+      }
       try {
         const params = new URLSearchParams({
           folder,
@@ -227,6 +241,19 @@ export const useMailList = ({
       .catch(() => {})
   }, [refreshTrigger])
   const selectedThreads = threads.filter((thread) => selected.has(thread.id))
+  const allSelected =
+    threads.length > 0 && selectedThreads.length === threads.length
+  useEffect(() => {
+    if (selectAllRef.current)
+      selectAllRef.current.indeterminate =
+        selectedThreads.length > 0 && !allSelected
+  }, [selectedThreads.length, allSelected, selectionMode])
+  const toggleSelectionMode = () => {
+    if (bulkBusy) return
+    setSelectionMode((previous) => !previous)
+    setSelected(new Set())
+    setMoveOpen(false)
+  }
   const toggleSelection = (id: string) =>
     setSelected((previous) => {
       const next = new Set(previous)
@@ -257,6 +284,7 @@ export const useMailList = ({
       if (!response.ok)
         throw new Error(data.error || 'Could not update these messages.')
       setSelected(new Set())
+      setMoveOpen(false)
       refresh()
       onRefresh?.()
     } catch (error) {
@@ -280,16 +308,55 @@ export const useMailList = ({
     scope,
     setScope,
     advancedOpen,
-    setAdvancedOpen,
+    toggleSearchOptions: () => setAdvancedOpen((previous) => !previous),
+    searchOptionsRef,
+    searchOptionsId,
+    hasSearchOptions: scope === 'all' || Object.values(fields).some(Boolean),
+    handleSearchOptionsKeyDown: (event: React.KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      event.stopPropagation()
+      setAdvancedOpen(false)
+      searchOptionsRef.current?.focus()
+    },
     fields,
     setFields,
     selected,
     selectionMode,
-    setSelectionMode,
+    toggleSelectionMode,
+    selectAllRef,
+    allSelected,
     selectedCount: selectedThreads.length,
     bulkBusy,
     bulkAction,
-    destinations,
+    moveOpen,
+    moveButtonRef,
+    folderPickerId,
+    folderQuery,
+    setFolderQuery,
+    toggleMove: () => {
+      setMoveOpen((previous) => !previous)
+      setFolderQuery('')
+    },
+    handleFolderPickerKeyDown: (event: React.KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      event.stopPropagation()
+      setMoveOpen(false)
+      moveButtonRef.current?.focus()
+    },
+    destinations: destinations
+      .map((item) => ({ ...item, name: localizedFolderName(item, locale) }))
+      .filter((item) =>
+        `${item.name} ${item.path}`
+          .toLowerCase()
+          .includes(folderQuery.trim().toLowerCase()),
+      ),
+    handleThreadClick: (thread: import('@/lib/types').MailThread) => {
+      if (selectionMode) {
+        if (!bulkBusy) toggleSelection(thread.id)
+      } else onSelect(thread)
+    },
     toggleSelection,
     selectAll: () =>
       setSelected(
@@ -318,7 +385,13 @@ export const useMailList = ({
       ? handleSwipeDelete
       : undefined,
     shortcutsEnabled: preferences.keyboardShortcuts,
-    folderLabel: folder === 'INBOX' ? 'Inbox' : folder,
+    folderLabel: localizedFolderName(
+      destinations.find((item) => item.path === folder) || {
+        path: folder,
+        name: folder,
+      },
+      locale,
+    ),
     emptyTitle: query
       ? 'No matches just yet'
       : filter === 'unread'

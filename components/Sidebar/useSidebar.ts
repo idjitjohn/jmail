@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { readApiResponse } from '@/lib/api-client'
 import type { MailFolder } from '@/lib/types'
 
 export function useSidebar() {
@@ -11,12 +12,18 @@ export function useSidebar() {
   const fetchFolders = useCallback(async () => {
     try {
       const res = await fetch('/api/folders')
-      if (!res.ok) throw new Error('Could not load folders.')
-      const data = await res.json()
+      const data = await readApiResponse<MailFolder[]>(
+        res,
+        'Could not load folders.',
+      )
       setFolders(data)
       setError('')
-    } catch {
-      setError('Folders are unavailable. Please try again.')
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Folders are unavailable. Please try again.',
+      )
     } finally {
       setLoading(false)
     }

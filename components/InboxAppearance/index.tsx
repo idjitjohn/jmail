@@ -1,11 +1,15 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import PreferenceToggle from '../PreferenceToggle'
 import PreferenceStatus from '../PreferenceStatus'
 import { useInboxAppearance } from './useInboxAppearance'
 import './InboxAppearance.scss'
 
 const InboxAppearance = () => {
+  const { t } = useLocale()
+
   const { preferences, saving, setDensity, setPreviews, setReadingSize } =
     useInboxAppearance()
   return (
@@ -14,20 +18,24 @@ const InboxAppearance = () => {
       aria-labelledby="inbox-appearance-title"
     >
       <div className="heading">
-        <h2 id="inbox-appearance-title">A comfortable place for your mail</h2>
-        <p>Give conversations room to breathe, or fit a little more in.</p>
+        <h2 id="inbox-appearance-title">
+          {t('A comfortable place for your mail')}
+        </h2>
+        <p>
+          {t('Give conversations room to breathe, or fit a little more in.')}
+        </p>
       </div>
       <div className="card">
         <div className="choice-row">
-          <span className="label">Inbox spacing</span>
-          <div className="choices" role="group" aria-label="Inbox spacing">
+          <span className="label">{t('Inbox spacing')}</span>
+          <div className="choices" role="group" aria-label={t('Inbox spacing')}>
             <button
               type="button"
               disabled={saving}
               aria-pressed={preferences.density === 'comfortable'}
               onClick={() => setDensity('comfortable')}
             >
-              Comfortable
+              {t('Comfortable')}
             </button>
             <button
               type="button"
@@ -35,27 +43,31 @@ const InboxAppearance = () => {
               aria-pressed={preferences.density === 'compact'}
               onClick={() => setDensity('compact')}
             >
-              Compact
+              {t('Compact')}
             </button>
           </div>
         </div>
         <PreferenceToggle
-          label="Message previews"
-          description="Show the first few words underneath each subject."
+          label={t('Message previews')}
+          description={t('Show the first few words underneath each subject.')}
           checked={preferences.showPreviews}
           onChange={setPreviews}
           disabled={saving}
         />
         <div className="choice-row">
-          <span className="label">Message text size</span>
-          <div className="choices" role="group" aria-label="Message text size">
+          <span className="label">{t('Message text size')}</span>
+          <div
+            className="choices"
+            role="group"
+            aria-label={t('Message text size')}
+          >
             <button
               type="button"
               disabled={saving}
               aria-pressed={preferences.readingSize === 'standard'}
               onClick={() => setReadingSize('standard')}
             >
-              Standard
+              {t('Standard')}
             </button>
             <button
               type="button"
@@ -63,28 +75,30 @@ const InboxAppearance = () => {
               aria-pressed={preferences.readingSize === 'large'}
               onClick={() => setReadingSize('large')}
             >
-              Larger
+              {t('Larger')}
             </button>
           </div>
         </div>
       </div>
       <div
         className={`inbox-preview ${preferences.density}${preferences.showPreviews ? '' : ' no-preview'}`}
-        aria-label="Inbox appearance preview"
+        aria-label={t('Inbox appearance preview')}
       >
-        <span className="preview-label">A little preview</span>
+        <span className="preview-label">{t('A little preview')}</span>
         <div className="sample">
           <div className="sample-copy">
-            <strong>Maya Chen</strong>
-            <span className="sample-subject">Something good is on its way</span>
+            <strong>{t('Maya Chen')}</strong>
+            <span className="sample-subject">
+              {t('Something good is on its way')}
+            </span>
             {preferences.showPreviews && (
-              <p>A few ideas for our next adventure together…</p>
+              <p>{t('A few ideas for our next adventure together…')}</p>
             )}
           </div>
-          <span className="sample-time">9:41 AM</span>
+          <span className="sample-time">{t('9:41 AM')}</span>
         </div>
         <p className={`reading-sample ${preferences.readingSize}`}>
-          A message that’s easy on the eyes.
+          {t('A message that’s easy on the eyes.')}
         </p>
       </div>
       <PreferenceStatus />

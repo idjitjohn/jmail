@@ -1,3 +1,4 @@
+import { languageTags, type Locale } from './i18n/config'
 import type { MailMessage } from './types'
 
 const escapeHtml = (text: string) =>
@@ -13,6 +14,7 @@ export const replyContext = (
   message: MailMessage,
   ownEmail: string,
   mode: 'reply' | 'all' | 'forward',
+  locale: Locale = 'enUS',
 ) => {
   const own = ownEmail.toLowerCase()
   const seen = new Set([own])
@@ -43,7 +45,7 @@ export const replyContext = (
   const content =
     message.html ||
     `<p>${escapeHtml(message.text || '').replace(/\n/g, '<br>')}</p>`
-  const attribution = `${message.from.name || message.from.address} · ${message.from.address} · ${new Date(message.date).toLocaleString()}`
+  const attribution = `${message.from.name || message.from.address} · ${message.from.address} · ${new Date(message.date).toLocaleString(languageTags[locale])}`
   return {
     to,
     cc,

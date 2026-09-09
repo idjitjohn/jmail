@@ -1,5 +1,6 @@
 'use client'
 
+import { useLocale } from '../LocaleProvider/useLocale'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { usePreferences } from '../PreferencesProvider/usePreferences'
 import { useRouter } from 'next/navigation'
@@ -11,6 +12,7 @@ import type { Command } from '../CommandPalette/types'
 import type { ComposeState, MobilePanel } from './types'
 
 export const useAppLayout = () => {
+  const { t } = useLocale()
   const { preferences } = usePreferences()
   const [workspace, setWorkspace] = useState<WorkspaceTab | null>(null)
   const [activeFolder, setActiveFolder] = useState('INBOX')
@@ -109,8 +111,8 @@ export const useAppLayout = () => {
         Notification.permission === 'granted'
       ) {
         try {
-          const notification = new Notification('New mail in JMail', {
-            body: 'Your inbox has new mail.',
+          const notification = new Notification(t('New mail in JMail'), {
+            body: t('Your inbox has new mail.'),
             tag: 'jmail-new-mail',
           })
           notification.onclick = () => {

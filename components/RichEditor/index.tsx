@@ -1,21 +1,25 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import { useRichEditor } from './useRichEditor'
 import './RichEditor.scss'
 
-interface Props {
+type Props = {
   defaultValue?: string
   resetToken?: number
   onChange: (html: string) => void
   placeholder?: string
 }
 
-export default function RichEditor({
+const RichEditor = ({
   defaultValue = '',
   resetToken = 0,
   onChange,
   placeholder,
-}: Props) {
+}: Props) => {
+  const { t } = useLocale()
+
   const {
     divRef,
     formats,
@@ -23,6 +27,7 @@ export default function RichEditor({
     exec,
     toggleLink,
     handleInput,
+    handlePaste,
     handleKeyDown,
   } = useRichEditor({
     defaultValue,
@@ -40,7 +45,7 @@ export default function RichEditor({
             e.preventDefault()
             exec('bold')
           }}
-          title="Bold (⌘B)"
+          title={t('Bold (⌘B)')}
         >
           <b>B</b>
         </button>
@@ -51,7 +56,7 @@ export default function RichEditor({
             e.preventDefault()
             exec('italic')
           }}
-          title="Italic (⌘I)"
+          title={t('Italic (⌘I)')}
         >
           <i>I</i>
         </button>
@@ -62,7 +67,7 @@ export default function RichEditor({
             e.preventDefault()
             exec('underline')
           }}
-          title="Underline (⌘U)"
+          title={t('Underline (⌘U)')}
         >
           <u>U</u>
         </button>
@@ -74,7 +79,7 @@ export default function RichEditor({
             e.preventDefault()
             toggleLink()
           }}
-          title={inLink ? 'Remove link (⌘K)' : 'Insert link (⌘K)'}
+          title={inLink ? t('Remove link (⌘K)') : t('Insert link (⌘K)')}
         />
       </div>
 
@@ -83,14 +88,17 @@ export default function RichEditor({
         className="editor"
         contentEditable
         role="textbox"
-        aria-label="Message body"
+        aria-label={t('Message body')}
         aria-multiline="true"
         spellCheck
         suppressContentEditableWarning
         onInput={handleInput}
+        onPaste={handlePaste}
         onKeyDown={handleKeyDown}
         data-placeholder={placeholder}
       />
     </div>
   )
 }
+
+export default RichEditor

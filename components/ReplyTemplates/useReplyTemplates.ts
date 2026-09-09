@@ -1,9 +1,11 @@
 'use client'
 
+import { useLocale } from '../LocaleProvider/useLocale'
 import { useEffect, useMemo, useState } from 'react'
 import { starterTemplates, type ReplyTemplate } from '@/lib/reply-templates'
 
 export const useReplyTemplates = () => {
+  const { t } = useLocale()
   const [templates, setTemplates] = useState<ReplyTemplate[]>([])
   const [query, setQuery] = useState('')
   const [editId, setEditId] = useState<string | null>(null)
@@ -37,13 +39,18 @@ export const useReplyTemplates = () => {
     () =>
       [
         ...templates.map((template) => ({ ...template, custom: true })),
-        ...starterTemplates.map((template) => ({ ...template, custom: false })),
+        ...starterTemplates.map((template) => ({
+          ...template,
+          name: t(template.name),
+          body: t(template.body),
+          custom: false,
+        })),
       ].filter((template) =>
         `${template.name} ${template.body}`
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
-    [templates, query],
+    [templates, query, t],
   )
 
   const save = async () => {

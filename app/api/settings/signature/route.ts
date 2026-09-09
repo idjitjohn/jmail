@@ -1,21 +1,5 @@
-import { NextResponse } from 'next/server'
-import { getSession, unauthorized } from '@/lib/auth'
-import { getUserData, setUserData } from '@/lib/userdata'
+import { textSetting } from '@/lib/text-setting'
 
-export async function GET() {
-  const session = await getSession()
-  if (!session) return unauthorized()
-
-  const data = await getUserData(session.email)
-  return NextResponse.json({ signature: data.signature ?? '' })
-}
-
-export async function POST(req: Request) {
-  const session = await getSession()
-  if (!session) return unauthorized()
-
-  const { signature } = await req.json()
-
-  await setUserData(session.email, { signature: signature ?? '' })
-  return NextResponse.json({ ok: true })
-}
+const handlers = textSetting('signature', 10000)
+export const GET = handlers.GET
+export const POST = handlers.POST

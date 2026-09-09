@@ -1,17 +1,14 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import Avatar from '../Avatar'
 import LaterDialog from '../LaterDialog'
 import AttachmentPreview from '../AttachmentPreview'
 import Spinner from '../Spinner'
 import Toolbar from '../Toolbar'
 import { useMailViewer } from './useMailViewer'
-import {
-  formatFullDate,
-  formatDate,
-  formatAddress,
-  formatBytes,
-} from '@/lib/format'
+import { formatAddress } from '@/lib/format'
 import type { ComposeState } from '../AppLayout/types'
 import type { MailThread, MailAttachment } from '@/lib/types'
 import './MailViewer.scss'
@@ -35,6 +32,8 @@ const MailViewer = ({
   onMobileBack,
   onUpdate,
 }: Props) => {
+  const { t, plural, formatDate, formatFullDate, formatBytes } = useLocale()
+
   const {
     laterMode,
     setLaterMode,
@@ -58,22 +57,24 @@ const MailViewer = ({
     return (
       <div className="MailViewer empty">
         <div className="placeholder">
-          <p className="eyebrow">A little less inbox. A little more focus.</p>
-          <h2>Make room for what matters.</h2>
+          <p className="eyebrow">
+            {t('A little less inbox. A little more focus.')}
+          </p>
+          <h2>{t('Make room for what matters.')}</h2>
           <p>
-            Choose a conversation to get started.
+            {t('Choose a conversation to get started.')}
             <br />
-            We’ll keep the everyday things simple.
+            {t('We’ll keep the everyday things simple.')}
           </p>
           <div className="shortcut-hints">
             <span>
-              <kbd>C</kbd> Compose
+              <kbd>C</kbd> {t('Compose')}
             </span>
             <span>
-              <kbd>/</kbd> Search
+              <kbd>/</kbd> {t('Search')}
             </span>
             <span>
-              <kbd>?</kbd> Commands
+              <kbd>?</kbd> {t('Commands')}
             </span>
           </div>
         </div>
@@ -88,9 +89,9 @@ const MailViewer = ({
           className="mobile-back"
           onClick={onMobileBack}
           type="button"
-          aria-label="Back"
+          aria-label={t('Back')}
         >
-          Back
+          {t('Back')}
         </button>
       </div>
 
@@ -111,7 +112,7 @@ const MailViewer = ({
       <Toolbar actions={toolbarActions} />
       {actionError && (
         <p className="action-error" role="alert">
-          {actionError}
+          {t(actionError)}
         </p>
       )}
 
@@ -122,12 +123,12 @@ const MailViewer = ({
           </div>
         ) : error ? (
           <div className="error">
-            <p>{error}</p>
+            <p>{t(error)}</p>
           </div>
         ) : (
           <>
             <h1 className="thread-subject">
-              {thread.subject || '(no subject)'}
+              {thread.subject || t('(no subject)')}
             </h1>
 
             <div className="thread-messages">
@@ -168,13 +169,13 @@ const MailViewer = ({
                     {isExpanded && (
                       <div className="item-body">
                         <div className="item-recipients">
-                          <span className="to-label">To:</span>
+                          <span className="to-label">{t('To:')}</span>
                           <span className="to-list">
                             {(full?.to || msg.to).map(formatAddress).join(', ')}
                           </span>
                           {full?.cc && full.cc.length > 0 && (
                             <>
-                              <span className="to-label">Cc:</span>
+                              <span className="to-label">{t('Cc:')}</span>
                               <span className="to-list">
                                 {full.cc.map(formatAddress).join(', ')}
                               </span>
@@ -185,14 +186,16 @@ const MailViewer = ({
                         {full?.remoteImagesBlocked && (
                           <div className="image-notice">
                             <span>
-                              Remote images are hidden to protect your privacy.
+                              {t(
+                                'Remote images are hidden to protect your privacy.',
+                              )}
                             </span>
                             <button
                               type="button"
                               disabled={busy}
                               onClick={() => showImages(full)}
                             >
-                              Show images
+                              {t('Show images')}
                             </button>
                           </div>
                         )}
@@ -216,8 +219,11 @@ const MailViewer = ({
                         {full?.attachments && full.attachments.length > 0 && (
                           <div className="item-attachments">
                             <span className="attachments-label">
-                              {full.attachments.length} attachment
-                              {full.attachments.length > 1 ? 's' : ''}
+                              {plural(
+                                '{count} attachment',
+                                '{count} attachments',
+                                full.attachments.length,
+                              )}
                             </span>
                             <ul className="attachments-list">
                               {full.attachments.map((att: MailAttachment) => (
@@ -249,7 +255,7 @@ const MailViewer = ({
                                       })
                                     }
                                   >
-                                    Preview
+                                    {t('Preview')}
                                   </button>
                                 </li>
                               ))}
@@ -262,17 +268,17 @@ const MailViewer = ({
                             href={`/api/messages/${msg.uid}/source?folder=${encodeURIComponent(msg.folder)}`}
                             download
                           >
-                            Export .eml
+                            {t('Export .eml')}
                           </a>
                           <button type="button" onClick={() => window.print()}>
-                            Print
+                            {t('Print')}
                           </button>
                           <button
                             type="button"
                             disabled={busy || !full}
                             onClick={() => composeMessage(full || msg, 'all')}
                           >
-                            Reply all
+                            {t('Reply all')}
                           </button>
                           <button
                             className="reply-btn"
@@ -285,7 +291,7 @@ const MailViewer = ({
                               )
                             }
                           >
-                            {full?.isDraft ? 'Edit draft' : 'Reply'}
+                            {full?.isDraft ? t('Edit draft') : t('Reply')}
                           </button>
                           <button
                             className="forward-btn"
@@ -295,7 +301,7 @@ const MailViewer = ({
                               composeMessage(full || msg, 'forward')
                             }
                           >
-                            Forward
+                            {t('Forward')}
                           </button>
                         </div>
                       </div>

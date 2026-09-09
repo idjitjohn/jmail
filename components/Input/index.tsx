@@ -1,5 +1,7 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import { useInput } from './useInput'
 import clsx from 'clsx'
 import './Input.scss'
@@ -35,12 +37,14 @@ const Input = ({
   autoFocus,
   className = '',
 }: Props) => {
+  const { t } = useLocale()
+
   const { id } = useInput()
   return (
     <div className={clsx('Input', className)}>
       {label && (
         <label className="label" htmlFor={id}>
-          {label}
+          {t(label)}
         </label>
       )}
       <input
@@ -57,7 +61,7 @@ const Input = ({
         autoComplete={autoComplete}
         autoFocus={autoFocus}
       />
-      {error && <span className="error-msg">{error}</span>}
+      {error && <span className="error-msg">{t(error)}</span>}
     </div>
   )
 }

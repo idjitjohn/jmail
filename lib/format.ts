@@ -1,33 +1,59 @@
-// Date/name formatting utilities
+import { languageTags, type Locale } from './i18n/config'
+import { translate } from './i18n/translate'
 
-export function formatDate(dateStr: string): string {
+export const formatDate = (
+  dateStr: string,
+  locale: Locale = 'enUS',
+  timeZone = 'UTC',
+): string => {
   const date = new Date(dateStr)
+  if (Number.isNaN(date.getTime())) return '—'
   const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-  if (days === 0) {
-    return date.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })
+  const calendar = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone,
+  })
+  const dayNumber = (value: Date) => {
+    const parts = calendar.formatToParts(value)
+    const field = (type: string) =>
+      Number(parts.find((part) => part.type === type)?.value)
+    return Date.UTC(field('year'), field('month') - 1, field('day')) / 86400000
   }
-  if (days === 1) return 'Yesterday'
-  if (days < 7) {
-    return date.toLocaleDateString('en', { weekday: 'short' })
-  }
-  if (date.getFullYear() === now.getFullYear()) {
-    return date.toLocaleDateString('en', { month: 'short', day: 'numeric' })
-  }
-  return date.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
+  const days = dayNumber(now) - dayNumber(date)
+  const options: Intl.DateTimeFormatOptions = { timeZone }
+  if (days === 0) Object.assign(options, { hour: '2-digit', minute: '2-digit' })
+  else if (days === 1) return translate(locale, 'Yesterday')
+  else if (days > 1 && days < 7) options.weekday = 'short'
+  else
+    Object.assign(options, {
+      month: 'short',
+      day: 'numeric',
+      ...(date.getUTCFullYear() !== now.getUTCFullYear()
+        ? { year: 'numeric' }
+        : {}),
+    })
+  return new Intl.DateTimeFormat(languageTags[locale], options).format(date)
 }
 
-export function formatFullDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('en', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+export const formatFullDate = (
+  dateStr: string,
+  locale: Locale = 'enUS',
+  timeZone = 'UTC',
+): string => {
+  const date = new Date(dateStr)
+  return Number.isNaN(date.getTime())
+    ? '—'
+    : new Intl.DateTimeFormat(languageTags[locale], {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone,
+      }).format(date)
 }
 
 // Extract initials from name or email
@@ -44,8 +70,14 @@ export function getInitials(name?: string, email?: string): string {
 // Consistent color from string (for avatars)
 export function getAvatarColor(str: string): string {
   const colors = [
-    '#007aff', '#34c759', '#ff9500', '#ff3b30',
-    '#af52de', '#ff2d55', '#5ac8fa', '#ffcc00',
+    '#007aff',
+    '#34c759',
+    '#ff9500',
+    '#ff3b30',
+    '#af52de',
+    '#ff2d55',
+    '#5ac8fa',
+    '#ffcc00',
   ]
   let hash = 0
   for (let i = 0; i < str.length; i++) {
@@ -54,7 +86,10 @@ export function getAvatarColor(str: string): string {
   return colors[Math.abs(hash) % colors.length]
 }
 
-export function formatAddress(addr: { name?: string; address: string }): string {
+export function formatAddress(addr: {
+  name?: string
+  address: string
+}): string {
   if (addr.name) return `${addr.name} <${addr.address}>`
   return addr.address
 }
@@ -75,9 +110,12 @@ export function htmlToText(html: string): string {
     .trim()
 }
 
-// Human-readable file size
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+export const formatBytes = (bytes: number, locale: Locale = 'enUS'): string => {
+  const safe = Math.max(0, Number.isFinite(bytes) ? bytes : 0)
+  const index = safe < 1024 ? 0 : safe < 1024 * 1024 ? 1 : 2
+  const value = safe / 1024 ** index
+  const unit = (locale === 'frFR' ? ['o', 'Ko', 'Mo'] : ['B', 'KB', 'MB'])[
+    index
+  ]
+  return `${new Intl.NumberFormat(languageTags[locale], { minimumFractionDigits: index ? 1 : 0, maximumFractionDigits: index ? 1 : 0 }).format(value)} ${unit}`
 }

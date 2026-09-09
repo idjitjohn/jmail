@@ -14,7 +14,14 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   const { uid, partId } = await params
   const folder = new URL(req.url).searchParams.get('folder') || 'INBOX'
-  const idx = parseInt(partId)
+  if (
+    !/^[1-9]\d*$/.test(uid) ||
+    !Number.isSafeInteger(Number(uid)) ||
+    !/^\d+$/.test(partId) ||
+    !Number.isSafeInteger(Number(partId))
+  )
+    return NextResponse.json({ error: 'Invalid attachment.' }, { status: 400 })
+  const idx = Number(partId)
 
   const client = createImapClient(session.email, session.password)
 
@@ -24,10 +31,14 @@ export async function GET(req: NextRequest, { params }: Params) {
 
     let attachment = null
 
-    for await (const msg of client.fetch(`${uid}`, {
-      uid: true,
-      source: true,
-    }, { uid: true })) {
+    for await (const msg of client.fetch(
+      `${uid}`,
+      {
+        uid: true,
+        source: true,
+      },
+      { uid: true },
+    )) {
       const rawBuf = msg.source ? Buffer.from(msg.source) : Buffer.alloc(0)
       if (!rawBuf.length) continue
       const parsed = await simpleParser(rawBuf)
@@ -35,10 +46,11 @@ export async function GET(req: NextRequest, { params }: Params) {
       if (att) attachment = att
     }
 
-    await client.logout()
-
     if (!attachment) {
-      return NextResponse.json({ error: 'Attachment not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Attachment not found' },
+        { status: 404 },
+      )
     }
 
     return new NextResponse(new Uint8Array(attachment.content), {
@@ -46,12 +58,18 @@ export async function GET(req: NextRequest, { params }: Params) {
         'Content-Type': attachment.contentType || 'application/octet-stream',
         'Content-Disposition': `attachment; filename="${encodeURIComponent(attachment.filename || 'download')}"`,
         'Content-Length': String(attachment.size),
+        'Cache-Control': 'private, no-store',
+        'X-Content-Type-Options': 'nosniff',
       },
     })
   } catch (e) {
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Failed to download attachment' },
-      { status: 500 }
+      {
+        error: e instanceof Error ? e.message : 'Failed to download attachment',
+      },
+      { status: 500 },
     )
+  } finally {
+    await client.logout().catch(() => client.close())
   }
 }

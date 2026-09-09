@@ -1,5 +1,7 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import Input from '../Input'
 import RecipientInput from '../RecipientInput'
 import Button from '../Button'
@@ -7,7 +9,6 @@ import RichEditor from '../RichEditor'
 import SignaturePicker from '../SignaturePicker'
 import SignatureManager from '../SignatureManager'
 import ReplyTemplates from '../ReplyTemplates'
-import { formatBytes } from '@/lib/format'
 import { useComposeModal } from './useComposeModal'
 import './ComposeModal.scss'
 
@@ -42,6 +43,8 @@ const ComposeModal = ({
   draftUid,
   references,
 }: Props) => {
+  const { t, plural, formatBytes } = useLocale()
+
   const {
     to,
     setTo,
@@ -126,25 +129,25 @@ const ComposeModal = ({
         <div className="panel" ref={panelRef}>
           <div className="panel-header">
             <h2 className="title" id="compose-title">
-              {inReplyTo ? 'Your reply' : 'New message'}
+              {inReplyTo ? t('Your reply') : t('New message')}
             </h2>
             <button
               className="close-btn"
               disabled={sending || scheduling}
               onClick={handleClose}
               type="button"
-              aria-label="Close"
+              aria-label={t('Close')}
             />
           </div>
 
           {draftBanner && (
             <div className="draft-banner">
-              <span>Draft restored</span>
+              <span>{t('Draft restored')}</span>
               <button
                 type="button"
                 className="draft-dismiss"
                 onClick={dismissDraftBanner}
-                aria-label="Dismiss"
+                aria-label={t('Dismiss')}
               />
             </div>
           )}
@@ -152,7 +155,7 @@ const ComposeModal = ({
           <div className="fields" inert={busy}>
             <div className="field-row">
               <RecipientInput
-                label="To"
+                label={t('To')}
                 value={to}
                 onChange={setTo}
                 autoFocus
@@ -163,7 +166,7 @@ const ComposeModal = ({
                   onClick={() => setShowCc(true)}
                   type="button"
                 >
-                  Cc
+                  {t('Cc')}
                 </button>
               )}
               {!showBcc && (
@@ -172,21 +175,21 @@ const ComposeModal = ({
                   type="button"
                   onClick={() => setShowBcc(true)}
                 >
-                  Bcc
+                  {t('Bcc')}
                 </button>
               )}
             </div>
 
             {showCc && (
-              <RecipientInput label="Cc" value={cc} onChange={setCc} />
+              <RecipientInput label={t('Cc')} value={cc} onChange={setCc} />
             )}
             {showBcc && (
-              <RecipientInput label="Bcc" value={bcc} onChange={setBcc} />
+              <RecipientInput label={t('Bcc')} value={bcc} onChange={setBcc} />
             )}
 
             <Input
-              label="Subject"
-              placeholder="Subject"
+              label={t('Subject')}
+              placeholder={t('Subject')}
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
             />
@@ -198,10 +201,10 @@ const ComposeModal = ({
                 aria-expanded={templatesOpen}
                 onClick={() => setTemplatesOpen((open) => !open)}
               >
-                Reply templates
+                {t('Reply templates')}
               </button>
               <span className="writing-hint">
-                A head start on the right words
+                {t('A head start on the right words')}
               </span>
             </div>
             {templatesOpen && (
@@ -215,12 +218,12 @@ const ComposeModal = ({
               defaultValue={bodyHtml}
               resetToken={resetToken}
               onChange={setBodyHtml}
-              placeholder="Write your message..."
+              placeholder={t('Write your message...')}
             />
 
             {signatureHtml && (
               <div className="sig-preview">
-                <p className="sig-preview-label">Signature</p>
+                <p className="sig-preview-label">{t('Signature')}</p>
                 <div
                   className="sig-preview-content"
                   dangerouslySetInnerHTML={{ __html: signatureHtml }}
@@ -239,7 +242,7 @@ const ComposeModal = ({
                       type="button"
                       className="file-remove"
                       onClick={() => removeAttachment(i)}
-                      aria-label="Remove"
+                      aria-label={t('Remove')}
                     />
                   </li>
                 ))}
@@ -256,12 +259,12 @@ const ComposeModal = ({
                     key={preset.label}
                     onClick={() => setScheduleAt(preset.value)}
                   >
-                    {preset.label}
+                    {t(preset.label)}
                   </button>
                 ))}
               </div>
               <label className="schedule-label" htmlFor="schedule-time">
-                Send at
+                {t('Send at')}
               </label>
               <input
                 id="schedule-time"
@@ -272,33 +275,35 @@ const ComposeModal = ({
                 onChange={(e) => setScheduleAt(e.target.value)}
               />
               <Button onClick={handleSchedule} loading={scheduling}>
-                Schedule
+                {t('Schedule')}
               </Button>
               <button
                 type="button"
                 className="schedule-cancel"
                 onClick={() => setShowSchedule(false)}
               >
-                Cancel
+                {t('Cancel')}
               </button>
             </div>
           )}
 
           {attachmentWarning && (
             <div className="attachment-warning" role="alert">
-              <p>You mentioned an attachment. Add a file before sending?</p>
+              <p>
+                {t('You mentioned an attachment. Add a file before sending?')}
+              </p>
               <div className="warning-actions">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  Add attachment
+                  {t('Add attachment')}
                 </button>
                 <button type="button" onClick={sendWithoutAttachment}>
-                  Send without it
+                  {t('Send without it')}
                 </button>
                 <button type="button" onClick={dismissAttachmentWarning}>
-                  Keep editing
+                  {t('Keep editing')}
                 </button>
               </div>
             </div>
@@ -306,34 +311,40 @@ const ComposeModal = ({
           {countdown !== null && (
             <div className="undo-banner" role="status">
               <div className="undo-copy">
-                <strong>Sending in {countdown}s</strong>
-                <span>A moment to catch that last little thing.</span>
+                <strong>
+                  {plural(
+                    'Sending in {count} second',
+                    'Sending in {count} seconds',
+                    countdown ?? 0,
+                  )}
+                </strong>
+                <span>{t('A moment to catch that last little thing.')}</span>
               </div>
               <button type="button" onClick={undoSend}>
-                Undo send
+                {t('Undo send')}
               </button>
             </div>
           )}
           {confirmDiscard && (
             <div className="attachment-warning" role="alert">
-              <p>Discard this draft and its attachments?</p>
+              <p>{t('Discard this draft and its attachments?')}</p>
               <div className="warning-actions">
                 <button type="button" disabled={saving} onClick={discardDraft}>
-                  Discard draft
+                  {t('Discard draft')}
                 </button>
                 <button type="button" onClick={() => setConfirmDiscard(false)}>
-                  Keep editing
+                  {t('Keep editing')}
                 </button>
               </div>
             </div>
           )}
           {error && (
             <p className="send-error" role="alert">
-              {error}
+              {t(error)}
             </p>
           )}
           <div className="draft-status" role="status">
-            {draftStatus}
+            {t(draftStatus)}
           </div>
 
           <div className="panel-footer" inert={busy}>
@@ -341,16 +352,16 @@ const ComposeModal = ({
               <button
                 type="button"
                 className="discard-btn"
-                aria-label="Discard draft"
-                title="Discard draft"
+                aria-label={t('Discard draft')}
+                title={t('Discard draft')}
                 onClick={() => setConfirmDiscard(true)}
               />
               <button
                 type="button"
                 className="attach-btn"
                 onClick={() => fileInputRef.current?.click()}
-                title="Attach files"
-                aria-label="Attach files"
+                title={t('Attach files')}
+                aria-label={t('Attach files')}
               />
               <input
                 ref={fileInputRef}
@@ -360,6 +371,7 @@ const ComposeModal = ({
                 onChange={(e) => addAttachments(e.target.files)}
               />
               <SignaturePicker
+                userEmail={userEmail}
                 value={signatureId}
                 onChange={handleSignatureChange}
                 onManage={() => setSigManagerOpen(true)}
@@ -371,17 +383,17 @@ const ComposeModal = ({
                 loading={saving}
                 onClick={handleClose}
               >
-                Save & close
+                {t('Save & close')}
               </Button>
               <button
                 type="button"
                 className={`schedule-toggle ${showSchedule ? 'active' : ''}`}
                 onClick={() => setShowSchedule((s) => !s)}
-                title="Schedule send"
-                aria-label="Schedule send"
+                title={t('Schedule send')}
+                aria-label={t('Schedule send')}
               />
               <Button onClick={handleSend} loading={sending}>
-                Send
+                {t('Send')}
               </Button>
             </div>
           </div>
@@ -389,6 +401,7 @@ const ComposeModal = ({
       </div>
 
       <SignatureManager
+        userEmail={userEmail}
         isOpen={sigManagerOpen}
         onClose={() => setSigManagerOpen(false)}
       />

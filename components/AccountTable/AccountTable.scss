@@ -2,24 +2,30 @@
   display: flex;
   flex-direction: column;
   gap: 1em;
+  min-width: 0;
 
   .controls {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.75em;
 
     .search {
-      padding: 0.45em 0.75em;
+      flex: 1;
+      min-width: 0;
+      width: 16em;
+      padding: 0.625em 0.875em;
       border: 1px solid var(--color-input-border);
       border-radius: 0.5em;
       background: var(--color-input-bg);
       color: var(--color-input-text);
       font-size: 0.875em;
       font-family: var(--font-sans);
-      width: 16em;
       transition: border-color var(--transition-fast);
 
-      &::placeholder { color: var(--color-text-muted); }
+      &::placeholder {
+        color: var(--color-text-muted);
+      }
 
       &:focus {
         outline: none;
@@ -27,87 +33,201 @@
         box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
       }
     }
-  }
 
-  .count {
-    font-size: 0.8125em;
-    color: var(--color-text-tertiary);
-  }
+    .DomainFilter {
+      max-width: 100%;
 
-  .table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--color-bg-default);
-    border-radius: 0.5em;
-    border: 1px solid var(--color-border-muted);
-    overflow: hidden;
-    font-size: 0.875em;
-
-    thead tr {
-      background: var(--color-bg-secondary);
-      border-bottom: 1px solid var(--color-border-default);
-
-      th {
-        padding: 0.625em 1em;
-        text-align: left;
-        font-size: 0.8125em;
-        font-weight: 600;
-        color: var(--color-text-tertiary);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-
-        &.actions-col { text-align: right; }
+      .select {
+        width: 100%;
+        max-width: 22em;
+        padding: 0.625em 0.875em;
       }
     }
+  }
 
-    tbody tr {
-      border-bottom: 1px solid var(--color-border-muted);
-      transition: background var(--transition-fast);
+  .summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    min-height: 1.75em;
 
-      &:last-child { border-bottom: none; }
+    .count {
+      margin: 0;
+      font-size: 0.8125em;
+      color: var(--color-text-tertiary);
+    }
+  }
 
-      &:hover { background: var(--color-bg-secondary); }
+  .empty {
+    padding: 2.5em 1em;
+    border: 1px dashed var(--color-border-default);
+    border-radius: 0.75em;
+    text-align: center;
 
-      td {
-        padding: 0.625em 1em;
-        color: var(--color-text);
-        vertical-align: middle;
-      }
+    strong {
+      color: var(--color-text);
+      font-size: 0.9375em;
+    }
 
-      .email-cell {
-        font-family: var(--font-mono);
-        font-size: 0.9375em;
+    p {
+      margin: 0.5em 0 0;
+      font-size: 0.875em;
+      color: var(--color-text-secondary);
+    }
+  }
 
-        .local { color: var(--color-text); }
-        .at { color: var(--color-text-muted); }
-        .domain { color: var(--color-text-secondary); }
-      }
+  .groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25em;
 
-      .domain-cell {
-        color: var(--color-text-tertiary);
-        font-size: 0.875em;
-      }
+    .domain-group {
+      min-width: 0;
+      border: 1px solid var(--color-border-default);
+      border-radius: 0.75em;
+      overflow: hidden;
+      background: var(--color-bg-default);
 
-      .actions-cell {
-        text-align: right;
+      .group-header {
         display: flex;
-        justify-content: flex-end;
-        gap: 0.25em;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5em 1em;
+        padding: 1em;
+        background: var(--color-bg-secondary);
+        border-bottom: 1px solid var(--color-border-muted);
 
-        .danger-ghost {
-          color: var(--color-danger);
+        h3 {
+          min-width: 0;
+          margin: 0;
+          color: var(--color-text);
+          font-size: 0.9375em;
+          font-weight: 600;
+          overflow-wrap: anywhere;
+        }
 
-          &:hover {
-            background: var(--color-danger-light);
-            color: var(--color-danger);
-          }
+        .mailbox-count {
+          flex-shrink: 0;
+          color: var(--color-text-secondary);
+          font-size: 0.75em;
+          padding: 0.3em 0.75em;
+          border: 1px solid var(--color-border-muted);
+          border-radius: 2em;
+          background: var(--color-bg-default);
         }
       }
 
-      .empty-row {
-        text-align: center;
-        padding: 2.5em;
-        color: var(--color-text-muted);
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875em;
+
+        thead {
+          tr {
+            border-bottom: 1px solid var(--color-border-muted);
+
+            th {
+              padding: 0.75em 1.15em;
+              text-align: left;
+              font-size: 0.8125em;
+              font-weight: 500;
+              color: var(--color-text-tertiary);
+
+              &.actions-col {
+                text-align: right;
+              }
+            }
+          }
+        }
+
+        tbody {
+          tr {
+            border-bottom: 1px solid var(--color-border-muted);
+            transition: background var(--transition-fast);
+
+            &:last-child {
+              border-bottom: none;
+            }
+            &:hover {
+              background: var(--color-bg-secondary);
+            }
+
+            .email-cell {
+              padding: 0.875em 1em;
+              text-align: left;
+              font-weight: 400;
+              vertical-align: middle;
+              overflow-wrap: anywhere;
+
+              .local {
+                display: block;
+                color: var(--color-text);
+                font-weight: 500;
+              }
+
+              .address {
+                display: block;
+                margin-top: 0.25em;
+                color: var(--color-text-tertiary);
+                font-size: 0.8125em;
+              }
+            }
+
+            .actions-cell {
+              padding: 0.625em 1em;
+              vertical-align: middle;
+              width: 1%;
+
+              .actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 0.25em;
+                white-space: nowrap;
+
+                .danger-ghost {
+                  color: var(--color-danger);
+
+                  &:hover {
+                    background: var(--color-danger-light);
+                    color: var(--color-danger);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 38em) {
+    .controls {
+      .search {
+        flex-basis: 100%;
+      }
+      .DomainFilter {
+        width: 100%;
+      }
+    }
+
+    .groups {
+      .domain-group {
+        .table {
+          tbody {
+            tr {
+              .actions-cell {
+                .actions {
+                  flex-direction: column;
+                  align-items: flex-end;
+                  gap: 0.125em;
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

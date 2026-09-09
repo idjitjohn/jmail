@@ -1,18 +1,33 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import SignatureEditor from '../SignatureEditor'
 import Button from '../Button'
 import { useSignatureManager } from './useSignatureManager'
 import './SignatureManager.scss'
 
-interface Props {
+type Props = {
+  userEmail: string
   isOpen: boolean
   onClose: () => void
 }
 
-export default function SignatureManager({ isOpen, onClose }: Props) {
-  const { signatures, editing, isCreating, startCreate, startEdit, cancelEditor, save, remove } =
-    useSignatureManager()
+const SignatureManager = ({ isOpen, onClose, userEmail }: Props) => {
+  const { t } = useLocale()
+
+  const {
+    signatures,
+    hasLegacy,
+    importLegacy,
+    editing,
+    isCreating,
+    startCreate,
+    startEdit,
+    cancelEditor,
+    save,
+    remove,
+  } = useSignatureManager(userEmail)
 
   if (!isOpen) return null
 
@@ -21,11 +36,21 @@ export default function SignatureManager({ isOpen, onClose }: Props) {
       <div className="backdrop" onClick={onClose} />
       <div className="panel">
         <div className="panel-header">
-          <h2 className="title">Signatures</h2>
-          <button className="close-btn" onClick={onClose} type="button" aria-label="Close" />
+          <h2 className="title">{t('Signatures')}</h2>
+          <button
+            className="close-btn"
+            onClick={onClose}
+            type="button"
+            aria-label={t('Close')}
+          />
         </div>
 
         <div className="panel-body">
+          {hasLegacy && (
+            <Button variant="secondary" size="sm" onClick={importLegacy}>
+              {t('Import older signatures from this browser')}
+            </Button>
+          )}
           {isCreating ? (
             <SignatureEditor
               initial={editing}
@@ -36,11 +61,11 @@ export default function SignatureManager({ isOpen, onClose }: Props) {
             <>
               {signatures.length === 0 ? (
                 <div className="empty">
-                  <p>No signatures yet.</p>
+                  <p>{t('No signatures yet.')}</p>
                 </div>
               ) : (
                 <div className="sig-list">
-                  {signatures.map(sig => (
+                  {signatures.map((sig) => (
                     <div key={sig.id} className="sig-item">
                       <div className="sig-info">
                         <p className="sig-name">{sig.name}</p>
@@ -50,8 +75,12 @@ export default function SignatureManager({ isOpen, onClose }: Props) {
                         />
                       </div>
                       <div className="sig-actions">
-                        <Button variant="ghost" size="sm" onClick={() => startEdit(sig)}>
-                          Edit
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => startEdit(sig)}
+                        >
+                          {t('Edit')}
                         </Button>
                         <Button
                           variant="ghost"
@@ -59,7 +88,7 @@ export default function SignatureManager({ isOpen, onClose }: Props) {
                           onClick={() => remove(sig.id)}
                           className="remove-btn"
                         >
-                          Remove
+                          {t('Remove')}
                         </Button>
                       </div>
                     </div>
@@ -67,8 +96,13 @@ export default function SignatureManager({ isOpen, onClose }: Props) {
                 </div>
               )}
 
-              <Button variant="secondary" size="sm" onClick={startCreate} className="new-sig-btn">
-                New signature
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={startCreate}
+                className="new-sig-btn"
+              >
+                {t('New signature')}
               </Button>
             </>
           )}
@@ -77,3 +111,5 @@ export default function SignatureManager({ isOpen, onClose }: Props) {
     </div>
   )
 }
+
+export default SignatureManager

@@ -1,5 +1,7 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import Sidebar from '../Sidebar'
 import WorkspacePanel from '../WorkspacePanel'
 import MailList from '../MailList'
@@ -15,6 +17,8 @@ type Props = {
 }
 
 const AppLayout = ({ userEmail, isAdmin }: Props) => {
+  const { t } = useLocale()
+
   const {
     workspace,
     setWorkspace,
@@ -133,10 +137,10 @@ const AppLayout = ({ userEmail, isAdmin }: Props) => {
       )}
       {notice && (
         <div className="notification" role="status">
-          <span>{notice}</span>
+          <span>{t(notice)}</span>
           <button
             type="button"
-            aria-label="Dismiss notification"
+            aria-label={t('Dismiss notification')}
             onClick={() => setNotice('')}
           >
             ×

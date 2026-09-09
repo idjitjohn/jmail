@@ -1,4 +1,5 @@
 'use client'
+import { readApiResponse } from '@/lib/api-client'
 
 import { useEffect, useState, useRef } from 'react'
 import type { FormEvent } from 'react'
@@ -23,9 +24,7 @@ const api = async <T>(url: string, body?: object): Promise<T> => {
         }
       : { cache: 'no-store' },
   )
-  const data = await response.json()
-  if (!response.ok) throw new Error(data.error || 'Request failed')
-  return data
+  return readApiResponse<T>(response, 'Could not complete this action.')
 }
 
 export const useMailServerAdmin = (adminEmail: string) => {

@@ -4,6 +4,7 @@ import type { DiagnosticResult } from '@/components/MailServerAdmin/types'
 import { NextResponse } from 'next/server'
 import { getAdminSession, adminUnauthorized, logAdminAction } from '@/lib/admin'
 import { getMailServer } from '@/lib/maddy-admin'
+import { isSameOriginRequest } from '@/lib/request-origin'
 import {
   checkDns,
   checkMailbox,
@@ -34,10 +35,7 @@ export const GET = async () => {
 export const POST = async (request: Request) => {
   const session = await getAdminSession()
   if (!session) return adminUnauthorized()
-  if (
-    request.headers.get('origin') &&
-    request.headers.get('origin') !== new URL(request.url).origin
-  ) {
+  if (!isSameOriginRequest(request)) {
     return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
   }
   const current = limits.get(session.email)

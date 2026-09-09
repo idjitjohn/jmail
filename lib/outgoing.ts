@@ -1,5 +1,6 @@
 import MailComposer from 'nodemailer/lib/mail-composer'
 import addressparser from 'nodemailer/lib/addressparser'
+import { randomUUID } from 'node:crypto'
 import { createImapClient, createSmtpTransport } from './mail'
 import { htmlToText } from './format'
 import type { SessionPayload } from './auth'
@@ -32,7 +33,10 @@ export const readOutgoing = async (fd: FormData): Promise<OutgoingMessage> => {
   const files = fd
     .getAll('attachments')
     .filter((item): item is File => item instanceof File && item.size > 0)
-  if (files.reduce((sum, file) => sum + file.size, 0) > 25 * 1024 * 1024)
+  if (
+    files.length > 100 ||
+    files.reduce((sum, file) => sum + file.size, 0) > 25 * 1024 * 1024
+  )
     throw new Error('Attachments must total less than 25 MB.')
   const message = {
     to: value('to'),
@@ -57,7 +61,12 @@ export const readOutgoing = async (fd: FormData): Promise<OutgoingMessage> => {
     )
   )
     throw new Error('Message headers cannot contain line breaks.')
-  if (message.bodyHtml.length > 5 * 1024 * 1024)
+  if (
+    message.signatureHtml.length > 100000 ||
+    message.subject.length > 1000 ||
+    message.to.length + message.cc.length + message.bcc.length > 30000 ||
+    message.bodyHtml.length > 5 * 1024 * 1024
+  )
     throw new Error('This message is too large.')
   return message
 }
@@ -81,6 +90,7 @@ export const buildMessage = (
   email: string,
   name?: string,
   draft = false,
+  messageId?: string,
 ) =>
   new Promise<Buffer>((resolve, reject) => {
     const compiled = new MailComposer({
@@ -89,7 +99,11 @@ export const buildMessage = (
       cc: message.cc || undefined,
       bcc: message.bcc || undefined,
       subject: message.subject,
-      text: htmlToText(message.bodyHtml),
+      messageId,
+      text: htmlToText(
+        message.bodyHtml +
+          (message.signatureHtml ? `<br>${message.signatureHtml}` : ''),
+      ),
       html:
         message.bodyHtml +
         (message.signatureHtml
@@ -113,7 +127,14 @@ export const deliverMessage = async (
   message: OutgoingMessage,
 ) => {
   validateOutgoing(message)
-  const raw = await buildMessage(message, session.email, session.name)
+  const messageId = `<${randomUUID()}@${session.domain}>`
+  const raw = await buildMessage(
+    message,
+    session.email,
+    session.name,
+    false,
+    messageId,
+  )
   const transport = createSmtpTransport(session.email, session.password)
   let result
   try {
@@ -136,7 +157,15 @@ export const deliverMessage = async (
       folders.find((folder) => folder.specialUse === '\\Sent')?.path || 'Sent'
     if (!folders.some((folder) => folder.path === sent))
       await imap.mailboxCreate(sent)
-    await imap.append(sent, raw, ['\\Seen'])
+    const copy = await buildMessage(
+      message,
+      session.email,
+      session.name,
+      true,
+      messageId,
+    )
+    const appended = await imap.append(sent, copy, ['\\Seen'])
+    if (!appended) throw new Error('Sent copy was not confirmed')
     savedToSent = true
   } catch {
     /* Successful SMTP delivery */

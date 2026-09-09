@@ -10,7 +10,7 @@ DIRECTORY = Path('/var/lib/maddy/sieve')
 
 
 def destination(account, header):
-    if not re.fullmatch(r'[a-zA-Z0-9@._-]+', account):
+    if not re.fullmatch(r'[a-zA-Z0-9@._%+-]+', account):
         return ''
     file = DIRECTORY / (account + '.json')
     try:

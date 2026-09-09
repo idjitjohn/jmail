@@ -1,10 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySession } from '@/lib/auth'
+import { isSameOriginRequest } from '@/lib/request-origin'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
+  if (pathname.startsWith('/api/')) {
+    if (
+      !['GET', 'HEAD', 'OPTIONS'].includes(req.method) &&
+      !isSameOriginRequest(req)
+    )
+      return NextResponse.json(
+        {
+          error: 'Reload JMail before trying this action again.',
+          code: 'INVALID_ORIGIN',
+        },
+        { status: 403 },
+      )
+    const response = NextResponse.next()
+    response.headers.set('Cache-Control', 'private, no-store')
+    return response
+  }
   const token = req.cookies.get('session')?.value
 
   // Auth-only routes: redirect logged-in users to inbox
@@ -17,7 +34,11 @@ export async function proxy(req: NextRequest) {
   }
 
   // Protected routes: require valid session
-  if (pathname.startsWith('/inbox') || pathname.startsWith('/admin') || pathname.startsWith('/settings')) {
+  if (
+    pathname.startsWith('/inbox') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/settings')
+  ) {
     if (!token) return NextResponse.redirect(new URL('/', req.url))
 
     const session = await verifySession(token)
@@ -33,5 +54,11 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/inbox/:path*', '/admin/:path*', '/settings/:path*'],
+  matcher: [
+    '/',
+    '/inbox/:path*',
+    '/admin/:path*',
+    '/settings/:path*',
+    '/api/:path*',
+  ],
 }

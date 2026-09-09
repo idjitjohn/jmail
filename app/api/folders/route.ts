@@ -35,8 +35,6 @@ export async function GET() {
       })
     }
 
-    await client.logout()
-
     const ORDER = ['INBOX', 'Sent', 'Drafts', 'Trash', 'Spam', 'Archive']
     folders.sort((a, b) => {
       const ai = ORDER.indexOf(a.path)
@@ -53,6 +51,8 @@ export async function GET() {
       { error: e instanceof Error ? e.message : 'Failed to list folders' },
       { status: 500 },
     )
+  } finally {
+    await client.logout().catch(() => client.close())
   }
 }
 
@@ -79,7 +79,9 @@ const mutateFolder = async (
       if (!folder) throw new Error('Folder not found.')
       if (
         folder.specialUse ||
-        /^(inbox|sent|drafts|trash|spam|junk|archive)$/i.test(folder.path)
+        /^(inbox|sent|drafts|trash|spam|junk|archive|snoozed)$/i.test(
+          folder.path,
+        )
       )
         throw new Error('Built-in mail folders cannot be renamed or deleted.')
     }

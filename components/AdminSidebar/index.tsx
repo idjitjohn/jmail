@@ -1,5 +1,7 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
@@ -12,6 +14,8 @@ const NAV = [
 ]
 
 export default function AdminSidebar() {
+  const { t } = useLocale()
+
   const pathname = usePathname()
 
   return (
@@ -21,7 +25,7 @@ export default function AdminSidebar() {
           <span className="brand-icon" />
           <div className="brand-text">
             <span className="brand-name">JMail</span>
-            <span className="brand-sub">Admin</span>
+            <span className="brand-sub">{t('Admin')}</span>
           </div>
         </div>
         <ThemeToggle />
@@ -52,14 +56,14 @@ export default function AdminSidebar() {
             data-icon={item.icon}
           >
             <span className="nav-icon" />
-            <span className="nav-label">{item.label}</span>
+            <span className="nav-label">{t(item.label)}</span>
           </Link>
         ))}
       </nav>
 
       <div className="footer">
         <Link href="/inbox" className="back-link">
-          Back to Mail
+          {t('Back to Mail')}
         </Link>
       </div>
     </aside>

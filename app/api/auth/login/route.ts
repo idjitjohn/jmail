@@ -3,6 +3,7 @@ import { createImapClient } from '@/lib/mail'
 import { createSession, extractDomain } from '@/lib/auth'
 import { rateLimit } from '@/lib/rate-limit'
 import { logLoginFailure, mailAuthenticationError } from '@/lib/mail-errors'
+import { sessionRevision } from '@/lib/session-revisions'
 
 export const POST = async (request: NextRequest) => {
   let input
@@ -40,13 +41,17 @@ export const POST = async (request: NextRequest) => {
   const client = createImapClient(email, input.password)
   let authenticated = false
   try {
+    const revision = await sessionRevision(email)
     await client.connect()
     authenticated = true
-    const token = await createSession({
-      email,
-      password: input.password,
-      domain: extractDomain(email),
-    })
+    const token = await createSession(
+      {
+        email,
+        password: input.password,
+        domain: extractDomain(email),
+      },
+      revision,
+    )
     const response = NextResponse.json({ ok: true })
     response.cookies.set('session', token, {
       httpOnly: true,

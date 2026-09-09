@@ -1,4 +1,7 @@
+import { locales, type Locale } from './i18n/config'
+
 export type MailPreferences = {
+  locale?: Locale
   desktopNotifications: boolean
   undoSendSeconds: 0 | 5 | 8 | 10 | 30
   attachmentReminder: boolean
@@ -23,6 +26,7 @@ export const defaultPreferences: Readonly<MailPreferences> = {
 }
 
 const allowedValues: Record<keyof MailPreferences, readonly unknown[]> = {
+  locale: locales,
   desktopNotifications: [true, false],
   undoSendSeconds: [0, 5, 8, 10, 30],
   attachmentReminder: [true, false],
@@ -38,9 +42,7 @@ export const normalizePreferences = (input: unknown): MailPreferences => {
   const preferences = { ...defaultPreferences }
   if (!input || typeof input !== 'object' || Array.isArray(input))
     return preferences
-  for (const key of Object.keys(
-    defaultPreferences,
-  ) as (keyof MailPreferences)[]) {
+  for (const key of Object.keys(allowedValues) as (keyof MailPreferences)[]) {
     const value = (input as Record<string, unknown>)[key]
     if (allowedValues[key].includes(value))
       Object.assign(preferences, { [key]: value })

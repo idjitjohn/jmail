@@ -1,6 +1,9 @@
+'use client'
+
 import clsx from 'clsx'
 import Badge from '../Badge'
-import { FOLDER_LABELS } from '@/lib/types'
+import { folderLabel } from '@/lib/i18n/folders'
+import { useLocale } from '../LocaleProvider/useLocale'
 import type { MailFolder } from '@/lib/types'
 import './FolderItem.scss'
 
@@ -11,7 +14,8 @@ interface Props {
 }
 
 export default function FolderItem({ folder, isActive, onClick }: Props) {
-  const label = FOLDER_LABELS[folder.path] || FOLDER_LABELS[folder.name] || folder.name
+  const { locale } = useLocale()
+  const label = folderLabel(folder, locale)
   const folderKey = folder.path || folder.name
 
   return (

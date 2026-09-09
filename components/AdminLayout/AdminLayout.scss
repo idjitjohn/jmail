@@ -12,15 +12,25 @@
     overflow: hidden;
 
     .page-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5em;
       padding: 1.25em 1.5em 0.875em;
       border-bottom: 1px solid var(--color-border-muted);
       background: var(--color-bg-default);
       flex-shrink: 0;
 
       .page-title {
+        min-width: 0;
         font-size: 1.125em;
         font-weight: 600;
         color: var(--color-text);
+      }
+
+      .LanguageSelector {
+        max-width: 100%;
       }
     }
 
@@ -36,8 +46,12 @@
   .AdminLayout {
     flex-direction: column;
     > .content {
-      > .page-header { padding: 0.875em; }
-      > .page-body { padding: 0.75em; }
+      > .page-header {
+        padding: 0.875em;
+      }
+      > .page-body {
+        padding: 0.75em;
+      }
     }
   }
 }

@@ -47,7 +47,7 @@ const updateDraft = async (req: NextRequest, remove: boolean) => {
           return NextResponse.json({ ok: true })
         }
         const raw = await buildMessage(
-          { ...message!, signatureHtml: '' },
+          message!,
           session.email,
           session.name,
           true,

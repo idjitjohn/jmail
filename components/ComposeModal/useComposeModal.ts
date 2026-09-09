@@ -1,8 +1,11 @@
 'use client'
 
+import { useLocale } from '../LocaleProvider/useLocale'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { saveDraft, loadDraft, clearDraft } from '@/lib/drafts'
 import { getSignatures } from '@/lib/signatures'
+import { safeHtml } from '@/lib/safe-html'
+import { readApiResponse } from '@/lib/api-client'
 import { usePreferences } from '../PreferencesProvider/usePreferences'
 import { templateToHtml } from '@/lib/reply-templates'
 import {
@@ -29,6 +32,7 @@ export const useComposeModal = ({
   draftUid,
   references = EMPTY_REFERENCES,
 }: ComposeOptions) => {
+  const { dateTime } = useLocale()
   const { preferences } = usePreferences()
   const [draft] = useState(() =>
     !draftUid && !initialTo && !initialSubject && !initialBody
@@ -46,12 +50,14 @@ export const useComposeModal = ({
   const [bodyHtml, setBodyHtml] = useState(draft?.bodyHtml ?? initialBody)
   const [resetToken, setResetToken] = useState(0)
   const [signatureId, setSignatureId] = useState<string | null>(
-    draft?.signatureId ?? null,
+    draft?.signatureId ?? (draftUid || initialBody ? '__none__' : null),
   )
+  const [defaultSignature, setDefaultSignature] = useState<string | null>(null)
   const [signatureHtml, setSignatureHtml] = useState<string | null>(() =>
     draft?.signatureId
-      ? (getSignatures().find((signature) => signature.id === draft.signatureId)
-          ?.html ?? null)
+      ? (getSignatures(userEmail).find(
+          (signature) => signature.id === draft.signatureId,
+        )?.html ?? null)
       : null,
   )
   const [showCc, setShowCc] = useState(Boolean(draft?.cc || initialCc))
@@ -81,6 +87,33 @@ export const useComposeModal = ({
   const saveQueue = useRef<Promise<boolean>>(Promise.resolve(true))
   const [saving, setSaving] = useState(false)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const signatureChosen = useRef(
+    Boolean(draftUid || draft?.signatureId || initialBody),
+  )
+  const dirty = useRef(false)
+  const draftRevision = useRef(0)
+  const hasContent = Boolean(
+    to || cc || bcc || subject || bodyHtml || attachments.length,
+  )
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/settings/signature', { signal: controller.signal })
+      .then((response) =>
+        readApiResponse<{ signature: string }>(
+          response,
+          'Could not load your default signature.',
+        ),
+      )
+      .then((data) => {
+        if (controller.signal.aborted) return
+        const html = data.signature ? templateToHtml(data.signature) : null
+        setDefaultSignature(html)
+        if (!signatureChosen.current) setSignatureHtml(html)
+      })
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
 
   const resetEditor = useCallback((html: string) => {
     setBodyHtml(html)
@@ -104,6 +137,7 @@ export const useComposeModal = ({
       draftUid: serverDraft.current,
     }
     saveDraft(local, userEmail)
+    const revision = draftRevision.current
     const fd = new FormData()
     for (const [key, value] of Object.entries({
       to,
@@ -111,6 +145,7 @@ export const useComposeModal = ({
       bcc,
       subject,
       bodyHtml,
+      signatureHtml: signatureHtml || '',
       inReplyTo: inReplyToRef.current || '',
       references: references.join(' '),
     }))
@@ -130,8 +165,11 @@ export const useComposeModal = ({
           const data = await response.json()
           if (!response.ok)
             throw new Error(data.error || 'Could not save this draft.')
+          if (!Number.isSafeInteger(data.uid) || data.uid < 1)
+            throw new Error('Draft save was not confirmed.')
           serverDraft.current = data.uid
           saveDraft({ ...local, draftUid: data.uid }, userEmail)
+          if (revision === draftRevision.current) dirty.current = false
           setDraftStatus('Saved to Drafts · available on your other devices')
           return true
         } catch {
@@ -150,6 +188,7 @@ export const useComposeModal = ({
     subject,
     bodyHtml,
     signatureId,
+    signatureHtml,
     userEmail,
     attachments,
     references,
@@ -173,11 +212,13 @@ export const useComposeModal = ({
 
   useEffect(() => {
     if (!isOpen || skipSave.current) return
+    dirty.current = hasContent
+    draftRevision.current += 1
     draftTimer.current = setTimeout(persistDraft, 800)
     return () => {
       if (draftTimer.current) clearTimeout(draftTimer.current)
     }
-  }, [isOpen, persistDraft])
+  }, [isOpen, persistDraft, hasContent])
 
   const clearTimers = useCallback(() => {
     if (sendTimer.current) clearTimeout(sendTimer.current)
@@ -280,7 +321,10 @@ export const useComposeModal = ({
     if (!isOpen) return
     const handleUnload = (event: BeforeUnloadEvent) => {
       persistDraft()
-      if (busyRef.current || attachments.length) {
+      if (
+        !skipSave.current &&
+        (busyRef.current || dirty.current || attachments.length)
+      ) {
         event.preventDefault()
         event.returnValue = ''
       }
@@ -424,9 +468,7 @@ export const useComposeModal = ({
       const data = await res.json()
       if (!res.ok)
         throw new Error(data.error || 'Could not schedule your message.')
-      await finish(
-        `Message scheduled for ${new Date(scheduleAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}.`,
-      )
+      await finish(`Message scheduled for ${dateTime(scheduleAt)}.`)
     } catch (e) {
       setError(
         e instanceof Error
@@ -482,8 +524,11 @@ export const useComposeModal = ({
     signatureId,
     signatureHtml,
     handleSignatureChange: (id: string | null, html: string | null) => {
+      signatureChosen.current = true
       setSignatureId(id)
-      setSignatureHtml(html)
+      setSignatureHtml(
+        id === null ? defaultSignature : html ? safeHtml(html) : null,
+      )
     },
     showCc,
     setShowCc,

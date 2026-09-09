@@ -1,66 +1,72 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import { useMailServerAdmin } from './useMailServerAdmin'
 import './MailServerAdmin.scss'
 
 type Props = { adminEmail: string }
 
 const MailServerAdmin = ({ adminEmail }: Props) => {
+  const { t, dateTime } = useLocale()
+
   const { previewRef, formRef, ...vm } = useMailServerAdmin(adminEmail)
 
   return (
     <div className="MailServerAdmin">
       <div className="intro">
         <div className="heading">
-          <h2>Mail server</h2>
-          <p>Manage domains, forwarding, and delivery from one place.</p>
+          <h2>{t('Mail server')}</h2>
+          <p>{t('Manage domains, forwarding, and delivery from one place.')}</p>
         </div>
         <button
           type="button"
           disabled={vm.busy || vm.loading}
           onClick={vm.refresh}
         >
-          Refresh server
+          {t('Refresh server')}
         </button>
       </div>
       {vm.error && (
         <p className="error" role="alert">
-          {vm.error}
+          {t(vm.error)}
         </p>
       )}
       {vm.notice && (
         <p className="notice" role="status">
-          {vm.notice}
+          {t(vm.notice)}
         </p>
       )}
       {vm.loading && (
         <p className="loading" role="status">
-          Connecting to Maddy…
+          {t('Connecting to Maddy…')}
         </p>
       )}
       {!vm.loading && !vm.state && (
         <section className="setup">
-          <h3>Connect server administration</h3>
+          <h3>{t('Connect server administration')}</h3>
           <p>
-            On the Linux server running JMail and Maddy, run this from the JMail
-            project directory. Replace APP_USER with the Linux user running
-            JMail.
+            {t(
+              'On the Linux server running JMail and Maddy, run this from the JMail project directory. Replace APP_USER with the Linux user running JMail.',
+            )}
           </p>
           <pre>sudo sh scripts/install-maddy-admin.sh APP_USER</pre>
           <p>
-            The helper supports /etc/maddy/maddy.conf, /usr/local/bin/maddy, and
-            the maddy systemd service. Existing custom routing is preserved;
-            unsupported layouts return an explanation before any change.
+            {t(
+              'The helper supports /etc/maddy/maddy.conf, /usr/local/bin/maddy, and the maddy systemd service. Existing custom routing is preserved; unsupported layouts return an explanation before any change.',
+            )}
           </p>
         </section>
       )}
       {vm.state && (
         <>
           <p className={vm.state.active ? 'notice' : 'error'}>
-            Maddy is {vm.state.active ? 'running' : 'not running'}. Primary
-            domain: {vm.state.primaryDomain}
+            {t('Maddy is {status}. Primary domain: {domain}', {
+              status: t(vm.state.active ? 'running' : 'not running'),
+              domain: vm.state.primaryDomain,
+            })}
           </p>
-          <nav className="server-tabs" aria-label="Server sections">
+          <nav className="server-tabs" aria-label={t('Server sections')}>
             {['domains', 'forwarding', 'diagnostics', 'activity'].map((tab) => (
               <button
                 type="button"
@@ -71,25 +77,25 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                 onClick={() => vm.selectTab(tab)}
               >
                 {tab === 'domains'
-                  ? 'Domains'
+                  ? t('Domains')
                   : tab === 'forwarding'
-                    ? 'Routing & rules'
+                    ? t('Routing & rules')
                     : tab === 'activity'
-                      ? 'Server activity'
-                      : 'Delivery tests'}
+                      ? t('Server activity')
+                      : t('Delivery tests')}
               </button>
             ))}
           </nav>
           {vm.tab === 'domains' && (
             <section className="domains">
               <div className="section-heading">
-                <h3>Your email domains</h3>
+                <h3>{t('Your email domains')}</h3>
                 <button
                   type="button"
                   disabled={vm.busy}
                   onClick={() => vm.editDomain()}
                 >
-                  Add domain
+                  {t('Add domain')}
                 </button>
               </div>
               <div className="domain-list">
@@ -107,8 +113,8 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                     <span>{domain.mxHost}</span>
                     <span>
                       {domain.dkimRecord
-                        ? 'DKIM key available'
-                        : 'DKIM key needs checking'}
+                        ? t('DKIM key available')
+                        : t('DKIM key needs checking')}
                     </span>
                   </button>
                 ))}
@@ -119,18 +125,23 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                   className="domain-form"
                   onSubmit={vm.previewDomain}
                 >
-                  <h4>{vm.original ? `Edit ${vm.original}` : 'New domain'}</h4>
+                  <h4>
+                    {vm.original
+                      ? t('Edit {0}', { '0': vm.original })
+                      : t('New domain')}
+                  </h4>
                   <p>
-                    1. Enter the domain details. 2. Review and save. 3. Publish
-                    the DNS records and check delivery.
+                    {t(
+                      '1. Enter the domain details. 2. Review and save. 3. Publish the DNS records and check delivery.',
+                    )}
                   </p>
                   <fieldset disabled={vm.busy}>
                     <label>
-                      Domain
+                      {t('Domain')}
                       <input
                         required
                         value={vm.domain.name}
-                        placeholder="example.org"
+                        placeholder={t('example.org')}
                         onChange={(e) =>
                           vm.updateDomain(
                             'name',
@@ -140,11 +151,11 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                       />
                     </label>
                     <label>
-                      Public mail hostname
+                      {t('Public mail hostname')}
                       <input
                         required
                         value={vm.domain.mxHost}
-                        placeholder="smtp.example.org"
+                        placeholder={t('smtp.example.org')}
                         onChange={(e) =>
                           vm.updateDomain(
                             'mxHost',
@@ -154,27 +165,27 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                       />
                     </label>
                     <label>
-                      Sending IPv4
+                      {t('Sending IPv4')}
                       <input
                         value={vm.domain.ipv4}
-                        placeholder="Server’s outgoing IPv4"
+                        placeholder={t('Server’s outgoing IPv4')}
                         onChange={(e) =>
                           vm.updateDomain('ipv4', e.target.value.trim())
                         }
                       />
                     </label>
                     <label>
-                      Sending IPv6
+                      {t('Sending IPv6')}
                       <input
                         value={vm.domain.ipv6}
-                        placeholder="Server’s outgoing IPv6, if enabled"
+                        placeholder={t('Server’s outgoing IPv6, if enabled')}
                         onChange={(e) =>
                           vm.updateDomain('ipv6', e.target.value.trim())
                         }
                       />
                     </label>
                     <label>
-                      DKIM selector
+                      {t('DKIM selector')}
                       <input
                         required
                         value={vm.domain.selector}
@@ -188,7 +199,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                     </label>
                   </fieldset>
                   <button className="primary" disabled={vm.busy} type="submit">
-                    Review changes
+                    {t('Review changes')}
                   </button>
                   <button
                     type="button"
@@ -198,7 +209,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                       vm.setPreview(null)
                     }}
                   >
-                    Cancel
+                    {t('Cancel')}
                   </button>
                   {vm.original && (
                     <button
@@ -206,15 +217,16 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                       disabled={vm.busy}
                       onClick={() => vm.checkDomain(vm.original)}
                     >
-                      Check this domain’s DNS
+                      {t('Check this domain’s DNS')}
                     </button>
                   )}
                 </form>
               )}
               {!vm.editingDomain && (
                 <p>
-                  Select a domain to update it, or add a domain for new email
-                  addresses.
+                  {t(
+                    'Select a domain to update it, or add a domain for new email addresses.',
+                  )}
                 </p>
               )}
             </section>
@@ -222,7 +234,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
           {vm.tab === 'forwarding' && (
             <section className="forwarding">
               <div className="section-heading">
-                <h3>Automatic forwarding</h3>
+                <h3>{t('Automatic forwarding')}</h3>
                 <button
                   type="button"
                   disabled={vm.busy}
@@ -236,21 +248,23 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                     vm.setPreview(null)
                   }}
                 >
-                  Add forwarding
+                  {t('Add forwarding')}
                 </button>
               </div>
               <p>
-                Forward incoming messages using Maddy’s delivery rules. Choose a
-                final destination; local forwarding chains are blocked. External
-                delivery still depends on the original message’s authentication.
+                {t(
+                  'Forward incoming messages using Maddy’s delivery rules. Choose a final destination; local forwarding chains are blocked. External delivery still depends on the original message’s authentication.',
+                )}
               </p>
               <div className="filter-status">
                 <div className="copy">
-                  <strong>Mailbox sorting rules</strong>
+                  <strong>{t('Mailbox sorting rules')}</strong>
                   <p>
                     {vm.state.filtersReady
-                      ? 'Rules saved by your users run when Maddy receives a message.'
-                      : 'Connect users’ sorting rules to incoming delivery.'}
+                      ? t(
+                          'Rules saved by your users run when Maddy receives a message.',
+                        )
+                      : t('Connect users’ sorting rules to incoming delivery.')}
                   </p>
                 </div>
                 <button
@@ -259,19 +273,19 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                   onClick={vm.toggleFilters}
                 >
                   {vm.state.filtersReady
-                    ? 'Disable sorting rules'
-                    : 'Enable sorting rules'}
+                    ? t('Disable sorting rules')
+                    : t('Enable sorting rules')}
                 </button>
               </div>
               <div className="rule-list">
                 {vm.state.forwarding.length === 0 && (
-                  <p>No forwarding rules managed by JMail yet.</p>
+                  <p>{t('No forwarding rules managed by JMail yet.')}</p>
                 )}
                 {vm.state.forwarding.map((rule) => (
                   <div className="rule" key={rule.source}>
                     <span>
                       {rule.source} → {rule.destination}
-                      {rule.keepCopy ? ' · Keep a copy' : ''}
+                      {rule.keepCopy ? t(' · Keep a copy') : ''}
                     </span>
                     <button
                       type="button"
@@ -282,14 +296,14 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                         vm.setPreview(null)
                       }}
                     >
-                      Edit
+                      {t('Edit')}
                     </button>
                     <button
                       type="button"
                       disabled={vm.busy}
                       onClick={() => vm.removeForward(rule.source)}
                     >
-                      Remove
+                      {t('Remove')}
                     </button>
                   </div>
                 ))}
@@ -298,7 +312,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                 <form className="forward-form" onSubmit={vm.previewForward}>
                   <fieldset disabled={vm.busy}>
                     <label>
-                      Existing mailbox
+                      {t('Existing mailbox')}
                       <input
                         required
                         type="email"
@@ -313,7 +327,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                       />
                     </label>
                     <label>
-                      Forward to
+                      {t('Forward to')}
                       <input
                         required
                         type="email"
@@ -339,11 +353,11 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                           vm.setPreview(null)
                         }}
                       />
-                      Keep a copy in the original mailbox
+                      {t('Keep a copy in the original mailbox')}
                     </label>
                   </fieldset>
                   <button type="submit" disabled={vm.busy}>
-                    Review changes
+                    {t('Review changes')}
                   </button>
                   <button
                     type="button"
@@ -353,7 +367,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                       vm.setPreview(null)
                     }}
                   >
-                    Cancel
+                    {t('Cancel')}
                   </button>
                 </form>
               )}
@@ -364,28 +378,31 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
               ref={previewRef}
               tabIndex={-1}
               className="preview"
-              aria-label="Configuration preview"
+              aria-label={t('Configuration preview')}
             >
-              <h3>Review changes</h3>
+              <h3>{t('Review changes')}</h3>
               <p>
-                Maddy will validate the configuration, back up the current
-                files, and restart. Active mail connections may briefly
-                reconnect. Failed changes restore the previous configuration.
+                {t(
+                  'Maddy will validate the configuration, back up the current files, and restart. Active mail connections may briefly reconnect. Failed changes restore the previous configuration.',
+                )}
               </p>
               <div className="change-summary">
                 {vm.preview.change.kind === 'domain' && (
                   <>
                     <strong>
-                      {vm.preview.change.original ? 'Update' : 'Add'}{' '}
+                      {vm.preview.change.original ? t('Update') : t('Add')}{' '}
                       {vm.preview.change.domain?.name}
                     </strong>
                     <p>
-                      Accept mail for this domain and sign outgoing messages.
-                      Mail hostname: {vm.preview.change.domain?.mxHost}.
+                      {t(
+                        'Accept mail for this domain and sign outgoing messages. Mail hostname: {hostname}.',
+                        { hostname: vm.preview.change.domain?.mxHost || '' },
+                      )}
                     </p>
                     <p>
-                      After saving, publish the DNS records at your domain
-                      provider and check delivery.
+                      {t(
+                        'After saving, publish the DNS records at your domain provider and check delivery.',
+                      )}
                     </p>
                   </>
                 )}
@@ -393,8 +410,8 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                   <>
                     <strong>
                       {vm.preview.change.destination
-                        ? 'Forward incoming mail'
-                        : 'Remove forwarding'}
+                        ? t('Forward incoming mail')
+                        : t('Remove forwarding')}
                     </strong>
                     <p>
                       {vm.preview.change.source}
@@ -405,8 +422,10 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                     {vm.preview.change.destination && (
                       <p>
                         {vm.preview.change.keepCopy
-                          ? 'A copy will stay in the original mailbox.'
-                          : 'Incoming messages will only go to the forwarding destination.'}
+                          ? t('A copy will stay in the original mailbox.')
+                          : t(
+                              'Incoming messages will only go to the forwarding destination.',
+                            )}
                       </p>
                     )}
                   </>
@@ -414,20 +433,27 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                 {vm.preview.change.kind === 'filters' && (
                   <>
                     <strong>
-                      {vm.preview.change.enabled ? 'Enable' : 'Disable'} mailbox
-                      sorting rules
+                      {t(
+                        vm.preview.change.enabled
+                          ? 'Enable mailbox sorting rules'
+                          : 'Disable mailbox sorting rules',
+                      )}
                     </strong>
                     <p>
                       {vm.preview.change.enabled
-                        ? 'Rules saved by your users will run when incoming mail is delivered.'
-                        : 'Incoming messages will use the default delivery folder.'}
+                        ? t(
+                            'Rules saved by your users will run when incoming mail is delivered.',
+                          )
+                        : t(
+                            'Incoming messages will use the default delivery folder.',
+                          )}
                     </p>
                   </>
                 )}
               </div>
               <details className="configuration-diff">
-                <summary>View configuration changes</summary>
-                <pre>{vm.preview.diff || 'No changes'}</pre>
+                <summary>{t('View configuration changes')}</summary>
+                <pre>{vm.preview.diff || t('No changes')}</pre>
               </details>
               <div className="actions">
                 <button
@@ -436,24 +462,25 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                   disabled={vm.busy || !vm.preview.diff}
                   onClick={vm.apply}
                 >
-                  {vm.busy ? 'Saving…' : 'Save changes'}
+                  {vm.busy ? t('Saving…') : t('Save changes')}
                 </button>
                 <button
                   type="button"
                   disabled={vm.busy}
                   onClick={() => vm.setPreview(null)}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </button>
               </div>
             </section>
           )}
           {vm.tab === 'activity' && (
             <section className="activity">
-              <h3>Find out what happened to a message</h3>
+              <h3>{t('Find out what happened to a message')}</h3>
               <p>
-                Paste the message ID from a delivery failure, such as f733b3cc.
-                This searches the latest 300 server log entries.
+                {t(
+                  'Paste the message ID from a delivery failure, such as f733b3cc. This searches the latest 300 server log entries.',
+                )}
               </p>
               <form
                 className="activity-form"
@@ -463,32 +490,31 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                 }}
               >
                 <label>
-                  Message ID (optional)
+                  {t('Message ID (optional)')}
                   <input
                     value={vm.messageId}
                     onChange={(event) => vm.setMessageId(event.target.value)}
-                    placeholder="Message ID from the delivery notice"
+                    placeholder={t('Message ID from the delivery notice')}
                   />
                 </label>
                 <button type="submit" disabled={vm.busy}>
-                  Search activity
+                  {t('Search activity')}
                 </button>
               </form>
               {vm.activity && (
                 <div className="activity-list">
                   {vm.activity.length === 0 && (
                     <p>
-                      No matching entries in the recent log. The message may be
-                      older than this window.
+                      {t(
+                        'No matching entries in the recent log. The message may be older than this window.',
+                      )}
                     </p>
                   )}
                   {vm.activity.map((entry, index) => (
                     <article key={index}>
                       <time>
                         {entry.timestamp
-                          ? new Date(
-                              Number(entry.timestamp) / 1000,
-                            ).toLocaleString()
+                          ? dateTime(Number(entry.timestamp) / 1000)
                           : ''}
                       </time>
                       <pre>{entry.message}</pre>
@@ -500,57 +526,63 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
           )}
           {vm.tab === 'diagnostics' && (
             <section className="diagnostics">
-              <h3>Delivery tests</h3>
+              <h3>{t('Delivery tests')}</h3>
               <details className="worker-setup">
-                <summary>Scheduled sending and reminders</summary>
+                <summary>{t('Scheduled sending and reminders')}</summary>
                 <p>
                   {vm.state.lastWorkerRun
-                    ? `Last background check: ${new Date(vm.state.lastWorkerRun).toLocaleString()}`
-                    : 'No background check has been recorded yet.'}
+                    ? t('Last background check: {0}', {
+                        '0': dateTime(vm.state.lastWorkerRun),
+                      })
+                    : t('No background check has been recorded yet.')}
                 </p>
                 <p>
-                  These features need the background worker. On the server,
-                  install its timer using the app user and the absolute project
-                  directory.
+                  {t(
+                    'These features need the background worker. On the server, install its timer using the app user and the absolute project directory.',
+                  )}
                 </p>
                 <pre>
                   sudo sh scripts/install-mail-worker.sh APP_USER /path/to/jmail
                 </pre>
                 <p>
-                  Set CRON_SECRET in the app environment. For a custom local
-                  port, set JMAIL_WORKER_ORIGIN to the local app address. The
-                  timer checks work every minute.
+                  {t(
+                    'Set CRON_SECRET in the app environment. For a custom local port, set JMAIL_WORKER_ORIGIN to the local app address. The timer checks work every minute.',
+                  )}
                 </p>
               </details>
               <p>
-                DNS checks compare published records. Send and forwarding tests
-                send a real message to the address you choose. Receiving is
-                confirmed by finding its tracking token in a mailbox.
+                {t(
+                  'DNS checks compare published records. Send and forwarding tests send a real message to the address you choose. Receiving is confirmed by finding its tracking token in a mailbox.',
+                )}
               </p>
               <form className="test-form" onSubmit={vm.runTest}>
                 <fieldset disabled={vm.busy}>
                   <label>
-                    Test
+                    {t('Test')}
                     <select
-                      aria-label="Test"
+                      aria-label={t('Test')}
                       value={vm.test.mode}
                       onChange={(e) =>
                         vm.setTest((t) => ({ ...t, mode: e.target.value }))
                       }
                     >
-                      <option value="dns">DNS and email authentication</option>
-                      <option value="send">Send a test email</option>
-                      <option value="receive">Receive / check mailbox</option>
+                      <option value="dns">
+                        {t('DNS and email authentication')}
+                      </option>
+                      <option value="send">{t('Send a test email')}</option>
+                      <option value="receive">
+                        {t('Receive / check mailbox')}
+                      </option>
                       <option value="forward">
-                        Send through a forwarding rule
+                        {t('Send through a forwarding rule')}
                       </option>
                     </select>
                   </label>
                   {vm.test.mode === 'dns' ? (
                     <label>
-                      Domain
+                      {t('Domain')}
                       <select
-                        aria-label="Diagnostic domain"
+                        aria-label={t('Diagnostic domain')}
                         value={vm.test.domain}
                         onChange={(e) =>
                           vm.setTest((t) => ({ ...t, domain: e.target.value }))
@@ -565,8 +597,8 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                     <>
                       <label>
                         {vm.test.mode === 'receive'
-                          ? 'Mailbox to check'
-                          : 'Send from'}
+                          ? t('Mailbox to check')
+                          : t('Send from')}
                         <input
                           type="email"
                           required
@@ -581,7 +613,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                         />
                       </label>
                       <label>
-                        Mailbox password
+                        {t('Mailbox password')}
                         <input
                           type="password"
                           autoComplete="off"
@@ -589,8 +621,8 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                           value={vm.test.password}
                           placeholder={
                             vm.test.email === adminEmail
-                              ? 'Uses your current session if blank'
-                              : 'Required for another mailbox'
+                              ? t('Uses your current session if blank')
+                              : t('Required for another mailbox')
                           }
                           onChange={(e) =>
                             vm.setTest((t) => ({
@@ -603,8 +635,8 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                       {vm.test.mode !== 'receive' && (
                         <label>
                           {vm.test.mode === 'forward'
-                            ? 'Mailbox with a forwarding rule'
-                            : 'Send test to'}
+                            ? t('Mailbox with a forwarding rule')
+                            : t('Send test to')}
                           <input
                             type="email"
                             required
@@ -620,7 +652,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                       )}
                       {vm.test.mode === 'receive' && (
                         <label>
-                          Tracking token (optional)
+                          {t('Tracking token (optional)')}
                           <input
                             value={vm.test.token}
                             onChange={(e) =>
@@ -629,7 +661,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                                 token: e.target.value,
                               }))
                             }
-                            placeholder="jmail-test-…"
+                            placeholder={t('jmail-test-…')}
                           />
                         </label>
                       )}
@@ -639,27 +671,25 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                 {vm.test.mode === 'receive' && (
                   <div className="inbound-help">
                     <p>
-                      To test public inbound delivery, generate a token, send an
-                      email with that token as the subject from an external
-                      provider to this mailbox, then run the check. For
-                      forwarding, check the destination inbox for the token from
-                      the forwarding test.
+                      {t(
+                        'To test public inbound delivery, generate a token, send an email with that token as the subject from an external provider to this mailbox, then run the check. For forwarding, check the destination inbox for the token from the forwarding test.',
+                      )}
                     </p>
                     <button
                       type="button"
                       disabled={vm.busy}
                       onClick={vm.generateToken}
                     >
-                      Generate inbound test token
+                      {t('Generate inbound test token')}
                     </button>
                   </div>
                 )}
                 <button className="primary" type="submit" disabled={vm.busy}>
                   {vm.busy
-                    ? 'Working…'
+                    ? t('Working…')
                     : vm.test.mode === 'send' || vm.test.mode === 'forward'
-                      ? 'Send test email'
-                      : 'Run checks'}
+                      ? t('Send test email')
+                      : t('Run checks')}
                 </button>
               </form>
               <div className="test-history">
@@ -668,7 +698,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                   disabled={vm.busy}
                   onClick={vm.loadHistory}
                 >
-                  Load previous tests
+                  {t('Load previous tests')}
                 </button>
                 {vm.history.map((item) => (
                   <button
@@ -676,8 +706,7 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                     type="button"
                     onClick={() => vm.setResult(item.result)}
                   >
-                    {item.target} · {item.mode} ·{' '}
-                    {new Date(item.at).toLocaleString()}
+                    {item.target} · {t(item.mode)} · {dateTime(item.at)}
                   </button>
                 ))}
               </div>
@@ -685,31 +714,31 @@ const MailServerAdmin = ({ adminEmail }: Props) => {
                 <div className="results" aria-live="polite">
                   {vm.result.token && (
                     <p className="token">
-                      Tracking token: <code>{vm.result.token}</code>
+                      {t('Tracking token:')} <code>{vm.result.token}</code>
                     </p>
                   )}
                   {vm.result.checks.map((check, index) => (
                     <article
                       className={`check ${check.status}`}
-                      key={`${check.name}-${index}`}
+                      key={`${t(check.name)}-${index}`}
                     >
                       <h4>
-                        {check.name} ·{' '}
+                        {t(check.name)} ·{' '}
                         {check.status === 'pass'
-                          ? 'Passed'
+                          ? t('Passed')
                           : check.status === 'fail'
-                            ? 'Failed'
-                            : 'Needs review'}
+                            ? t('Failed')
+                            : t('Needs review')}
                       </h4>
-                      <p>{check.detail}</p>
+                      <p>{t(check.detail)}</p>
                       {check.expected && (
                         <>
-                          <pre>{check.expected}</pre>
+                          <pre>{t(check.expected)}</pre>
                           <button
                             type="button"
                             onClick={() => vm.copyRecord(check.expected!)}
                           >
-                            Copy record
+                            {t('Copy record')}
                           </button>
                         </>
                       )}

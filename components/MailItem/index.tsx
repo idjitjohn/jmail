@@ -1,7 +1,10 @@
+'use client'
+
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import { useRef, useState, useEffect } from 'react'
 import clsx from 'clsx'
 import Avatar from '../Avatar'
-import { formatDate } from '@/lib/format'
 import type { MailThread } from '@/lib/types'
 import './MailItem.scss'
 
@@ -22,6 +25,8 @@ export default function MailItem({
   onClick,
   onSwipeDelete,
 }: Props) {
+  const { t, formatDate } = useLocale()
+
   const { subject, participants, latest, messages, unreadCount } = thread
 
   const senderLabel =
@@ -153,7 +158,7 @@ export default function MailItem({
             )}
             <span className="date">{formatDate(latest.date)}</span>
           </div>
-          <p className="subject">{subject || '(no subject)'}</p>
+          <p className="subject">{subject || t('(no subject)')}</p>
           {latest.preview && <p className="preview">{latest.preview}</p>}
         </div>
 

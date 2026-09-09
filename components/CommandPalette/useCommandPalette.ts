@@ -1,11 +1,13 @@
 'use client'
 
+import { useLocale } from '../LocaleProvider/useLocale'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { usePreferences } from '../PreferencesProvider/usePreferences'
 import type { Command } from './types'
 
 export const useCommandPalette = (commands: Command[], onClose: () => void) => {
+  const { t } = useLocale()
   const { preferences } = usePreferences()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [query, setQuery] = useState('')
@@ -13,11 +15,11 @@ export const useCommandPalette = (commands: Command[], onClose: () => void) => {
   const filtered = useMemo(
     () =>
       commands.filter((command) =>
-        `${command.label} ${command.description}`
+        `${t(command.label)} ${t(command.description)} ${command.label} ${command.description}`
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
-    [commands, query],
+    [commands, query, t],
   )
 
   useEffect(() => {

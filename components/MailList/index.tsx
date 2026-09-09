@@ -1,5 +1,7 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import MailItem from '../MailItem'
 import Spinner from '../Spinner'
 import Button from '../Button'
@@ -24,20 +26,36 @@ const MailList = ({
   onMobileBack,
   onRefresh,
 }: Props) => {
+  const { t, plural } = useLocale()
+
   const {
     scope,
     setScope,
     advancedOpen,
-    setAdvancedOpen,
+    toggleSearchOptions,
+    searchOptionsRef,
+    searchOptionsId,
+    hasSearchOptions,
+    handleSearchOptionsKeyDown,
     fields,
     setFields,
     selected,
     selectionMode,
-    setSelectionMode,
+    toggleSelectionMode,
+    selectAllRef,
+    allSelected,
     selectedCount,
     bulkBusy,
     bulkAction,
     destinations,
+    moveOpen,
+    moveButtonRef,
+    folderPickerId,
+    folderQuery,
+    setFolderQuery,
+    toggleMove,
+    handleFolderPickerKeyDown,
+    handleThreadClick,
     toggleSelection,
     selectAll,
     threads,
@@ -69,13 +87,16 @@ const MailList = ({
   })
 
   return (
-    <section className="MailList" aria-label={`${folderLabel} messages`}>
+    <section
+      className="MailList"
+      aria-label={t('{0} messages', { '0': folderLabel })}
+    >
       <div className="header">
         <button
           className="mobile-back"
           onClick={onMobileBack}
           type="button"
-          aria-label="Show folders"
+          aria-label={t('Show folders')}
         />
         <h2 className="title">{folderLabel}</h2>
         <button
@@ -83,16 +104,16 @@ const MailList = ({
           onClick={markAllRead}
           disabled={markingRead || loading}
           type="button"
-          title="Mark folder as read"
-          aria-label="Mark folder as read"
+          title={t('Mark folder as read')}
+          aria-label={t('Mark folder as read')}
         />
         <button
           className={`refresh-btn${loading ? ' refreshing' : ''}`}
           onClick={refresh}
           disabled={loading}
           type="button"
-          title="Refresh"
-          aria-label="Refresh messages"
+          title={t('Refresh')}
+          aria-label={t('Refresh messages')}
         />
       </div>
       <div className="search-bar">
@@ -101,9 +122,11 @@ const MailList = ({
           className="search-input"
           type="search"
           placeholder={
-            scope === 'all' ? 'Search all folders' : 'Search this folder'
+            scope === 'all' ? t('Search all folders') : t('Search this folder')
           }
-          aria-label="Search this folder"
+          aria-label={
+            scope === 'all' ? t('Search all folders') : t('Search this folder')
+          }
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={(e) => {
@@ -111,45 +134,62 @@ const MailList = ({
           }}
         />
         {shortcutsEnabled && <kbd>/</kbd>}
-      </div>
-      <div className="search-options">
-        <select
-          aria-label="Search in"
-          value={scope}
-          onChange={(event) => setScope(event.target.value)}
-        >
-          <option value="folder">This folder</option>
-          <option value="all">All folders</option>
-        </select>
         <button
+          ref={searchOptionsRef}
+          className={`search-options-toggle${advancedOpen || hasSearchOptions ? ' active' : ''}`}
           type="button"
+          aria-label={t('Search options')}
+          title={t('Search options')}
           aria-expanded={advancedOpen}
-          onClick={() => setAdvancedOpen(!advancedOpen)}
-        >
-          Search options
-        </button>
-        <button
-          type="button"
-          aria-pressed={selectionMode}
-          onClick={() => setSelectionMode(!selectionMode)}
-        >
-          {selectionMode ? 'Done' : 'Select'}
-        </button>
+          aria-controls={searchOptionsId}
+          onClick={toggleSearchOptions}
+        />
       </div>
       {advancedOpen && (
-        <div className="advanced-search">
+        <div
+          className="advanced-search"
+          id={searchOptionsId}
+          role="region"
+          aria-label={t('Search options')}
+          onKeyDown={handleSearchOptionsKeyDown}
+        >
+          <fieldset className="search-scope">
+            <legend>{t('Search in')}</legend>
+            <div className="scope-choices">
+              <label className="scope-choice">
+                <input
+                  type="radio"
+                  name={searchOptionsId}
+                  value="folder"
+                  checked={scope === 'folder'}
+                  onChange={() => setScope('folder')}
+                />
+                <span>{t('This folder')}</span>
+              </label>
+              <label className="scope-choice">
+                <input
+                  type="radio"
+                  name={searchOptionsId}
+                  value="all"
+                  checked={scope === 'all'}
+                  onChange={() => setScope('all')}
+                />
+                <span>{t('All folders')}</span>
+              </label>
+            </div>
+          </fieldset>
           {(['from', 'to', 'subject', 'after', 'before'] as const).map(
             (field) => (
-              <label key={field}>
+              <label className={`search-field ${field}`} key={field}>
                 {field === 'after'
-                  ? 'On or after'
+                  ? t('On or after')
                   : field === 'before'
-                    ? 'Before'
+                    ? t('Before')
                     : field === 'from'
-                      ? 'From'
+                      ? t('From')
                       : field === 'to'
-                        ? 'To'
-                        : 'Subject'}
+                        ? t('To')
+                        : t('Subject')}
                 <input
                   type={
                     field === 'after' || field === 'before' ? 'date' : 'text'
@@ -165,64 +205,19 @@ const MailList = ({
               </label>
             ),
           )}
-          <button type="button" onClick={clearSearch}>
-            Clear search
+          <button className="clear-search" type="button" onClick={clearSearch}>
+            {t('Clear search')}
           </button>
         </div>
       )}
-      {selectionMode && (
-        <div className="bulk-actions" aria-label="Selected messages">
-          <button
-            type="button"
-            onClick={selectAll}
-            disabled={loading || bulkBusy}
-          >
-            Select visible
-          </button>
-          <span>{selectedCount} selected</span>
-          {(['archive', 'trash', 'read', 'unread', 'star'] as const).map(
-            (action) => (
-              <button
-                type="button"
-                key={action}
-                disabled={!selectedCount || bulkBusy}
-                onClick={() => bulkAction(action)}
-              >
-                {action === 'trash'
-                  ? 'Move to Trash'
-                  : action === 'read'
-                    ? 'Mark read'
-                    : action === 'unread'
-                      ? 'Mark unread'
-                      : action === 'star'
-                        ? 'Star'
-                        : 'Archive'}
-              </button>
-            ),
-          )}
-          <select
-            aria-label="Move selected messages to folder"
-            value=""
-            disabled={!selectedCount || bulkBusy}
-            onChange={(event) => bulkAction('move', event.target.value)}
-          >
-            <option value="">Move to…</option>
-            {destinations.map((folder) => (
-              <option key={folder.path} value={folder.path}>
-                {folder.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-      <div className="filters" role="group" aria-label="Filter messages">
+      <div className="filters" role="group" aria-label={t('Filter messages')}>
         <button
           type="button"
           className={`filter ${filter === 'all' ? 'active' : ''}`}
           aria-pressed={filter === 'all'}
           onClick={() => setFilter('all')}
         >
-          All mail
+          {t('All mail')}
         </button>
         <button
           type="button"
@@ -230,7 +225,7 @@ const MailList = ({
           aria-pressed={filter === 'unread'}
           onClick={() => setFilter('unread')}
         >
-          Unread
+          {t('Unread')}
         </button>
         <button
           type="button"
@@ -238,35 +233,165 @@ const MailList = ({
           aria-pressed={filter === 'starred'}
           onClick={() => setFilter('starred')}
         >
-          Starred
+          {t('Starred')}
         </button>
+        <button
+          className={`selection-toggle${selectionMode ? ' active' : ''}`}
+          type="button"
+          aria-label={
+            selectionMode ? t('Cancel selection') : t('Select messages')
+          }
+          title={selectionMode ? t('Cancel selection') : t('Select messages')}
+          aria-pressed={selectionMode}
+          disabled={bulkBusy}
+          onClick={toggleSelectionMode}
+        />
       </div>
+      {selectionMode && (
+        <div
+          className="bulk-actions"
+          role="group"
+          aria-label={t('Selected messages')}
+        >
+          <div className="selection-summary">
+            <label className="select-visible">
+              <input
+                ref={selectAllRef}
+                type="checkbox"
+                checked={allSelected}
+                onChange={selectAll}
+                disabled={loading || bulkBusy || !threads.length}
+                aria-label={t('Select all visible messages')}
+              />
+              <span>{t('All visible')}</span>
+            </label>
+            <span className="selected-count" role="status">
+              {selectedCount
+                ? plural(
+                    '{count} selected message',
+                    '{count} selected messages',
+                    selectedCount,
+                  )
+                : t('Choose messages below')}
+            </span>
+          </div>
+          <div className="action-buttons">
+            <button
+              className="bulk-action archive"
+              type="button"
+              title={t('Archive')}
+              aria-label={t('Archive')}
+              disabled={!selectedCount || bulkBusy}
+              onClick={() => bulkAction('archive')}
+            />
+            <button
+              className="bulk-action trash"
+              type="button"
+              title={t('Move to Trash')}
+              aria-label={t('Move to Trash')}
+              disabled={!selectedCount || bulkBusy}
+              onClick={() => bulkAction('trash')}
+            />
+            <button
+              className="bulk-action read"
+              type="button"
+              title={t('Mark read')}
+              aria-label={t('Mark read')}
+              disabled={!selectedCount || bulkBusy}
+              onClick={() => bulkAction('read')}
+            />
+            <button
+              className="bulk-action unread"
+              type="button"
+              title={t('Mark unread')}
+              aria-label={t('Mark unread')}
+              disabled={!selectedCount || bulkBusy}
+              onClick={() => bulkAction('unread')}
+            />
+            <button
+              className="bulk-action star"
+              type="button"
+              title={t('Star')}
+              aria-label={t('Star')}
+              disabled={!selectedCount || bulkBusy}
+              onClick={() => bulkAction('star')}
+            />
+            <button
+              ref={moveButtonRef}
+              className={`bulk-action move${moveOpen && selectedCount ? ' active' : ''}`}
+              type="button"
+              title={t('Move to folder')}
+              aria-label={t('Move to folder')}
+              aria-expanded={moveOpen && selectedCount > 0}
+              aria-controls={folderPickerId}
+              disabled={!selectedCount || bulkBusy}
+              onClick={toggleMove}
+            />
+          </div>
+          {moveOpen && selectedCount > 0 && (
+            <div
+              className="folder-picker"
+              id={folderPickerId}
+              role="group"
+              aria-label={t('Move selected messages to folder')}
+              onKeyDown={handleFolderPickerKeyDown}
+            >
+              <input
+                className="folder-search"
+                type="search"
+                aria-label={t('Find a destination folder')}
+                placeholder={t('Find a folder…')}
+                value={folderQuery}
+                onChange={(event) => setFolderQuery(event.target.value)}
+                autoFocus
+              />
+              <div className="folder-choices">
+                {destinations.map((destination) => (
+                  <button
+                    className="folder-choice"
+                    key={destination.path}
+                    type="button"
+                    disabled={bulkBusy}
+                    onClick={() => bulkAction('move', destination.path)}
+                    title={destination.path}
+                  >
+                    <span>{destination.name}</span>
+                  </button>
+                ))}
+                {!destinations.length && (
+                  <p className="no-folders">{t('No matching folders.')}</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       <div className="list-caption" role="status">
         <span>
           {loading
-            ? 'Updating your mail…'
-            : `${total.toLocaleString()} message${total === 1 ? '' : 's'}`}
+            ? t('Updating your mail…')
+            : plural('{count} message', '{count} messages', total)}
         </span>
-        <span>Newest first</span>
+        <span>{t('Newest first')}</span>
       </div>
       <div className="messages" aria-busy={loading}>
         {error && (
           <div className="error-state" role="alert">
-            <p>{error}</p>
+            <p>{t(error)}</p>
             <Button variant="secondary" size="sm" onClick={refresh}>
-              Try again
+              {t('Try again')}
             </Button>
           </div>
         )}
         {loading && threads.length === 0 ? (
           <div className="empty-state">
             <Spinner size="md" />
-            <p>Getting your mail ready…</p>
+            <p>{t('Getting your mail ready…')}</p>
           </div>
         ) : !error && threads.length === 0 ? (
           <div className="empty-state">
-            <h3>{emptyTitle}</h3>
-            <p>{emptyDescription}</p>
+            <h3>{t(emptyTitle)}</h3>
+            <p>{t(emptyDescription)}</p>
           </div>
         ) : (
           <>
@@ -276,7 +401,9 @@ const MailList = ({
                   <input
                     className="selection"
                     type="checkbox"
-                    aria-label={`Select ${thread.subject || 'message'}`}
+                    aria-label={t('Select {0}', {
+                      '0': thread.subject || 'message',
+                    })}
                     checked={selected.has(thread.id)}
                     disabled={bulkBusy}
                     onChange={() => toggleSelection(thread.id)}
@@ -284,8 +411,12 @@ const MailList = ({
                 )}
                 <MailItem
                   thread={thread}
-                  isSelected={selectedThread?.id === thread.id}
-                  onClick={onSelect}
+                  isSelected={
+                    selectionMode
+                      ? selected.has(thread.id)
+                      : selectedThread?.id === thread.id
+                  }
+                  onClick={handleThreadClick}
                   onSwipeDelete={selectionMode ? undefined : handleSwipeDelete}
                 />
               </div>
@@ -298,7 +429,7 @@ const MailList = ({
                   onClick={loadMore}
                   loading={loading}
                 >
-                  Load more
+                  {t('Load more')}
                 </Button>
               </div>
             )}

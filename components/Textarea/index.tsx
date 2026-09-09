@@ -1,3 +1,7 @@
+'use client'
+
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import clsx from 'clsx'
 import './Textarea.scss'
 
@@ -24,9 +28,11 @@ export default function Textarea({
   rows = 6,
   className = '',
 }: Props) {
+  const { t } = useLocale()
+
   return (
     <div className={clsx('Textarea', className)}>
-      {label && <label className="label">{label}</label>}
+      {label && <label className="label">{t(label)}</label>}
       <textarea
         className={clsx('field', { error: !!error })}
         placeholder={placeholder}
@@ -36,7 +42,7 @@ export default function Textarea({
         name={name}
         rows={rows}
       />
-      {error && <span className="error-msg">{error}</span>}
+      {error && <span className="error-msg">{t(error)}</span>}
     </div>
   )
 }

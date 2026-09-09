@@ -1,3 +1,5 @@
+'use client'
+
 import Spinner from '../Spinner'
 import './Button.scss'
 

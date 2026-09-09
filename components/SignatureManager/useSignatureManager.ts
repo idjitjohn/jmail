@@ -4,23 +4,42 @@ import { useState, useEffect } from 'react'
 import {
   type Signature,
   getSignatures,
+  getLegacySignatures,
   saveSignatures,
   createSignature,
 } from '@/lib/signatures'
+import { useToast } from '../Toast'
 
-export function useSignatureManager() {
+export function useSignatureManager(userEmail: string) {
+  const { toast } = useToast()
   const [signatures, setSignatures] = useState<Signature[]>([])
   const [editing, setEditing] = useState<Signature | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [legacy, setLegacy] = useState<Signature[]>([])
 
   useEffect(() => {
+    const current = getSignatures(userEmail)
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Browser signature hydration
-    setSignatures(getSignatures())
-  }, [])
+    setSignatures(current)
+    setLegacy(
+      getLegacySignatures().filter(
+        (row) => !current.some((item) => item.id === row.id),
+      ),
+    )
+  }, [userEmail])
 
   const persist = (updated: Signature[]) => {
-    setSignatures(updated)
-    saveSignatures(updated)
+    try {
+      saveSignatures(updated, userEmail)
+      setSignatures(updated)
+      return true
+    } catch {
+      toast(
+        'Could not save signatures in this browser. Your previous signatures are unchanged.',
+        'error',
+      )
+      return false
+    }
   }
 
   const startCreate = () => {
@@ -40,11 +59,16 @@ export function useSignatureManager() {
 
   const save = (name: string, html: string) => {
     if (editing) {
-      persist(
-        signatures.map((s) => (s.id === editing.id ? { ...s, name, html } : s)),
+      if (
+        !persist(
+          signatures.map((s) =>
+            s.id === editing.id ? { ...s, name, html } : s,
+          ),
+        )
       )
+        return
     } else {
-      persist([...signatures, createSignature(name, html)])
+      if (!persist([...signatures, createSignature(name, html)])) return
     }
     setEditing(null)
     setIsCreating(false)
@@ -56,6 +80,10 @@ export function useSignatureManager() {
 
   return {
     signatures,
+    hasLegacy: legacy.length > 0,
+    importLegacy: () => {
+      if (persist([...signatures, ...legacy])) setLegacy([])
+    },
     editing,
     isCreating,
     startCreate,

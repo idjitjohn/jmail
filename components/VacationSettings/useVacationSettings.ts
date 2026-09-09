@@ -1,75 +1,33 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useSavedSetting } from '@/lib/useSavedSetting'
 
-export function useVacationSettings() {
-  const [enabled, setEnabled] = useState(false)
-  const [subject, setSubject] = useState('')
-  const [message, setMessage] = useState('')
-  const [days, setDays] = useState(7)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    fetch('/api/settings/vacation')
-      .then(r => r.json())
-      .then(data => {
-        if (data.subject || data.message) {
-          setEnabled(true)
-          setSubject(data.subject ?? '')
-          setMessage(data.message ?? '')
-          setDays(data.days ?? 7)
-        }
-      })
-      .catch(() => setError('Failed to load settings'))
-      .finally(() => setLoading(false))
-  }, [])
-
-  const save = async () => {
-    setError('')
-    setSaved(false)
-
-    if (!enabled) {
-      setSaving(true)
-      try {
-        await fetch('/api/settings/vacation', { method: 'DELETE' })
-        setSaved(true)
-        setTimeout(() => setSaved(false), 3000)
-      } catch {
-        setError('Failed to save settings')
-      } finally {
-        setSaving(false)
-      }
-      return
-    }
-
-    if (!subject.trim() || !message.trim()) {
-      setError('Subject and message are required')
-      return
-    }
-
-    setSaving(true)
-    try {
-      const res = await fetch('/api/settings/vacation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: subject.trim(), message: message.trim(), days }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error ?? 'Failed to save')
-      } else {
-        setSaved(true)
-        setTimeout(() => setSaved(false), 3000)
-      }
-    } catch {
-      setError('Failed to save settings')
-    } finally {
-      setSaving(false)
-    }
+export const useVacationSettings = () => {
+  const state = useSavedSetting('/api/settings/vacation', {
+    enabled: false,
+    available: false,
+    subject: '',
+    message: '',
+    days: 7,
+  })
+  const change = <K extends keyof typeof state.value>(
+    key: K,
+    value: (typeof state.value)[K],
+  ) => state.setValue((current) => ({ ...current, [key]: value }))
+  return {
+    ...state,
+    ...state.value,
+    setEnabled: (update: boolean | ((value: boolean) => boolean)) =>
+      change(
+        'enabled',
+        typeof update === 'function' ? update(state.value.enabled) : update,
+      ),
+    setSubject: (value: string) => change('subject', value),
+    setMessage: (value: string) => change('message', value),
+    setDays: (value: number) => change('days', value),
+    save: () => {
+      if (!state.value.available) return
+      return state.value.enabled ? state.save() : state.save(null, 'DELETE')
+    },
   }
-
-  return { enabled, setEnabled, subject, setSubject, message, setMessage, days, setDays, loading, saving, saved, error, save }
 }

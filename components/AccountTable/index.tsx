@@ -1,70 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import Button from '../Button'
 import DeleteModal from '../DeleteModal'
 import ResetPasswordModal from '../ResetPasswordModal'
 import DomainFilter from '../DomainFilter'
-import { useToast } from '../Toast'
+import { useAccountTable } from './useAccountTable'
 import './AccountTable.scss'
 
-interface Props {
+type Props = {
   accounts: string[]
   onRefresh: () => void
 }
 
-export default function AccountTable({ accounts, onRefresh }: Props) {
-  const { toast } = useToast()
-  const [search, setSearch] = useState('')
-  const [domain, setDomain] = useState('')
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
-  const [resetTarget, setResetTarget] = useState<string | null>(null)
-  const [actionLoading, setActionLoading] = useState(false)
+const AccountTable = ({ accounts, onRefresh }: Props) => {
+  const { t, plural } = useLocale()
 
-  const filtered = accounts.filter(email => {
-    if (domain && !email.endsWith(`@${domain}`)) return false
-    if (search && !email.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return
-    setActionLoading(true)
-    try {
-      const res = await fetch(`/api/admin/accounts/${encodeURIComponent(deleteTarget)}`, {
-        method: 'DELETE',
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      toast(`Deleted ${deleteTarget}`, 'success')
-      setDeleteTarget(null)
-      onRefresh()
-    } catch (e) {
-      toast(e instanceof Error ? e.message : 'Delete failed', 'error')
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleReset = async (password: string) => {
-    if (!resetTarget) return
-    setActionLoading(true)
-    try {
-      const res = await fetch(`/api/admin/accounts/${encodeURIComponent(resetTarget)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      toast(`Password reset for ${resetTarget}`, 'success')
-      setResetTarget(null)
-    } catch (e) {
-      toast(e instanceof Error ? e.message : 'Reset failed', 'error')
-    } finally {
-      setActionLoading(false)
-    }
-  }
+  const vm = useAccountTable(accounts, onRefresh)
 
   return (
     <div className="AccountTable">
@@ -72,78 +25,124 @@ export default function AccountTable({ accounts, onRefresh }: Props) {
         <input
           className="search"
           type="search"
-          placeholder="Search accounts..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
+          aria-label={t('Search mailboxes')}
+          placeholder={t('Search mailboxes...')}
+          value={vm.search}
+          onChange={(event) => vm.setSearch(event.target.value)}
         />
-        <DomainFilter domains={[...new Set(accounts.map(email => email.split('@')[1]))]} value={domain} onChange={setDomain} />
+        <DomainFilter
+          domains={vm.domains}
+          value={vm.domain}
+          onChange={vm.setDomain}
+        />
       </div>
 
-      <div className="count">{filtered.length} account{filtered.length !== 1 ? 's' : ''}</div>
+      <div className="summary">
+        <p className="count" role="status">
+          {t('{mailboxes} across {domains}', {
+            mailboxes: plural('{count} mailbox', '{count} mailboxes', vm.count),
+            domains: plural(
+              '{count} domain',
+              '{count} domains',
+              vm.groups.length,
+            ),
+          })}
+        </p>
+        {vm.hasFilters && (
+          <Button variant="ghost" size="sm" onClick={vm.clearFilters}>
+            {t('Clear filters')}
+          </Button>
+        )}
+      </div>
 
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Email</th>
-            <th>Domain</th>
-            <th className="actions-col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.length === 0 ? (
-            <tr>
-              <td colSpan={3} className="empty-row">No accounts found</td>
-            </tr>
-          ) : (
-            filtered.map(email => {
-              const [local, dom] = email.split('@')
-              return (
-                <tr key={email}>
-                  <td className="email-cell">
-                    <span className="local">{local}</span>
-                    <span className="at">@</span>
-                    <span className="domain">{dom}</span>
-                  </td>
-                  <td className="domain-cell">{dom}</td>
-                  <td className="actions-cell">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setResetTarget(email)}
-                    >
-                      Reset password
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleteTarget(email)}
-                      className="danger-ghost"
-                    >
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              )
-            })
-          )}
-        </tbody>
-      </table>
+      {vm.groups.length === 0 ? (
+        <div className="empty">
+          <strong>{t('No mailboxes found')}</strong>
+          <p>{t('Try a different name or choose another domain.')}</p>
+        </div>
+      ) : (
+        <div className="groups">
+          {vm.groups.map((group) => (
+            <section
+              className="domain-group"
+              key={group.domain}
+              aria-label={group.domain}
+            >
+              <div className="group-header">
+                <h3>{group.domain}</h3>
+                <span className="mailbox-count">
+                  {plural(
+                    '{count} mailbox',
+                    '{count} mailboxes',
+                    group.accounts.length,
+                  )}
+                </span>
+              </div>
+              <table
+                className="table"
+                aria-label={t('Mailboxes for {0}', { '0': group.domain })}
+              >
+                <thead>
+                  <tr>
+                    <th scope="col">{t('Mailbox')}</th>
+                    <th scope="col" className="actions-col">
+                      {t('Actions')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.accounts.map((account) => (
+                    <tr key={account.email}>
+                      <th scope="row" className="email-cell">
+                        <span className="local">{account.local}</span>
+                        <span className="address">{account.email}</span>
+                      </th>
+                      <td className="actions-cell">
+                        <div className="actions">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => vm.setResetTarget(account.email)}
+                          >
+                            {t('Reset password')}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => vm.setDeleteTarget(account.email)}
+                            className="danger-ghost"
+                          >
+                            {t('Delete')}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          ))}
+        </div>
+      )}
 
       <DeleteModal
-        isOpen={!!deleteTarget}
-        email={deleteTarget || ''}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
-        loading={actionLoading}
+        isOpen={!!vm.deleteTarget}
+        email={vm.deleteTarget || ''}
+        onConfirm={vm.handleDelete}
+        onCancel={vm.cancelDelete}
+        loading={vm.actionLoading}
       />
 
       <ResetPasswordModal
-        isOpen={!!resetTarget}
-        email={resetTarget || ''}
-        onConfirm={handleReset}
-        onCancel={() => setResetTarget(null)}
-        loading={actionLoading}
+        key={vm.resetTarget || 'reset'}
+        isOpen={!!vm.resetTarget}
+        email={vm.resetTarget || ''}
+        onConfirm={vm.handleReset}
+        onCancel={vm.cancelReset}
+        loading={vm.actionLoading}
       />
     </div>
   )
 }
+
+export default AccountTable

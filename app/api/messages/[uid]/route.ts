@@ -83,7 +83,7 @@ export async function GET(req: NextRequest, { params }: Params) {
             allowedAttributes: {
               ...SANITIZE_OPTIONS.allowedAttributes,
               '*': ['style', 'class', 'align', 'valign', 'width', 'height'],
-            img: ['src', 'alt', 'width', 'height'],
+              img: ['src', 'alt', 'width', 'height'],
             },
             transformTags: {
               ...SANITIZE_OPTIONS.transformTags,
@@ -150,8 +150,6 @@ export async function GET(req: NextRequest, { params }: Params) {
       message.isRead = true
     }
 
-    await client.logout()
-
     if (!message) {
       return NextResponse.json({ error: 'Message not found' }, { status: 404 })
     }
@@ -162,6 +160,8 @@ export async function GET(req: NextRequest, { params }: Params) {
       { error: e instanceof Error ? e.message : 'Failed to fetch message' },
       { status: 500 },
     )
+  } finally {
+    await client.logout().catch(() => client.close())
   }
 }
 
@@ -173,7 +173,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const { uid } = await params
   if (!/^[1-9]\d*$/.test(uid))
     return NextResponse.json({ error: 'Invalid message.' }, { status: 400 })
-  const { isRead, isFlagged, folder = 'INBOX' } = await req.json()
+  const {
+    isRead,
+    isFlagged,
+    folder = 'INBOX',
+  } = (await req.json().catch(() => ({}))) || {}
+  if (
+    typeof folder !== 'string' ||
+    !folder ||
+    (typeof isRead !== 'boolean' && typeof isFlagged !== 'boolean')
+  )
+    return NextResponse.json(
+      { error: 'Choose a valid message update.' },
+      { status: 400 },
+    )
 
   const client = createImapClient(session.email, session.password)
 
@@ -197,13 +210,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       }
     }
 
-    await client.logout()
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Failed to update message' },
       { status: 500 },
     )
+  } finally {
+    await client.logout().catch(() => client.close())
   }
 }
 
@@ -223,20 +237,27 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     await client.connect()
     await client.mailboxOpen(folder)
 
-    if (folder === 'Trash') {
+    const folders = await client.list()
+    const trash =
+      folders.find((item) => item.specialUse === '\\Trash')?.path || 'Trash'
+    if (folder === trash) {
       // Permanently delete if already in Trash
       await client.messageDelete(`${uid}`, { uid: true })
     } else {
-      await client.messageMove(`${uid}`, 'Trash', { uid: true })
+      if (!folders.some((item) => item.path === trash))
+        await client.mailboxCreate(trash)
+      const moved = await client.messageMove(uid, trash, { uid: true })
+      if (!moved) throw new Error('This message could not be moved to Trash.')
     }
 
-    await client.logout()
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'Failed to delete message' },
       { status: 500 },
     )
+  } finally {
+    await client.logout().catch(() => client.close())
   }
 }
 
@@ -310,14 +331,53 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     ],
   },
   allowedStyles: {
-    '*': Object.fromEntries([
-      'color', 'background-color', 'background', 'font-family', 'font-size', 'font-weight', 'font-style',
-      'text-align', 'text-decoration', 'line-height', 'letter-spacing', 'border', 'border-top', 'border-bottom',
-      'border-left', 'border-right', 'border-color', 'border-width', 'border-style', 'border-collapse', 'border-radius',
-      'width', 'max-width', 'min-width', 'height', 'max-height', 'margin', 'margin-top', 'margin-bottom', 'margin-left',
-      'margin-right', 'padding', 'padding-top', 'padding-bottom', 'padding-left', 'padding-right', 'vertical-align',
-      'white-space', 'display', 'table-layout',
-    ].map(property => [property, [/^(?!.*(?:url|expression|import))[^\\]*$/i]])),
+    '*': Object.fromEntries(
+      [
+        'color',
+        'background-color',
+        'background',
+        'font-family',
+        'font-size',
+        'font-weight',
+        'font-style',
+        'text-align',
+        'text-decoration',
+        'line-height',
+        'letter-spacing',
+        'border',
+        'border-top',
+        'border-bottom',
+        'border-left',
+        'border-right',
+        'border-color',
+        'border-width',
+        'border-style',
+        'border-collapse',
+        'border-radius',
+        'width',
+        'max-width',
+        'min-width',
+        'height',
+        'max-height',
+        'margin',
+        'margin-top',
+        'margin-bottom',
+        'margin-left',
+        'margin-right',
+        'padding',
+        'padding-top',
+        'padding-bottom',
+        'padding-left',
+        'padding-right',
+        'vertical-align',
+        'white-space',
+        'display',
+        'table-layout',
+      ].map((property) => [
+        property,
+        [/^(?!.*(?:url|expression|import))[^\\]*$/i],
+      ]),
+    ),
   },
   allowedSchemes: ['http', 'https', 'mailto'],
   allowedSchemesByTag: { img: ['http', 'https', 'data'] },

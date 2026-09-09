@@ -1,5 +1,9 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
+import LanguageSelector from '../LanguageSelector'
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useLogout } from '@/lib/useLogout'
@@ -16,6 +20,8 @@ export default function SettingsLayout({
   userEmail,
   isAdmin,
 }: Props) {
+  const { t } = useLocale()
+
   const pathname = usePathname()
 
   const logout = useLogout()
@@ -29,7 +35,7 @@ export default function SettingsLayout({
       data-icon={icon}
     >
       <span className="nav-icon" />
-      {label}
+      {t(label)}
     </Link>
   )
 
@@ -38,17 +44,18 @@ export default function SettingsLayout({
       <aside className="sidebar">
         <div className="header">
           <Link href="/inbox" className="back-link">
-            Back
+            {t('Back')}
           </Link>
           {/* Mobile-only sign out */}
           <button
             className="mobile-signout"
             onClick={logout}
             type="button"
-            aria-label="Sign out"
+            aria-label={t('Sign out')}
           />
         </div>
 
+        <LanguageSelector />
         <nav className="nav">
           {navItem('/settings/profile', 'Profile', 'person')}
           {navItem('/settings/appearance', 'Appearance', 'appearance')}
@@ -62,7 +69,7 @@ export default function SettingsLayout({
         <div className="footer">
           {userEmail && <span className="user-email">{userEmail}</span>}
           <button className="logout-btn" onClick={logout} type="button">
-            Sign out
+            {t('Sign out')}
           </button>
         </div>
       </aside>

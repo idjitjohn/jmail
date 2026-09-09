@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSession, unauthorized } from '@/lib/auth'
 import { getUserData, updateUserData } from '@/lib/userdata'
 import { normalizePreferences, parsePreferencePatch } from '@/lib/preferences'
+import { isSameOriginRequest } from '@/lib/request-origin'
 
 export const GET = async () => {
   const session = await getSession()
@@ -22,9 +23,14 @@ export const GET = async () => {
 export const PATCH = async (request: Request) => {
   const session = await getSession()
   if (!session) return unauthorized()
-  const origin = request.headers.get('origin')
-  if (origin && origin !== new URL(request.url).origin)
-    return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
+  if (!isSameOriginRequest(request))
+    return NextResponse.json(
+      {
+        error: 'Reload JMail before trying this change again.',
+        code: 'INVALID_ORIGIN',
+      },
+      { status: 403 },
+    )
   let patch
   try {
     patch = parsePreferencePatch(await request.json())

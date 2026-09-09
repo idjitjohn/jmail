@@ -40,15 +40,37 @@ export const listMessages = async (request: NextRequest) => {
             .filter((folder) => !folder.flags.has('\\Noselect'))
             .map((folder) => folder.path)
         : [params.get('folder') || 'INBOX']
-    const messages: MailMessage[] = []
-    let total = 0
+    const candidates: { uid: number; folder: string; date: string }[] = []
     for (const folder of folders) {
       await client.mailboxOpen(folder)
       const found = await client.search(query, { uid: true })
-      const uids = Array.isArray(found) ? found : []
-      total += uids.length
-      const pageUids = uids.slice(-page * 50)
-      if (!pageUids.length) continue
+      if (!Array.isArray(found) || !found.length) continue
+      for await (const message of client.fetch(
+        found.join(','),
+        { uid: true, envelope: true },
+        { uid: true },
+      )) {
+        candidates.push({
+          uid: message.uid,
+          folder,
+          date: (message.envelope?.date || new Date(0)).toISOString(),
+        })
+      }
+    }
+    candidates.sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) ||
+        a.folder.localeCompare(b.folder) ||
+        b.uid - a.uid,
+    )
+    const total = candidates.length
+    const selected = candidates.slice((page - 1) * 50, page * 50)
+    const messages: MailMessage[] = []
+    for (const folder of [...new Set(selected.map((item) => item.folder))]) {
+      await client.mailboxOpen(folder)
+      const pageUids = selected
+        .filter((item) => item.folder === folder)
+        .map((item) => item.uid)
       for await (const message of client.fetch(
         pageUids.join(','),
         {
@@ -105,7 +127,7 @@ export const listMessages = async (request: NextRequest) => {
     }
     messages.sort((a, b) => b.date.localeCompare(a.date) || b.uid - a.uid)
     return NextResponse.json({
-      messages: messages.slice((page - 1) * 50, page * 50),
+      messages,
       total,
       hasMore: total > page * 50,
     })

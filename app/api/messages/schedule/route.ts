@@ -66,6 +66,7 @@ const change = async (req: NextRequest, remove: boolean) => {
       session.email,
       body.id,
       remove ? undefined : futureDate(body.sendAt),
+      session.password,
     )
     return NextResponse.json({ ok: true })
   } catch (error) {

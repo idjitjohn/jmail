@@ -38,11 +38,19 @@ export const usePreferencesProvider = (
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
       })
-      if (!res.ok)
+      const data = await res.json().catch(() => null)
+      if (res.status === 401)
+        throw new Error(
+          'Your session has expired. Sign in again to save your preferences.',
+        )
+      if (res.status === 403)
+        throw new Error(
+          'This change was blocked. Reload JMail and try again. Your previous preference has been restored.',
+        )
+      if (!res.ok || !data?.preferences)
         throw new Error(
           'Could not save this change. Your previous preference has been restored.',
         )
-      const data = await res.json()
       setPreferences(normalizePreferences(data.preferences))
       setSaved(true)
     } catch (error) {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useLocale } from '../LocaleProvider/useLocale'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { MailMessage, MailThread } from '@/lib/types'
 import type { PreviewFile } from '../AttachmentPreview/types'
@@ -15,6 +16,7 @@ export const useMailViewer = (
   onUpdate?: () => void,
   userEmail = '',
 ) => {
+  const { locale } = useLocale()
   const [laterMode, setLaterMode] = useState<'snooze' | 'reminder' | null>(null)
   const [previewFile, setPreviewFile] = useState<PreviewFile | null>(null)
   const [actionError, setActionError] = useState('')
@@ -62,6 +64,8 @@ export const useMailViewer = (
     generation.current += 1
     // eslint-disable-next-line react-hooks/set-state-in-effect -- IMAP message synchronization
     setActionError('')
+    setPreviewFile(null)
+    setLaterMode(null)
     if (!thread) {
       setExpanded(new Set())
       setFullMessages(new Map())
@@ -82,7 +86,7 @@ export const useMailViewer = (
       if (current === generation.current) setLoading(false)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [thread?.id, folder])
+  }, [thread?.id, thread?.latest.uid, folder])
 
   const toggleExpand = useCallback(
     (uid: number) => {
@@ -192,7 +196,7 @@ export const useMailViewer = (
         })
       } else {
         onReply({
-          ...replyContext(full, userEmail, mode),
+          ...replyContext(full, userEmail, mode, locale),
           attachments: mode === 'forward' ? await loadMessageFiles(full) : [],
         })
       }
@@ -200,12 +204,16 @@ export const useMailViewer = (
 
   const showImages = (message: MailMessage) =>
     runAction(async () => {
+      const current = generation.current
       const response = await fetch(
         `/api/messages/${message.uid}?folder=${encodeURIComponent(message.folder)}&images=show`,
       )
       if (!response.ok) throw new Error('Could not load the images.')
       const data = await response.json()
-      setFullMessages((previous) => new Map([...previous, [message.uid, data]]))
+      if (current === generation.current)
+        setFullMessages(
+          (previous) => new Map([...previous, [message.uid, data]]),
+        )
     })
 
   const toolbarActions =

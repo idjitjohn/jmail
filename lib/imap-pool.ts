@@ -1,98 +1,80 @@
+import { createHash } from 'crypto'
 import { createImapClient } from './mail'
 import { broadcast, hasSubscribers } from './sse-manager'
 
-interface PoolEntry {
+type PoolEntry = {
   running: boolean
+  credential: string
+  client?: ReturnType<typeof createImapClient>
 }
 
-// Global singleton — survives hot reload in dev
-const g = globalThis as typeof globalThis & {
+const globalPool = globalThis as typeof globalThis & {
   _imapPool?: Map<string, PoolEntry>
 }
-if (!g._imapPool) g._imapPool = new Map<string, PoolEntry>()
-const pool: Map<string, PoolEntry> = g._imapPool
+const pool = (globalPool._imapPool ||= new Map<string, PoolEntry>())
 
-export function startIdleMonitor(email: string, password: string): void {
-  if (pool.has(email)) return
-  const entry: PoolEntry = { running: true }
-  pool.set(email, entry)
-  void runIdleLoop(email, password, entry)
-}
-
-export function stopIdleMonitor(email: string): void {
+export const stopIdleMonitor = (email: string) => {
   const entry = pool.get(email)
   if (!entry) return
   entry.running = false
+  entry.client?.close()
   pool.delete(email)
 }
 
-async function runIdleLoop(
+const runIdleLoop = async (
   email: string,
   password: string,
   entry: PoolEntry,
-): Promise<void> {
-  while (entry.running) {
+) => {
+  while (entry.running && hasSubscribers(email)) {
     const client = createImapClient(email, password)
+    entry.client = client
     try {
       await client.connect()
       const lock = await client.getMailboxLock('INBOX')
-
-      client.on('exists', (data: { path: string; count: number }) => {
-        if (!hasSubscribers(email)) {
-          entry.running = false
-          return
-        }
-        broadcast(email, {
-          type: 'new_mail',
-          folder: data.path,
-          count: data.count,
-        })
-      })
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(client as any).on(
-        'flags',
-        (data: { path: string; uid: number; flags: Set<string> }) => {
-          if (!data.uid) return
-          broadcast(email, {
-            type: 'flag_update',
-            folder: data.path,
-            uid: data.uid,
-            isRead: data.flags?.has('\\Seen') ?? false,
-          })
-        },
-      )
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(client as any).on('expunge', (data: { path: string }) => {
-        broadcast(email, { type: 'mail_expunged', folder: data.path })
-      })
-
-      while (entry.running) {
-        try {
-          await client.idle()
-        } catch {
-          break
-        }
-      }
-
-      lock.release()
       try {
-        await client.logout()
-      } catch {
-        client.close()
+        client.on('exists', (data) => {
+          if (entry.running)
+            broadcast(email, {
+              type: 'new_mail',
+              folder: data.path,
+              count: data.count,
+            })
+        })
+        client.on('flags', (data) => {
+          if (entry.running && data.uid)
+            broadcast(email, {
+              type: 'flag_update',
+              folder: data.path,
+              uid: data.uid,
+              isRead: data.flags?.has('\\Seen') ?? false,
+            })
+        })
+        client.on('expunge', (data) => {
+          if (entry.running)
+            broadcast(email, { type: 'mail_expunged', folder: data.path })
+        })
+        while (entry.running && hasSubscribers(email)) await client.idle()
+      } finally {
+        lock.release()
       }
     } catch {
-      try {
-        client.close()
-      } catch {
-        /* ignore */
-      }
+      /* Reconnection after socket or authentication failure */
+    } finally {
+      client.close()
+      entry.client = undefined
     }
-
-    // Reconnect delay on failure
-    if (entry.running) await new Promise((r) => setTimeout(r, 5_000))
+    if (entry.running && hasSubscribers(email))
+      await new Promise((resolve) => setTimeout(resolve, 5000))
   }
+  if (pool.get(email) === entry) pool.delete(email)
+}
 
-  pool.delete(email)
+export const startIdleMonitor = (email: string, password: string) => {
+  const credential = createHash('sha256').update(password).digest('hex')
+  if (pool.get(email)?.credential === credential) return
+  stopIdleMonitor(email)
+  const entry: PoolEntry = { running: true, credential }
+  pool.set(email, entry)
+  void runIdleLoop(email, password, entry)
 }

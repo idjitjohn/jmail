@@ -1,5 +1,7 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import InboxAppearance from '../InboxAppearance'
 import { type Theme } from '@/lib/theme'
 import { useAppearanceSettings } from './useAppearanceSettings'
@@ -12,16 +14,20 @@ const THEMES: { value: Theme; label: string; desc: string }[] = [
 ]
 
 export default function AppearanceSettings() {
+  const { t } = useLocale()
+
   const { theme, handleTheme } = useAppearanceSettings()
 
   return (
     <div className="AppearanceSettings">
       <div className="heading">
-        <h1>A space that feels like you.</h1>
-        <p>Choose your light, your spacing, and a comfortable way to read.</p>
+        <h1>{t('A space that feels like you.')}</h1>
+        <p>
+          {t('Choose your light, your spacing, and a comfortable way to read.')}
+        </p>
       </div>
       <div className="settings-section">
-        <h2 className="section-title">Theme</h2>
+        <h2 className="section-title">{t('Theme')}</h2>
         <div className="theme-grid">
           {THEMES.map(({ value, label, desc }) => (
             <button
@@ -39,8 +45,8 @@ export default function AppearanceSettings() {
                 </div>
               </div>
               <div className="card-info">
-                <span className="card-label">{label}</span>
-                <span className="card-desc">{desc}</span>
+                <span className="card-label">{t(label)}</span>
+                <span className="card-desc">{t(desc)}</span>
               </div>
               {theme === value && <span className="check" />}
             </button>

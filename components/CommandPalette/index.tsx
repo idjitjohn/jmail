@@ -1,5 +1,7 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import { useCommandPalette } from './useCommandPalette'
 import type { Command } from './types'
 import './CommandPalette.scss'
@@ -7,6 +9,8 @@ import './CommandPalette.scss'
 type Props = { commands: Command[]; onClose: () => void }
 
 const CommandPalette = ({ commands, onClose }: Props) => {
+  const { t } = useLocale()
+
   const {
     shortcutsEnabled,
     dialogRef,
@@ -32,23 +36,27 @@ const CommandPalette = ({ commands, onClose }: Props) => {
     >
       <div className="surface">
         <div className="heading">
-          <h2 id="command-title">Your inbox, at your fingertips</h2>
-          <button type="button" onClick={onClose} aria-label="Close commands">
-            Esc
+          <h2 id="command-title">{t('Your inbox, at your fingertips')}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t('Close commands')}
+          >
+            {t('Esc')}
           </button>
         </div>
         <div className="search">
           <input
             autoFocus
             role="combobox"
-            aria-label="Search commands"
+            aria-label={t('Search commands')}
             aria-expanded="true"
             aria-controls="command-results"
             aria-activedescendant={
               filtered[active] ? `command-${filtered[active].id}` : undefined
             }
             autoComplete="off"
-            placeholder="What would you like to do?"
+            placeholder={t('What would you like to do?')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -58,7 +66,7 @@ const CommandPalette = ({ commands, onClose }: Props) => {
           className="commands"
           id="command-results"
           role="listbox"
-          aria-label="Commands"
+          aria-label={t('Commands')}
         >
           {filtered.map((command, index) => (
             <button
@@ -72,26 +80,26 @@ const CommandPalette = ({ commands, onClose }: Props) => {
               onClick={() => run(command)}
             >
               <span className="copy">
-                <strong>{command.label}</strong>
-                <span>{command.description}</span>
+                <strong>{t(command.label)}</strong>
+                <span>{t(command.description)}</span>
               </span>
               {command.shortcut && <kbd>{command.shortcut}</kbd>}
             </button>
           ))}
           {!filtered.length && (
             <p className="empty">
-              No commands found. Try “compose” or “inbox”.
+              {t('No commands found. Try “compose” or “inbox”.')}
             </p>
           )}
         </div>
         <div className="footer">
           <span>
-            <kbd>↑</kbd> <kbd>↓</kbd> to explore
+            <kbd>↑</kbd> <kbd>↓</kbd> {t('to explore')}
           </span>
           <span>
-            <kbd>↵</kbd> to choose
+            <kbd>↵</kbd> {t('to choose')}
           </span>
-          {shortcutsEnabled && <span>J / K to move through mail</span>}
+          {shortcutsEnabled && <span>{t('J / K to move through mail')}</span>}
         </div>
       </div>
     </dialog>

@@ -5,18 +5,36 @@ type Sender = (event: SSEEvent) => void
 // Global singleton — survives hot reload in dev
 const g = globalThis as typeof globalThis & {
   _sseSubs?: Map<string, Set<Sender>>
+  _sseClosers?: Map<string, Map<Sender, () => void>>
 }
 if (!g._sseSubs) g._sseSubs = new Map<string, Set<Sender>>()
 const subs: Map<string, Set<Sender>> = g._sseSubs
+const closers = (g._sseClosers ||= new Map<string, Map<Sender, () => void>>())
 
-export function subscribe(email: string, send: Sender): void {
+export function subscribe(
+  email: string,
+  send: Sender,
+  close?: () => void,
+): void {
   if (!subs.has(email)) subs.set(email, new Set())
   subs.get(email)!.add(send)
+  if (close) {
+    if (!closers.has(email)) closers.set(email, new Map())
+    closers.get(email)!.set(send, close)
+  }
 }
 
 export function unsubscribe(email: string, send: Sender): void {
+  closers.get(email)?.delete(send)
+  if (!closers.get(email)?.size) closers.delete(email)
   subs.get(email)?.delete(send)
   if ((subs.get(email)?.size ?? 0) === 0) subs.delete(email)
+}
+
+export const disconnectStreams = (email: string) => {
+  closers.get(email)?.forEach((close) => close())
+  closers.delete(email)
+  subs.delete(email)
 }
 
 export function broadcast(email: string, event: SSEEvent): void {

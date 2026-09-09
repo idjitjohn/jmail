@@ -34,7 +34,10 @@ export const useAdminAccounts = (
     domainCount:
       error && !domains.length
         ? '—'
-        : new Set([...domains, ...accounts.map((email) => email.split('@')[1])])
-            .size,
+        : new Set(
+            [...domains, ...accounts.map((email) => email.split('@')[1])].map(
+              (domain) => domain.toLowerCase(),
+            ),
+          ).size,
   }
 }

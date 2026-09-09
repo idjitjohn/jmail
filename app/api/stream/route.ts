@@ -1,5 +1,5 @@
 import { type NextRequest } from 'next/server'
-import { getSession } from '@/lib/auth'
+import { getSession, unauthorized, verifySession } from '@/lib/auth'
 import { subscribe, unsubscribe, hasSubscribers } from '@/lib/sse-manager'
 import { startIdleMonitor, stopIdleMonitor } from '@/lib/imap-pool'
 import type { SSEEvent } from '@/lib/types'
@@ -7,41 +7,59 @@ import type { SSEEvent } from '@/lib/types'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-function encode(event: SSEEvent): Uint8Array {
-  return new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`)
-}
-
-export async function GET(req: NextRequest) {
+export const GET = async (request: NextRequest) => {
   const session = await getSession()
-  if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
-
+  if (!session) return unauthorized()
   const { email, password } = session
-
+  const token = request.cookies.get('session')?.value || ''
+  let cleanup = () => {}
   const stream = new ReadableStream({
     start(controller) {
-      const send = (event: SSEEvent) => controller.enqueue(encode(event))
-
-      subscribe(email, send)
-      startIdleMonitor(email, password)
-      send({ type: 'connected' })
-
+      let closed = false
+      const send = (event: SSEEvent) => {
+        if (closed) return
+        try {
+          controller.enqueue(
+            new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`),
+          )
+        } catch {
+          cleanup()
+        }
+      }
       const ping = setInterval(() => {
-        try { send({ type: 'ping' }) } catch { clearInterval(ping) }
-      }, 30_000)
-
-      req.signal.addEventListener('abort', () => {
+        void verifySession(token)
+          .then((current) => (current ? send({ type: 'ping' }) : cleanup()))
+          .catch(() => cleanup())
+      }, 25000)
+      cleanup = () => {
+        if (closed) return
+        closed = true
         clearInterval(ping)
+        request.signal.removeEventListener('abort', cleanup)
         unsubscribe(email, send)
         if (!hasSubscribers(email)) stopIdleMonitor(email)
-      })
+        try {
+          controller.close()
+        } catch {
+          /* Disconnected stream */
+        }
+      }
+      if (request.signal.aborted) return cleanup()
+      request.signal.addEventListener('abort', cleanup, { once: true })
+      subscribe(email, send, cleanup)
+      startIdleMonitor(email, password)
+      send({ type: 'connected' })
+    },
+    cancel() {
+      cleanup()
     },
   })
-
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      'Cache-Control': 'private, no-store, no-transform',
+      'X-Accel-Buffering': 'no',
+      Connection: 'keep-alive',
     },
   })
 }

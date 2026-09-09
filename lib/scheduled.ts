@@ -77,6 +77,7 @@ export const changeScheduled = async (
   email: string,
   id: string,
   sendAt?: string,
+  password?: string,
 ) =>
   withFileLock(FILE, async () => {
     const rows = await readAll()
@@ -85,6 +86,7 @@ export const changeScheduled = async (
     if (row.status === 'sending')
       throw new Error('This message is being sent and cannot be changed.')
     if (sendAt) {
+      if (password) row.credential = await seal({ password }, 'jmail-scheduled')
       row.sendAt = sendAt
       row.status = 'pending'
       delete row.error

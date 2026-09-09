@@ -1,4 +1,6 @@
 'use client'
+
+import { useLocale } from '@/components/LocaleProvider/useLocale'
 import Dialog from '../Dialog'
 import { useLaterDialog } from './useLaterDialog'
 import type { MailMessage } from '@/lib/types'
@@ -11,13 +13,15 @@ type Props = {
   onSaved: () => void
 }
 const LaterDialog = ({ message, mode, onClose, onSaved }: Props) => {
+  const { t } = useLocale()
+
   const vm = useLaterDialog(message, mode, onSaved)
   return (
     <Dialog
       title={
         mode === 'snooze'
-          ? 'Make time for this later'
-          : 'Follow up on this message'
+          ? t('Make time for this later')
+          : t('Follow up on this message')
       }
       onClose={onClose}
       busy={vm.busy}
@@ -26,8 +30,12 @@ const LaterDialog = ({ message, mode, onClose, onSaved }: Props) => {
         <strong>{message.subject}</strong>
         <p>
           {mode === 'snooze'
-            ? 'Move this message to Snoozed. It will return unread to its original folder after the time you choose.'
-            : 'Add a reminder to Later if no reply is found in your Inbox by this time.'}
+            ? t(
+                'Move this message to Snoozed. It will return unread to its original folder after the time you choose.',
+              )
+            : t(
+                'Add a reminder to Later if no reply is found in your Inbox by this time.',
+              )}
         </p>
         <div className="presets">
           {vm.presets.map((preset) => (
@@ -36,12 +44,12 @@ const LaterDialog = ({ message, mode, onClose, onSaved }: Props) => {
               key={preset.label}
               onClick={() => vm.setDueAt(preset.value)}
             >
-              {preset.label}
+              {t(preset.label)}
             </button>
           ))}
         </div>
         <label>
-          When
+          {t('When')}
           <input
             type="datetime-local"
             required
@@ -51,15 +59,15 @@ const LaterDialog = ({ message, mode, onClose, onSaved }: Props) => {
         </label>
         {vm.error && (
           <p className="error" role="alert">
-            {vm.error}
+            {t(vm.error)}
           </p>
         )}
         <button className="primary" type="submit" disabled={vm.busy}>
           {vm.busy
-            ? 'Saving…'
+            ? t('Saving…')
             : mode === 'snooze'
-              ? 'Snooze message'
-              : 'Set reminder'}
+              ? t('Snooze message')
+              : t('Set reminder')}
         </button>
       </form>
     </Dialog>

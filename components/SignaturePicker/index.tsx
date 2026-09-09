@@ -1,36 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getSignatures, type Signature } from '@/lib/signatures'
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
+import { useSignaturePicker } from './useSignaturePicker'
 import './SignaturePicker.scss'
 
-interface Props {
+type Props = {
+  userEmail: string
   value: string | null
   onChange: (id: string | null, html: string | null) => void
   onManage: () => void
 }
 
-export default function SignaturePicker({ value, onChange, onManage }: Props) {
-  const [signatures, setSignatures] = useState<Signature[]>([])
+const SignaturePicker = ({ value, onChange, onManage, userEmail }: Props) => {
+  const { t } = useLocale()
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Browser signature hydration
-    setSignatures(getSignatures())
-  }, [])
-
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = e.target.value || null
-    const sig = signatures.find((s) => s.id === id) ?? null
-    onChange(id, sig?.html ?? null)
-  }
-
+  const { signatures, handleChange } = useSignaturePicker(userEmail, onChange)
   return (
     <div className="SignaturePicker">
-      <select className="select" value={value ?? ''} onChange={handleChange}>
-        <option value="">No signature</option>
-        {signatures.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.name}
+      <select
+        className="select"
+        aria-label={t('Choose signature')}
+        value={value ?? ''}
+        onChange={handleChange}
+      >
+        <option value="">{t('Default signature')}</option>
+        <option value="__none__">{t('No signature')}</option>
+        {signatures.map((signature) => (
+          <option key={signature.id} value={signature.id}>
+            {signature.name}
           </option>
         ))}
       </select>
@@ -38,8 +36,11 @@ export default function SignaturePicker({ value, onChange, onManage }: Props) {
         className="manage-btn"
         onClick={onManage}
         type="button"
-        title="Manage signatures"
+        title={t('Manage signatures')}
+        aria-label={t('Manage signatures')}
       />
     </div>
   )
 }
+
+export default SignaturePicker

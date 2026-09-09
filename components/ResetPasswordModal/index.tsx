@@ -1,5 +1,7 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import { useState } from 'react'
 import Input from '../Input'
 import Button from '../Button'
@@ -13,7 +15,15 @@ interface Props {
   loading?: boolean
 }
 
-export default function ResetPasswordModal({ isOpen, email, onConfirm, onCancel, loading }: Props) {
+export default function ResetPasswordModal({
+  isOpen,
+  email,
+  onConfirm,
+  onCancel,
+  loading,
+}: Props) {
+  const { t } = useLocale()
+
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
@@ -38,34 +48,39 @@ export default function ResetPasswordModal({ isOpen, email, onConfirm, onCancel,
     <div className="ResetPasswordModal" role="dialog" aria-modal="true">
       <div className="backdrop" onClick={onCancel} />
       <div className="panel">
-        <h2 className="panel-title">Reset password</h2>
+        <h2 className="panel-title">{t('Reset password')}</h2>
         <p className="panel-sub">{email}</p>
 
         <form className="form" onSubmit={handleSubmit}>
           <Input
-            label="New password"
+            label={t('New password')}
             type="password"
             placeholder="••••••••"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             autoFocus
             required
           />
           <Input
-            label="Confirm password"
+            label={t('Confirm password')}
             type="password"
             placeholder="••••••••"
             value={confirm}
-            onChange={e => setConfirm(e.target.value)}
+            onChange={(e) => setConfirm(e.target.value)}
             required
           />
-          {error && <p className="form-error">{error}</p>}
+          {error && <p className="form-error">{t(error)}</p>}
           <div className="form-actions">
-            <Button variant="secondary" onClick={onCancel} disabled={loading} type="button">
-              Cancel
+            <Button
+              variant="secondary"
+              onClick={onCancel}
+              disabled={loading}
+              type="button"
+            >
+              {t('Cancel')}
             </Button>
             <Button type="submit" loading={loading}>
-              Reset password
+              {t('Reset password')}
             </Button>
           </div>
         </form>

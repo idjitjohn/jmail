@@ -20,7 +20,8 @@ const mutate = async (request: Request, create: boolean) => {
   try {
     const body = await request.json()
     if (create) await createLater(session, body)
-    else await changeLater(session.email, body.id, body.action)
+    else
+      await changeLater(session.email, body.id, body.action, session.password)
     return NextResponse.json({ ok: true })
   } catch (error) {
     return NextResponse.json(

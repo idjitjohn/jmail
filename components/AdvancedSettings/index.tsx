@@ -1,12 +1,16 @@
 'use client'
 
+import { useLocale } from '@/components/LocaleProvider/useLocale'
+
 import Button from '../Button'
 import Spinner from '../Spinner'
 import { useForwardingSettings } from '../ForwardingSettings/useForwardingSettings'
 import { useVacationSettings } from '../VacationSettings/useVacationSettings'
 import './AdvancedSettings.scss'
 
-export default function AdvancedSettings() {
+const AdvancedSettings = () => {
+  const { t } = useLocale()
+
   const fwd = useForwardingSettings()
   const vac = useVacationSettings()
 
@@ -24,14 +28,14 @@ export default function AdvancedSettings() {
     <div className="AdvancedSettings">
       <section className="section">
         <div className="section-head">
-          <h2 className="section-title">Forwarding</h2>
+          <h2 className="section-title">{t('Forwarding')}</h2>
           <p className="section-subtitle">
-            Automatically forward incoming mail to another address
+            {t('Automatically forward incoming mail to another address')}
           </p>
         </div>
         <div className="card">
           <div className="toggle-row">
-            <span className="toggle-label">Enable forwarding</span>
+            <span className="toggle-label">{t('Enable forwarding')}</span>
             <button
               type="button"
               className={`toggle ${fwd.enabled ? 'on' : 'off'}`}
@@ -47,11 +51,11 @@ export default function AdvancedSettings() {
             <>
               <div className="divider" />
               <div className="field-row">
-                <span className="field-label">Forward to</span>
+                <span className="field-label">{t('Forward to')}</span>
                 <input
                   type="email"
                   className="field-input"
-                  placeholder="you@example.com"
+                  placeholder={t('you@example.com')}
                   value={fwd.forwardTo}
                   onChange={(e) => fwd.setForwardTo(e.target.value)}
                   autoComplete="email"
@@ -61,10 +65,10 @@ export default function AdvancedSettings() {
               <div className="toggle-row">
                 <div className="toggle-label-group">
                   <span className="toggle-label">
-                    Keep a copy in my mailbox
+                    {t('Keep a copy in my mailbox')}
                   </span>
                   <span className="toggle-hint">
-                    Store a copy even after forwarding
+                    {t('Store a copy even after forwarding')}
                   </span>
                 </div>
                 <button
@@ -81,27 +85,43 @@ export default function AdvancedSettings() {
           )}
         </div>
         <div className="section-footer">
-          {fwd.error && <span className="msg error">{fwd.error}</span>}
-          {fwd.saved && <span className="msg success">Saved</span>}
-          <Button onClick={fwd.save} loading={fwd.saving} size="sm">
-            Save
+          {fwd.error && (
+            <span className="msg error" role="alert">
+              {t(fwd.error)}
+            </span>
+          )}
+          {!fwd.ready && (
+            <Button variant="secondary" onClick={fwd.reload}>
+              {t('Reload settings')}
+            </Button>
+          )}
+          {fwd.saved && <span className="msg success">{t('Saved')}</span>}
+          <Button
+            onClick={fwd.save}
+            loading={fwd.saving}
+            disabled={!fwd.ready}
+            size="sm"
+          >
+            {t('Save')}
           </Button>
         </div>
       </section>
 
       <section className="section">
         <div className="section-head">
-          <h2 className="section-title">Vacation reply</h2>
+          <h2 className="section-title">{t('Vacation reply')}</h2>
           <p className="section-subtitle">
-            Automatically reply to incoming messages while you are away
+            {t('Automatically reply to incoming messages while you are away')}
           </p>
         </div>
         <div className="card">
           <div className="toggle-row">
-            <span className="toggle-label">Enable auto-reply</span>
+            <span className="toggle-label">{t('Enable auto-reply')}</span>
             <button
               type="button"
               className={`toggle ${vac.enabled ? 'on' : 'off'}`}
+              disabled={!vac.ready || !vac.available || vac.saving}
+              aria-label={t('Enable automatic replies')}
               onClick={() => vac.setEnabled((v) => !v)}
               role="switch"
               aria-checked={vac.enabled}
@@ -110,32 +130,39 @@ export default function AdvancedSettings() {
             </button>
           </div>
 
+          {!vac.available && (
+            <p role="status">
+              {t(
+                'Automatic replies are not connected on this server. Contact your administrator.',
+              )}
+            </p>
+          )}
           {vac.enabled && (
             <>
               <div className="divider" />
               <div className="fields">
                 <div className="field">
                   <label className="field-label" htmlFor="vac-subject">
-                    Subject
+                    {t('Subject')}
                   </label>
                   <input
                     id="vac-subject"
                     className="field-input"
-                    placeholder="Out of Office"
+                    placeholder={t('Out of Office')}
                     value={vac.subject}
                     onChange={(e) => vac.setSubject(e.target.value)}
                   />
                 </div>
                 <div className="field">
                   <label className="field-label" htmlFor="vac-message">
-                    Message
+                    {t('Message')}
                   </label>
                   <textarea
                     id="vac-message"
                     className="field-textarea"
-                    placeholder={
-                      "Thank you for your message.\nI'm currently away and will reply when I return."
-                    }
+                    placeholder={t(
+                      "Thank you for your message.\nI'm currently away and will reply when I return.",
+                    )}
                     value={vac.message}
                     onChange={(e) => vac.setMessage(e.target.value)}
                     rows={4}
@@ -143,7 +170,7 @@ export default function AdvancedSettings() {
                 </div>
                 <div className="field days-field">
                   <label className="field-label" htmlFor="vac-days">
-                    Reply interval (days)
+                    {t('Reply interval (days)')}
                   </label>
                   <input
                     id="vac-days"
@@ -155,7 +182,9 @@ export default function AdvancedSettings() {
                     onChange={(e) => vac.setDays(Number(e.target.value))}
                   />
                   <span className="days-hint">
-                    Same sender won’t receive more than one reply per interval
+                    {t(
+                      'Same sender won’t receive more than one reply per interval',
+                    )}
                   </span>
                 </div>
               </div>
@@ -163,13 +192,29 @@ export default function AdvancedSettings() {
           )}
         </div>
         <div className="section-footer">
-          {vac.error && <span className="msg error">{vac.error}</span>}
-          {vac.saved && <span className="msg success">Saved</span>}
-          <Button onClick={vac.save} loading={vac.saving} size="sm">
-            Save
+          {vac.error && (
+            <span className="msg error" role="alert">
+              {t(vac.error)}
+            </span>
+          )}
+          {!vac.ready && (
+            <Button variant="secondary" onClick={vac.reload}>
+              {t('Reload settings')}
+            </Button>
+          )}
+          {vac.saved && <span className="msg success">{t('Saved')}</span>}
+          <Button
+            onClick={vac.save}
+            loading={vac.saving}
+            disabled={!vac.ready || !vac.available}
+            size="sm"
+          >
+            {t('Save')}
           </Button>
         </div>
       </section>
     </div>
   )
 }
+
+export default AdvancedSettings
