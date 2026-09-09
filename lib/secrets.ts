@@ -12,7 +12,7 @@ const secretKey = async () => {
 export const seal = async (
   payload: Record<string, unknown>,
   purpose: string,
-  expiration?: string,
+  expiration?: string | number,
 ) => {
   const token = new EncryptJWT(payload)
     .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })

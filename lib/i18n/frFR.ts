@@ -1,6 +1,12 @@
 import type { enUS } from './enUS'
 
 export const frFR = {
+  'Could not sign out. Please try again.':
+    'La déconnexion a échoué. Veuillez réessayer.',
+  'Your session is temporarily unavailable. Please try again.':
+    'Votre session est temporairement indisponible. Veuillez réessayer.',
+  'Your account changed during sign-in. Please try again.':
+    'Votre compte a été modifié pendant la connexion. Veuillez réessayer.',
   'Archive conversation': 'Archiver',
   'Hide earlier messages': 'Masquer les messages précédents',
   '{count} earlier message': '{count} message précédent',

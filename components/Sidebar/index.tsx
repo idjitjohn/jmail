@@ -39,7 +39,7 @@ export default function Sidebar({
   const { t } = useLocale()
 
   const { folders, loading, error, refetch } = useSidebar()
-  const logout = useLogout()
+  const { logout, error: logoutError, loading: loggingOut } = useLogout()
 
   useEffect(() => {
     if (refreshTrigger && refreshTrigger > 0) refetch()
@@ -141,7 +141,17 @@ export default function Sidebar({
         <Link href="/settings/profile" className="settings-btn">
           {t('Settings')}
         </Link>
-        <button className="logout-btn" onClick={logout} type="button">
+        {logoutError && (
+          <p className="logout-error" role="alert">
+            {t(logoutError)}
+          </p>
+        )}
+        <button
+          className="logout-btn"
+          onClick={logout}
+          type="button"
+          disabled={loggingOut}
+        >
           {t('Sign out')}
         </button>
       </div>

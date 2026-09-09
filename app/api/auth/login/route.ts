@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createImapClient } from '@/lib/mail'
-import { createSession, extractDomain } from '@/lib/auth'
+import { createSession, extractDomain, verifySession } from '@/lib/auth'
+import { setAuthCookies } from '@/lib/auth-cookies'
+import { revokeAuthSession } from '@/lib/auth-sessions'
+import { ACCESS_COOKIE, REFRESH_COOKIE, LEGACY_COOKIE } from '@/lib/auth-config'
 import { rateLimit } from '@/lib/rate-limit'
 import { logLoginFailure, mailAuthenticationError } from '@/lib/mail-errors'
 import { sessionRevision } from '@/lib/session-revisions'
@@ -44,7 +47,7 @@ export const POST = async (request: NextRequest) => {
     const revision = await sessionRevision(email)
     await client.connect()
     authenticated = true
-    const token = await createSession(
+    const tokens = await createSession(
       {
         email,
         password: input.password,
@@ -52,15 +55,24 @@ export const POST = async (request: NextRequest) => {
       },
       revision,
     )
-    const response = NextResponse.json({ ok: true })
-    response.cookies.set('session', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 86400,
-      path: '/',
-    })
-    return response
+    if (!tokens || !(await verifySession(tokens.accessToken)))
+      return NextResponse.json(
+        { error: 'Your account changed during sign-in. Please try again.' },
+        { status: 409 },
+      )
+    await revokeAuthSession(
+      request.cookies.get(ACCESS_COOKIE)?.value,
+      request.cookies.get(REFRESH_COOKIE)?.value,
+      request.cookies.get(LEGACY_COOKIE)?.value,
+    )
+    return setAuthCookies(
+      NextResponse.json({
+        ok: true,
+        accessExpiresAt: tokens.accessExpiresAt,
+        refreshExpiresAt: tokens.refreshExpiresAt,
+      }),
+      tokens,
+    )
   } catch (error) {
     logLoginFailure(error, authenticated ? 'session' : 'imap')
     if (authenticated)

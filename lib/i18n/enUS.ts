@@ -1,4 +1,10 @@
 export const enUS = {
+  'Could not sign out. Please try again.':
+    'Could not sign out. Please try again.',
+  'Your session is temporarily unavailable. Please try again.':
+    'Your session is temporarily unavailable. Please try again.',
+  'Your account changed during sign-in. Please try again.':
+    'Your account changed during sign-in. Please try again.',
   'Archive conversation': 'Archive',
   'Hide earlier messages': 'Hide earlier messages',
   '{count} earlier message': '{count} earlier message',

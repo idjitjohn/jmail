@@ -1,56 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifySession } from '@/lib/auth'
+import { resolveAuth } from '@/lib/auth'
+import { setAuthCookies } from '@/lib/auth-cookies'
+import { ACCESS_COOKIE, REFRESH_COOKIE, LEGACY_COOKIE } from '@/lib/auth-config'
 import { isSameOriginRequest } from '@/lib/request-origin'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
-export async function proxy(req: NextRequest) {
+export const proxy = async (req: NextRequest) => {
   const { pathname } = req.nextUrl
-  if (pathname.startsWith('/api/')) {
-    if (
-      !['GET', 'HEAD', 'OPTIONS'].includes(req.method) &&
-      !isSameOriginRequest(req)
+  const api = pathname.startsWith('/api/')
+  if (
+    !['GET', 'HEAD', 'OPTIONS'].includes(req.method) &&
+    !isSameOriginRequest(req)
+  )
+    return NextResponse.json(
+      {
+        error: 'Reload JMail before trying this action again.',
+        code: 'INVALID_ORIGIN',
+      },
+      { status: 403, headers: { 'Cache-Control': 'private, no-store' } },
     )
-      return NextResponse.json(
-        {
-          error: 'Reload JMail before trying this action again.',
-          code: 'INVALID_ORIGIN',
-        },
-        { status: 403 },
-      )
+
+  // Dedicated authentication and bearer-only scheduler routes
+  if (pathname.startsWith('/api/auth/') || pathname.startsWith('/api/cron/')) {
     const response = NextResponse.next()
     response.headers.set('Cache-Control', 'private, no-store')
     return response
   }
-  const token = req.cookies.get('session')?.value
 
-  // Auth-only routes: redirect logged-in users to inbox
-  if (pathname === '/') {
-    if (token) {
-      const session = await verifySession(token)
-      if (session) return NextResponse.redirect(new URL('/inbox', req.url))
+  try {
+    const { session, tokens } = await resolveAuth(
+      req.cookies.get(ACCESS_COOKIE)?.value,
+      req.cookies.get(REFRESH_COOKIE)?.value,
+      req.cookies.get(LEGACY_COOKIE)?.value,
+    )
+    let response: NextResponse
+    if (api && !session) {
+      response = NextResponse.json(
+        {
+          error: 'Your session has expired. Sign in again to continue.',
+          code: 'SESSION_EXPIRED',
+        },
+        { status: 401 },
+      )
+    } else if (pathname === '/' && session) {
+      response = NextResponse.redirect(new URL('/inbox', req.url))
+    } else if (pathname !== '/' && !session) {
+      response = NextResponse.redirect(new URL('/', req.url))
+    } else if (
+      pathname.startsWith('/admin') &&
+      session?.email !== ADMIN_EMAIL
+    ) {
+      response = NextResponse.redirect(new URL('/inbox', req.url))
+    } else {
+      if (tokens && session) {
+        // Renewed credentials for this request, without replaying its body
+        req.cookies.set(ACCESS_COOKIE, tokens.accessToken)
+        req.cookies.set(REFRESH_COOKIE, tokens.refreshToken)
+        req.cookies.delete(LEGACY_COOKIE)
+      }
+      response = NextResponse.next({ request: { headers: req.headers } })
     }
-    return NextResponse.next()
+    response.headers.set('Cache-Control', 'private, no-store')
+    return tokens && session ? setAuthCookies(response, tokens) : response
+  } catch {
+    return NextResponse.json(
+      {
+        error: 'Your session is temporarily unavailable. Please try again.',
+        code: 'SESSION_UNAVAILABLE',
+      },
+      {
+        status: 503,
+        headers: { 'Cache-Control': 'private, no-store', 'Retry-After': '5' },
+      },
+    )
   }
-
-  // Protected routes: require valid session
-  if (
-    pathname.startsWith('/inbox') ||
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/settings')
-  ) {
-    if (!token) return NextResponse.redirect(new URL('/', req.url))
-
-    const session = await verifySession(token)
-    if (!session) return NextResponse.redirect(new URL('/', req.url))
-
-    // Admin routes: require admin email
-    if (pathname.startsWith('/admin') && session.email !== ADMIN_EMAIL) {
-      return NextResponse.redirect(new URL('/inbox', req.url))
-    }
-  }
-
-  return NextResponse.next()
 }
 
 export const config = {

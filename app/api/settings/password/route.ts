@@ -3,7 +3,8 @@ import { getSession, unauthorized, createSession } from '@/lib/auth'
 import { resetPassword } from '@/lib/maddy'
 import { createImapClient } from '@/lib/mail'
 import { mailAuthenticationError } from '@/lib/mail-errors'
-import { cookies } from 'next/headers'
+import { setAuthCookies } from '@/lib/auth-cookies'
+import type { AuthTokens } from '@/lib/auth'
 import { stopIdleMonitor } from '@/lib/imap-pool'
 import { randomUUID } from 'crypto'
 import { revokeSessions } from '@/lib/session-revisions'
@@ -50,10 +51,14 @@ export async function POST(req: Request) {
     client.close()
   }
 
-  let token: string
+  let tokens: AuthTokens | null
   const revision = randomUUID()
   try {
-    token = await createSession({ ...session, password: newPassword }, revision)
+    tokens = await createSession(
+      { ...session, password: newPassword },
+      revision,
+    )
+    if (!tokens) throw new Error('Could not create a session')
     await revokeSessions(session.email)
   } catch {
     return NextResponse.json(
@@ -89,14 +94,12 @@ export async function POST(req: Request) {
       { status: 503 },
     )
   }
-  const store = await cookies()
-  store.set('session', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24,
-    path: '/',
-  })
-
-  return NextResponse.json({ ok: true })
+  return setAuthCookies(
+    NextResponse.json({
+      ok: true,
+      accessExpiresAt: tokens.accessExpiresAt,
+      refreshExpiresAt: tokens.refreshExpiresAt,
+    }),
+    tokens,
+  )
 }

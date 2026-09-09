@@ -24,7 +24,7 @@ export default function SettingsLayout({
 
   const pathname = usePathname()
 
-  const logout = useLogout()
+  const { logout, error: logoutError, loading: loggingOut } = useLogout()
 
   const navItem = (href: string, label: string, icon: string) => (
     <Link
@@ -50,6 +50,7 @@ export default function SettingsLayout({
           <button
             className="mobile-signout"
             onClick={logout}
+            disabled={loggingOut}
             type="button"
             aria-label={t('Sign out')}
           />
@@ -68,13 +69,25 @@ export default function SettingsLayout({
 
         <div className="footer">
           {userEmail && <span className="user-email">{userEmail}</span>}
-          <button className="logout-btn" onClick={logout} type="button">
+          <button
+            className="logout-btn"
+            onClick={logout}
+            type="button"
+            disabled={loggingOut}
+          >
             {t('Sign out')}
           </button>
         </div>
       </aside>
 
-      <main className="content">{children}</main>
+      <main className="content">
+        {logoutError && (
+          <p className="logout-error" role="alert">
+            {t(logoutError)}
+          </p>
+        )}
+        {children}
+      </main>
     </div>
   )
 }

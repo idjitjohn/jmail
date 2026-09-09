@@ -295,3 +295,17 @@
     }
   }
 }
+
+.Sidebar {
+  .footer {
+    .logout-error {
+      color: var(--color-danger);
+      font-size: 0.75em;
+      padding: 0.5em 0.75em;
+    }
+    .logout-btn:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+  }
+}

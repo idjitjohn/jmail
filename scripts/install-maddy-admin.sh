@@ -16,7 +16,7 @@ install -o root -g root -m 0755 "$script_dir/jmail-maddy-admin.py" /usr/local/sb
 install -d -o root -g root -m 0755 /usr/local/libexec
 install -o root -g root -m 0755 "$script_dir/jmail-imap-filter.py" /usr/local/libexec/jmail-imap-filter
 install -d -o "$app_user" -g maddy -m 2770 /var/lib/maddy/sieve
-for directory in /var/lib/maddy/jmail /var/lib/maddy/userdata; do
+for directory in /var/lib/maddy/jmail /var/lib/maddy/userdata /var/lib/maddy/jmail/sessions; do
   [ ! -L "$directory" ] || { echo 'Refusing a symbolic link in JMail runtime directories'; exit 1; }
   install -d -o "$app_user" -g maddy -m 0700 "$directory"
 done

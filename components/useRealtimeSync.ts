@@ -3,14 +3,15 @@
 import { useEffect, useRef } from 'react'
 import type { SSEEvent } from '@/lib/types'
 
-interface Handlers {
+type Handlers = {
+  onReconnect?: () => void
   onNewMail?: (folder: string, count: number) => void
   onFlagUpdate?: (folder: string, uid: number, isRead: boolean) => void
   onMailExpunged?: (folder: string) => void
   onUnreadCounts?: (counts: Record<string, number>) => void
 }
 
-export function useRealtimeSync(handlers: Handlers): void {
+export const useRealtimeSync = (handlers: Handlers): void => {
   // Stable ref — handlers can change without restarting EventSource
   const ref = useRef(handlers)
   useEffect(() => {
@@ -19,12 +20,17 @@ export function useRealtimeSync(handlers: Handlers): void {
 
   useEffect(() => {
     const es = new EventSource('/api/stream')
+    let connected = false
 
     es.onmessage = (e) => {
       try {
         const event: SSEEvent = JSON.parse(e.data as string)
         const h = ref.current
         switch (event.type) {
+          case 'connected':
+            if (connected) h.onReconnect?.()
+            connected = true
+            break
           case 'new_mail':
             h.onNewMail?.(event.folder, event.count)
             break

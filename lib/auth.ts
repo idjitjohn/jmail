@@ -1,63 +1,52 @@
-import { seal, unseal } from './secrets'
-import type { UserSession } from './types'
-import { sessionRevision } from './session-revisions'
+import {
+  verifyAccessToken,
+  refreshAuthSession,
+  migrateLegacySession,
+} from './auth-sessions'
+import { ACCESS_COOKIE, REFRESH_EARLY } from './auth-config'
+import type { AuthSession, AuthTokens } from './auth-types'
 
-export type SessionPayload = UserSession & {
-  password: string
-}
+export type { SessionPayload, AuthTokens, AuthSession } from './auth-types'
+export { createAuthSession as createSession } from './auth-sessions'
+export const verifySession = verifyAccessToken
 
-export async function createSession(
-  payload: SessionPayload,
-  revision?: string,
-): Promise<string> {
-  return seal(
-    {
-      ...payload,
-      revision: revision ?? (await sessionRevision(payload.email)),
-    },
-    'jmail-session',
-    '24h',
-  )
-}
-
-export async function verifySession(
-  token: string,
-): Promise<SessionPayload | null> {
-  let payload
-  try {
-    payload = await unseal(token, 'jmail-session')
-  } catch {
-    return null
-  }
+export const resolveAuth = async (
+  access?: string,
+  refresh?: string,
+  legacy?: string,
+): Promise<{ session: AuthSession | null; tokens: AuthTokens | null }> => {
+  const current = access ? await verifyAccessToken(access) : null
   if (
-    typeof payload.email !== 'string' ||
-    typeof payload.password !== 'string' ||
-    typeof payload.domain !== 'string'
+    current &&
+    (!refresh ||
+      current.accessExpiresAt > Math.floor(Date.now() / 1000) + REFRESH_EARLY)
   )
-    return null
-  if ((payload.revision || '') !== (await sessionRevision(payload.email)))
-    return null
+    return { session: current, tokens: null }
+  const tokens = refresh
+    ? await refreshAuthSession(refresh)
+    : legacy
+      ? await migrateLegacySession(legacy)
+      : null
+  if (tokens)
+    return { session: await verifyAccessToken(tokens.accessToken), tokens }
+  // Revalidation after a possible refresh replay revocation
   return {
-    email: payload.email as string,
-    domain: payload.domain as string,
-    password: payload.password as string,
-    name: payload.name as string | undefined,
+    session: current && access ? await verifyAccessToken(access) : null,
+    tokens: null,
   }
 }
 
-export function extractDomain(email: string): string {
-  return email.split('@')[1] || ''
-}
+export const extractDomain = (email: string) => email.split('@')[1] || ''
 
-// Server-only helpers (not used in proxy/edge)
-export async function getSession(): Promise<SessionPayload | null> {
+export const getSession = async (): Promise<AuthSession | null> => {
   const { cookies } = await import('next/headers')
-  const cookieStore = await cookies()
-  const token = cookieStore.get('session')?.value
-  if (!token) return null
-  return verifySession(token)
+  const store = await cookies()
+  const token = store.get(ACCESS_COOKIE)?.value
+  return token ? verifyAccessToken(token) : null
 }
 
-export function unauthorized() {
-  return Response.json({ error: 'Unauthorized' }, { status: 401 })
-}
+export const unauthorized = () =>
+  Response.json(
+    { error: 'Unauthorized', code: 'SESSION_EXPIRED' },
+    { status: 401, headers: { 'Cache-Control': 'private, no-store' } },
+  )

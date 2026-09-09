@@ -1,16 +1,10 @@
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { verifySession } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import SettingsLayout from '@/components/SettingsLayout'
 import AppearanceSettings from '@/components/AppearanceSettings'
 
 export default async function AppearancePage() {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('session')?.value
-
-  if (!token) redirect('/')
-
-  const session = await verifySession(token)
+  const session = await getSession()
   if (!session) redirect('/')
 
   return (

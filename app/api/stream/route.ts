@@ -3,6 +3,7 @@ import { getSession, unauthorized, verifySession } from '@/lib/auth'
 import { subscribe, unsubscribe, hasSubscribers } from '@/lib/sse-manager'
 import { startIdleMonitor, stopIdleMonitor } from '@/lib/imap-pool'
 import type { SSEEvent } from '@/lib/types'
+import { ACCESS_COOKIE } from '@/lib/auth-config'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,7 +12,7 @@ export const GET = async (request: NextRequest) => {
   const session = await getSession()
   if (!session) return unauthorized()
   const { email, password } = session
-  const token = request.cookies.get('session')?.value || ''
+  const token = request.cookies.get(ACCESS_COOKIE)?.value || ''
   let cleanup = () => {}
   const stream = new ReadableStream({
     start(controller) {
@@ -46,7 +47,7 @@ export const GET = async (request: NextRequest) => {
       }
       if (request.signal.aborted) return cleanup()
       request.signal.addEventListener('abort', cleanup, { once: true })
-      subscribe(email, send, cleanup)
+      subscribe(email, send, cleanup, session.sessionId)
       startIdleMonitor(email, password)
       send({ type: 'connected' })
     },

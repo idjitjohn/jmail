@@ -103,6 +103,10 @@ export const useAppLayout = () => {
   }
 
   useRealtimeSync({
+    onReconnect: () => {
+      setRefreshKey((k) => k + 1)
+      setSidebarRefreshTrigger((k) => k + 1)
+    },
     onNewMail: (folder) => {
       if (
         preferences.desktopNotifications &&
