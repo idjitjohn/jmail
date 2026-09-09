@@ -1,0 +1,124 @@
+.MailActionMenu {
+  position: relative;
+  flex-shrink: 0;
+
+  .trigger {
+    display: grid;
+    place-items: center;
+    width: 2.75em;
+    height: 2.75em;
+    border: none;
+    border-radius: 0.875em;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+
+    &::before {
+      content: '';
+      width: 1.25em;
+      height: 1.25em;
+      background: currentColor;
+      mask: url('/icons/more.svg') center / contain no-repeat;
+    }
+
+    &:hover,
+    &[aria-expanded='true'] {
+      background: var(--color-bg-secondary);
+      color: var(--color-text);
+    }
+  }
+
+  .options {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.375em);
+    z-index: 5;
+    width: max-content;
+    min-width: 13em;
+    max-width: 15em;
+    padding: 0.375em;
+    border-radius: 1em;
+    background: var(--color-bg-overlay);
+    box-shadow:
+      0 0.75em 2.5em color-mix(in srgb, var(--color-text) 14%, transparent),
+      0 0 0 1px var(--color-border-muted);
+
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.75em;
+      width: 100%;
+      min-height: 3.25em;
+      padding: 0.75em;
+      border: none;
+      border-radius: 0.625em;
+      background: transparent;
+      color: var(--color-text-secondary);
+      text-align: left;
+      text-decoration: none;
+      font: inherit;
+      font-size: 0.8125em;
+      line-height: 1.4;
+      cursor: pointer;
+
+      &::before {
+        content: '';
+        flex-shrink: 0;
+        width: 1.125em;
+        height: 1.125em;
+        background: currentColor;
+        mask-position: center;
+        mask-size: contain;
+        mask-repeat: no-repeat;
+      }
+
+      @each $name,
+        $file
+          in (
+            'reply': 'reply',
+            'reply-all': 'reply-all',
+            'forward': 'forward',
+            'clock': 'clock',
+            'mark-unread': 'mark-unread',
+            'download': 'download',
+            'print': 'print',
+            'star': 'star-outline',
+            'star-filled': 'star'
+          )
+      {
+        &.#{$name}::before {
+          mask-image: url('/icons/#{$file}.svg');
+        }
+      }
+
+      &:hover:not(:disabled) {
+        background: var(--color-bg-secondary);
+        color: var(--color-text);
+      }
+
+      &.danger {
+        color: var(--color-danger);
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &.above {
+    .options {
+      top: auto;
+      bottom: calc(100% + 0.375em);
+    }
+  }
+  @container mail-viewer (max-width: 20em) {
+    .options {
+      width: 12em;
+      min-width: 0;
+      max-width: 12em;
+    }
+  }
+}

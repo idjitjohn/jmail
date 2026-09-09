@@ -1,16 +1,13 @@
 'use client'
 
-import { useLocale } from '@/components/LocaleProvider/useLocale'
-
-import Avatar from '../Avatar'
 import LaterDialog from '../LaterDialog'
 import AttachmentPreview from '../AttachmentPreview'
 import Spinner from '../Spinner'
-import Toolbar from '../Toolbar'
+import MailActionMenu from '../MailActionMenu'
+import MailViewerMessage from '../MailViewerMessage'
 import { useMailViewer } from './useMailViewer'
-import { formatAddress } from '@/lib/format'
 import type { ComposeState } from '../AppLayout/types'
-import type { MailThread, MailAttachment } from '@/lib/types'
+import type { MailThread } from '@/lib/types'
 import './MailViewer.scss'
 
 type Props = {
@@ -32,25 +29,34 @@ const MailViewer = ({
   onMobileBack,
   onUpdate,
 }: Props) => {
-  const { t, plural, formatDate, formatFullDate, formatBytes } = useLocale()
-
   const {
+    t,
     laterMode,
-    setLaterMode,
     latest,
+    setLaterMode,
     laterSaved,
     previewFile,
     setPreviewFile,
-    expanded,
-    fullMessages,
-    loading,
-    error,
-    toggleExpand,
-    toolbarActions,
+    primaryActions,
+    moreActions,
     actionError,
+    bodyRef,
+    loading,
+    folderName,
+    historyExpanded,
+    toggleHistory,
+    visibleMessages,
+    plural,
+    error,
+    retry,
+    fullMessages,
+    messageErrors,
+    retryMessage,
+    expanded,
+    busy,
+    toggleExpand,
     composeMessage,
     showImages,
-    busy,
   } = useMailViewer(thread, folder, onReply, onDelete, onUpdate, userEmail)
 
   if (!thread) {
@@ -83,18 +89,7 @@ const MailViewer = ({
   }
 
   return (
-    <div className="MailViewer">
-      <div className="mobile-nav">
-        <button
-          className="mobile-back"
-          onClick={onMobileBack}
-          type="button"
-          aria-label={t('Back')}
-        >
-          {t('Back')}
-        </button>
-      </div>
-
+    <section className="MailViewer" aria-label={t('Conversation')}>
       {laterMode && latest && (
         <LaterDialog
           message={latest}
@@ -109,211 +104,112 @@ const MailViewer = ({
           onClose={() => setPreviewFile(null)}
         />
       )}
-      <Toolbar actions={toolbarActions} />
+      <div
+        className="viewer-toolbar"
+        role="group"
+        aria-label={t('Conversation actions')}
+      >
+        {onMobileBack && (
+          <button
+            className="mobile-back"
+            onClick={onMobileBack}
+            type="button"
+            aria-label={t('Back')}
+            title={t('Back')}
+          />
+        )}
+        <div className="toolbar-actions">
+          {primaryActions.map((action) => (
+            <button
+              key={action.id}
+              className={`toolbar-action ${action.id}${action.active ? ' active' : ''}${action.danger ? ' danger' : ''}`}
+              type="button"
+              disabled={action.disabled}
+              aria-label={t(action.label)}
+              title={t(action.label)}
+              aria-pressed={action.id === 'star' ? action.active : undefined}
+              onClick={action.onClick}
+            >
+              <span className="action-label">{t(action.label)}</span>
+            </button>
+          ))}
+          <MailActionMenu
+            key={thread.id}
+            actions={moreActions}
+            label="More conversation actions"
+          />
+        </div>
+      </div>
       {actionError && (
         <p className="action-error" role="alert">
           {t(actionError)}
         </p>
       )}
-
-      <div className="body">
+      <div className="body" ref={bodyRef} aria-busy={loading}>
+        <header className="conversation-heading">
+          <div className="conversation-context">
+            <span className="folder-label">{folderName}</span>
+            <span className="message-count">
+              {plural(
+                '{count} message',
+                '{count} messages',
+                thread.messages.length,
+              )}
+            </span>
+          </div>
+          <h1 className="thread-subject">
+            {thread.subject || t('(no subject)')}
+          </h1>
+        </header>
         {loading ? (
-          <div className="loading">
+          <div className="loading" role="status">
             <Spinner size="lg" />
+            <span>{t('Loading message…')}</span>
           </div>
         ) : error ? (
-          <div className="error">
+          <div className="error" role="alert">
             <p>{t(error)}</p>
+            <button type="button" onClick={retry}>
+              {t('Try again')}
+            </button>
           </div>
         ) : (
-          <>
-            <h1 className="thread-subject">
-              {thread.subject || t('(no subject)')}
-            </h1>
-
-            <div className="thread-messages">
-              {thread.messages.map((msg) => {
-                const full = fullMessages.get(msg.uid)
-                const isExpanded = expanded.has(msg.uid)
-
-                return (
-                  <div
-                    key={msg.uid}
-                    className={`thread-item${isExpanded ? ' expanded' : ''}`}
-                  >
-                    <button
-                      className="item-header"
-                      onClick={() => toggleExpand(msg.uid)}
-                      type="button"
-                    >
-                      <Avatar
-                        name={msg.from.name}
-                        email={msg.from.address}
-                        size="sm"
-                      />
-                      <div className="item-meta">
-                        <span className="item-sender">
-                          {msg.from.name || msg.from.address}
-                        </span>
-                        {!isExpanded && msg.preview && (
-                          <span className="item-preview">{msg.preview}</span>
-                        )}
-                      </div>
-                      <time className="item-date">
-                        {isExpanded
-                          ? formatFullDate(msg.date)
-                          : formatDate(msg.date)}
-                      </time>
-                    </button>
-
-                    {isExpanded && (
-                      <div className="item-body">
-                        <div className="item-recipients">
-                          <span className="to-label">{t('To:')}</span>
-                          <span className="to-list">
-                            {(full?.to || msg.to).map(formatAddress).join(', ')}
-                          </span>
-                          {full?.cc && full.cc.length > 0 && (
-                            <>
-                              <span className="to-label">{t('Cc:')}</span>
-                              <span className="to-list">
-                                {full.cc.map(formatAddress).join(', ')}
-                              </span>
-                            </>
-                          )}
-                        </div>
-
-                        {full?.remoteImagesBlocked && (
-                          <div className="image-notice">
-                            <span>
-                              {t(
-                                'Remote images are hidden to protect your privacy.',
-                              )}
-                            </span>
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => showImages(full)}
-                            >
-                              {t('Show images')}
-                            </button>
-                          </div>
-                        )}
-                        <div className="item-content">
-                          {full ? (
-                            full.html ? (
-                              <div
-                                className="html-content"
-                                dangerouslySetInnerHTML={{ __html: full.html }}
-                              />
-                            ) : (
-                              <pre className="text-content">{full.text}</pre>
-                            )
-                          ) : (
-                            <div className="loading-inline">
-                              <Spinner size="sm" />
-                            </div>
-                          )}
-                        </div>
-
-                        {full?.attachments && full.attachments.length > 0 && (
-                          <div className="item-attachments">
-                            <span className="attachments-label">
-                              {plural(
-                                '{count} attachment',
-                                '{count} attachments',
-                                full.attachments.length,
-                              )}
-                            </span>
-                            <ul className="attachments-list">
-                              {full.attachments.map((att: MailAttachment) => (
-                                <li
-                                  key={att.partId}
-                                  className="attachment-chip"
-                                >
-                                  <a
-                                    href={`/api/messages/${msg.uid}/attachments/${att.partId}?folder=${encodeURIComponent(folder)}`}
-                                    download={att.filename}
-                                    className="attachment-link"
-                                  >
-                                    <span className="attachment-icon" />
-                                    <span className="attachment-name">
-                                      {att.filename}
-                                    </span>
-                                    <span className="attachment-size">
-                                      {formatBytes(att.size)}
-                                    </span>
-                                  </a>
-                                  <button
-                                    type="button"
-                                    className="preview-attachment"
-                                    onClick={() =>
-                                      setPreviewFile({
-                                        ...att,
-                                        uid: msg.uid,
-                                        folder: msg.folder,
-                                      })
-                                    }
-                                  >
-                                    {t('Preview')}
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        <div className="item-actions">
-                          <a
-                            href={`/api/messages/${msg.uid}/source?folder=${encodeURIComponent(msg.folder)}`}
-                            download
-                          >
-                            {t('Export .eml')}
-                          </a>
-                          <button type="button" onClick={() => window.print()}>
-                            {t('Print')}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busy || !full}
-                            onClick={() => composeMessage(full || msg, 'all')}
-                          >
-                            {t('Reply all')}
-                          </button>
-                          <button
-                            className="reply-btn"
-                            type="button"
-                            disabled={busy || !full}
-                            onClick={() =>
-                              composeMessage(
-                                full || msg,
-                                full?.isDraft ? 'draft' : 'reply',
-                              )
-                            }
-                          >
-                            {full?.isDraft ? t('Edit draft') : t('Reply')}
-                          </button>
-                          <button
-                            className="forward-btn"
-                            type="button"
-                            disabled={busy || !full}
-                            onClick={() =>
-                              composeMessage(full || msg, 'forward')
-                            }
-                          >
-                            {t('Forward')}
-                          </button>
-                        </div>
-                      </div>
+          <div className="thread-messages">
+            {thread.messages.length > 1 && (
+              <button
+                className="history-toggle"
+                type="button"
+                aria-expanded={historyExpanded}
+                onClick={toggleHistory}
+              >
+                {historyExpanded
+                  ? t('Hide earlier messages')
+                  : plural(
+                      '{count} earlier message',
+                      '{count} earlier messages',
+                      thread.messages.length - 1,
                     )}
-                  </div>
-                )
-              })}
-            </div>
-          </>
+              </button>
+            )}
+            {visibleMessages.map((message) => (
+              <MailViewerMessage
+                key={`${message.folder}:${message.uid}`}
+                message={message}
+                full={fullMessages.get(message.uid)}
+                error={messageErrors.get(message.uid)}
+                onRetry={() => retryMessage(message.uid)}
+                expanded={expanded.has(message.uid)}
+                busy={busy}
+                onToggle={() => toggleExpand(message.uid)}
+                onCompose={composeMessage}
+                onShowImages={showImages}
+                onPreview={setPreviewFile}
+              />
+            ))}
+          </div>
         )}
       </div>
-    </div>
+    </section>
   )
 }
 

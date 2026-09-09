@@ -1,6 +1,25 @@
 import type { enUS } from './enUS'
 
 export const frFR = {
+  'Archive conversation': 'Archiver',
+  'Hide earlier messages': 'Masquer les messages précédents',
+  '{count} earlier message': '{count} message précédent',
+  '{count} earlier messages': '{count} messages précédents',
+  Conversation: 'Conversation',
+  'Conversation actions': 'Actions de la conversation',
+  'More conversation actions': 'Autres actions de la conversation',
+  'More message actions': 'Autres actions du message',
+  'Message details': 'Détails du message',
+  'From:': 'De :',
+  'Bcc:': 'Cci :',
+  'Date:': 'Date :',
+  'Loading message…': 'Chargement du message…',
+  'This message has no text content.': 'Ce message ne contient pas de texte.',
+  'Scroll horizontally to see the full message.':
+    'Faites défiler horizontalement pour lire le message en entier.',
+  'Preview {filename}': 'Aperçu de {filename}',
+  Attachments: 'Pièces jointes',
+  File: 'Fichier',
   ' · Built-in folder': ' · Dossier système',
   ' · Keep a copy': ' · Conserver une copie',
   '(no subject)': '(sans objet)',

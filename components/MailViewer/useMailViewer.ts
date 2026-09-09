@@ -7,6 +7,8 @@ import type { PreviewFile } from '../AttachmentPreview/types'
 import { templateToHtml } from '@/lib/reply-templates'
 import { replyContext, loadMessageFiles } from '@/lib/replies'
 import type { ComposeState } from '../AppLayout/types'
+import { folderLabel } from '@/lib/i18n/folders'
+import type { MailAction } from '../MailActionMenu/types'
 
 export const useMailViewer = (
   thread: MailThread | null,
@@ -16,7 +18,8 @@ export const useMailViewer = (
   onUpdate?: () => void,
   userEmail = '',
 ) => {
-  const { locale } = useLocale()
+  const { locale, t, plural } = useLocale()
+  const bodyRef = useRef<HTMLDivElement>(null)
   const [laterMode, setLaterMode] = useState<'snooze' | 'reminder' | null>(null)
   const [previewFile, setPreviewFile] = useState<PreviewFile | null>(null)
   const [actionError, setActionError] = useState('')
@@ -32,7 +35,11 @@ export const useMailViewer = (
   )
   // Loading state for initial expand
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [messageErrors, setMessageErrors] = useState<Map<number, string>>(
+    new Map(),
+  )
+  const [retryKey, setRetryKey] = useState(0)
+  const [historyExpanded, setHistoryExpanded] = useState(false)
 
   // Track fetched UIDs to avoid duplicate requests
   const fetchedRef = useRef<Set<number>>(new Set())
@@ -41,6 +48,11 @@ export const useMailViewer = (
     async (uid: number) => {
       if (fetchedRef.current.has(uid)) return
       fetchedRef.current.add(uid)
+      setMessageErrors((previous) => {
+        const next = new Map(previous)
+        next.delete(uid)
+        return next
+      })
       const current = generation.current
       try {
         const res = await fetch(
@@ -53,7 +65,13 @@ export const useMailViewer = (
       } catch (e) {
         if (current !== generation.current) return
         fetchedRef.current.delete(uid)
-        setError(e instanceof Error ? e.message : 'Unknown error')
+        setMessageErrors(
+          (previous) =>
+            new Map([
+              ...previous,
+              [uid, e instanceof Error ? e.message : 'Unknown error'],
+            ]),
+        )
       }
     },
     [folder],
@@ -62,15 +80,16 @@ export const useMailViewer = (
   // Reset when thread changes, auto-expand and load latest
   useEffect(() => {
     generation.current += 1
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- IMAP message synchronization
     setActionError('')
     setPreviewFile(null)
     setLaterMode(null)
+    setHistoryExpanded(false)
+    bodyRef.current?.scrollTo({ top: 0 })
     if (!thread) {
       setExpanded(new Set())
       setFullMessages(new Map())
       fetchedRef.current = new Set()
-      setError(null)
+      setMessageErrors(new Map())
       return
     }
 
@@ -78,7 +97,7 @@ export const useMailViewer = (
     setExpanded(new Set([latestUid]))
     setFullMessages(new Map())
     fetchedRef.current = new Set()
-    setError(null)
+    setMessageErrors(new Map())
 
     setLoading(true)
     const current = generation.current
@@ -86,22 +105,22 @@ export const useMailViewer = (
       if (current === generation.current) setLoading(false)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [thread?.id, thread?.latest.uid, folder])
+  }, [thread?.id, thread?.latest.uid, folder, retryKey])
 
   const toggleExpand = useCallback(
     (uid: number) => {
+      if (!expanded.has(uid)) void fetchFull(uid)
       setExpanded((prev) => {
         const s = new Set(prev)
         if (s.has(uid)) {
           s.delete(uid)
         } else {
           s.add(uid)
-          fetchFull(uid)
         }
         return s
       })
     },
-    [fetchFull],
+    [fetchFull, expanded],
   )
 
   const latest = thread
@@ -216,7 +235,7 @@ export const useMailViewer = (
         )
     })
 
-  const toolbarActions =
+  const toolbarActions: MailAction[] =
     latest && thread
       ? [
           {
@@ -230,7 +249,7 @@ export const useMailViewer = (
           {
             id: 'reply-all',
             label: 'Reply all',
-            icon: 'reply',
+            icon: 'reply-all',
             disabled: busy || loading,
             onClick: () => composeMessage(latest, 'all'),
           },
@@ -257,7 +276,7 @@ export const useMailViewer = (
           },
           {
             id: 'archive',
-            label: 'Archive',
+            label: 'Archive conversation',
             icon: 'archive',
             onClick: archive,
             disabled: busy,
@@ -301,7 +320,47 @@ export const useMailViewer = (
         ]
       : []
 
+  const [
+    replyAction,
+    replyAllAction,
+    forwardAction,
+    snoozeAction,
+    reminderAction,
+    archiveAction,
+    starAction,
+    unreadAction,
+    deleteAction,
+  ] = toolbarActions
+
   return {
+    t,
+    plural,
+    bodyRef,
+    folderName: folderLabel({ path: folder, name: folder }, locale),
+    historyExpanded,
+    toggleHistory: () => setHistoryExpanded((previous) => !previous),
+    visibleMessages: thread
+      ? historyExpanded
+        ? thread.messages
+        : [thread.latest]
+      : [],
+    primaryActions:
+      latest && thread
+        ? [archiveAction, snoozeAction, starAction, deleteAction]
+        : [],
+    moreActions:
+      latest && thread
+        ? [
+            replyAction,
+            replyAllAction,
+            forwardAction,
+            reminderAction,
+            unreadAction,
+            snoozeAction,
+            starAction,
+          ]
+        : [],
+    retry: () => setRetryKey((previous) => previous + 1),
     laterMode,
     setLaterMode,
     latest,
@@ -316,7 +375,9 @@ export const useMailViewer = (
     expanded,
     fullMessages,
     loading,
-    error,
+    error: thread ? messageErrors.get(thread.latest.uid) : undefined,
+    messageErrors,
+    retryMessage: fetchFull,
     toggleExpand,
     toolbarActions,
     composeMessage,

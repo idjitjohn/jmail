@@ -151,7 +151,7 @@ export const useAppLayout = () => {
   } = useSwipe<HTMLDivElement>({
     disabled: composeOpen || commandsOpen,
     ignoreSelector:
-      '.MailItem, input, textarea, select, [contenteditable="true"], [aria-modal="true"]',
+      '.MailItem, input, textarea, select, [contenteditable="true"], [aria-modal="true"], [data-swipe-ignore="true"]',
     onSwipeRight: () => {
       if (mobilePanel === 'list') setMobilePanel('sidebar')
       else if (mobilePanel === 'message') setMobilePanel('list')

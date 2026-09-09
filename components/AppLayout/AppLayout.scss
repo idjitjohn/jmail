@@ -253,9 +253,9 @@
     .MailViewer {
       .body {
         .thread-messages {
-          .thread-item {
-            .item-body {
-              .item-content {
+          .MailViewerMessage {
+            .message-body {
+              .message-content {
                 font-size: 1.2em;
               }
             }
