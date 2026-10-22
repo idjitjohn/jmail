@@ -1,4 +1,5 @@
 import { readJson } from './file-store'
+import { WORKER_STATUS_FILE } from './data-paths'
 import { spawn } from 'child_process'
 import type { Change, ServerState } from '@/components/MailServerAdmin/types'
 
@@ -49,7 +50,7 @@ export const maddyAdmin = <T>(request: object): Promise<T> =>
 export const getMailServer = async () => {
   const state = await maddyAdmin<ServerState>({ action: 'status' })
   const heartbeat = await readJson<{ lastRun?: string }>(
-    process.env.JMAIL_WORKER_STATUS_FILE || '/var/lib/maddy/jmail/worker.json',
+    WORKER_STATUS_FILE,
     {},
   ).catch(() => ({}) as { lastRun?: string })
   return { ...state, lastWorkerRun: heartbeat.lastRun }

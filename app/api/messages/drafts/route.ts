@@ -5,13 +5,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession, unauthorized } from '@/lib/auth'
 import { createImapClient } from '@/lib/mail'
 import { buildMessage, readOutgoing } from '@/lib/outgoing'
+import { USERDATA_DIR } from '@/lib/data-paths'
 
 const updateDraft = async (req: NextRequest, remove: boolean) => {
   const session = await getSession()
   if (!session) return unauthorized()
   const client = createImapClient(session.email, session.password)
   const lockPath = path.join(
-    process.env.JMAIL_USERDATA_DIR || '/var/lib/maddy/userdata',
+    USERDATA_DIR,
     '.locks',
     createHash('sha256').update(session.email).digest('hex'),
   )

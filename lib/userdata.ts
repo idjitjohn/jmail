@@ -4,10 +4,9 @@ import type { ReplyTemplate } from './reply-templates'
 import path from 'path'
 import type { Contact } from './contacts'
 import type { MailPreferences } from './preferences'
+import { USERDATA_DIR } from './data-paths'
 
-const DATA_DIR = path.resolve(
-  process.env.JMAIL_USERDATA_DIR || '/var/lib/maddy/userdata',
-)
+const DATA_DIR = USERDATA_DIR
 
 export type UserData = {
   contacts?: Contact[]

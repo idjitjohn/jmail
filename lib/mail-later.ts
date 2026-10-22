@@ -1,13 +1,11 @@
-import path from 'path'
 import { randomUUID } from 'crypto'
 import { withFileLock, readJson, writeJson } from './file-store'
 import { seal, unseal } from './secrets'
 import { createImapClient } from './mail'
 import type { SessionPayload } from './auth'
+import { LATER_FILE } from './data-paths'
 
-const FILE = path.resolve(
-  process.env.JMAIL_LATER_FILE || '/var/lib/maddy/jmail/later.json',
-)
+const FILE = LATER_FILE
 export type LaterItem = {
   id: string
   email: string

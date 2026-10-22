@@ -6,6 +6,7 @@ import { seal, unseal } from './secrets'
 import { sessionRevision } from './session-revisions'
 import { disconnectSessionStreams } from './sse-manager'
 import { ACCESS_TTL, REFRESH_TTL, REFRESH_GRACE } from './auth-config'
+import { AUTH_SESSIONS_DIR } from './data-paths'
 import type { AuthSession, AuthTokens, SessionPayload } from './auth-types'
 
 type SessionRecord = {
@@ -23,16 +24,7 @@ type SessionRecord = {
   refreshValue: string
 }
 
-const directory = path.resolve(
-  process.env.JMAIL_AUTH_SESSIONS_DIR ||
-    path.join(
-      path.dirname(
-        process.env.JMAIL_SESSION_REVISIONS_FILE ||
-          '/var/lib/maddy/jmail/session-revisions.json',
-      ),
-      'sessions',
-    ),
-)
+const directory = AUTH_SESSIONS_DIR
 const now = () => Math.floor(Date.now() / 1000)
 const sessionPath = (id: string) => {
   if (!/^[a-f0-9]{32}$/.test(id)) throw new Error('Invalid session identifier')

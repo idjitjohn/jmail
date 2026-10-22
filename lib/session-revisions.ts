@@ -1,12 +1,9 @@
-import path from 'path'
 import { randomUUID } from 'crypto'
 import { readJson, withFileLock, writeJson } from './file-store'
 import { disconnectStreams } from './sse-manager'
+import { SESSION_REVISIONS_FILE } from './data-paths'
 
-const file = path.resolve(
-  process.env.JMAIL_SESSION_REVISIONS_FILE ||
-    '/var/lib/maddy/jmail/session-revisions.json',
-)
+const file = SESSION_REVISIONS_FILE
 
 export const sessionRevision = async (email: string) => {
   email = email.trim().toLowerCase()

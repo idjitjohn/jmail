@@ -1,14 +1,12 @@
-import path from 'path'
 import { withFileLock, writeJson } from '@/lib/file-store'
 import { NextRequest, NextResponse } from 'next/server'
 import { timingSafeEqual } from 'crypto'
 import { claimDue, finishScheduled } from '@/lib/scheduled'
 import { processLater } from '@/lib/mail-later'
 import { deliverMessage } from '@/lib/outgoing'
+import { WORKER_STATUS_FILE } from '@/lib/data-paths'
 
-const heartbeat = path.resolve(
-  process.env.JMAIL_WORKER_STATUS_FILE || '/var/lib/maddy/jmail/worker.json',
-)
+const heartbeat = WORKER_STATUS_FILE
 
 export const GET = async (req: NextRequest) => {
   const provided =

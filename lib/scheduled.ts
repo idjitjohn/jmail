@@ -1,12 +1,10 @@
-import path from 'path'
 import { randomUUID } from 'crypto'
 import { readJson, writeJson, withFileLock } from './file-store'
 import { seal, unseal } from './secrets'
 import type { OutgoingMessage } from './outgoing'
+import { SCHEDULED_FILE } from './data-paths'
 
-const FILE = path.resolve(
-  process.env.JMAIL_SCHEDULED_FILE || '/var/lib/maddy/jmail/scheduled.json',
-)
+const FILE = SCHEDULED_FILE
 export type ScheduledMessage = OutgoingMessage & {
   id: string
   sendAt: string
