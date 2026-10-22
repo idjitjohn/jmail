@@ -20,6 +20,12 @@ const diagnosticCodes = new Set([
   'ESOCKET',
   'ERR_SSL_WRONG_VERSION_NUMBER',
   'ERR_TLS_HANDSHAKE_TIMEOUT',
+  // Session storage failures
+  'EACCES',
+  'EPERM',
+  'ENOENT',
+  'EROFS',
+  'ENOSPC',
 ])
 
 export const mailAuthenticationError = (error: unknown) => {
