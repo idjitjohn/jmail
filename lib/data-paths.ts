@@ -33,3 +33,7 @@ export const USERDATA_DIR = resolve(
   process.env.JMAIL_USERDATA_DIR,
   base ? path.join(base, 'userdata') : '/var/lib/maddy/userdata',
 )
+export const ADMIN_LOG_FILE = resolve(
+  process.env.JMAIL_ADMIN_LOG_FILE,
+  base ? path.join(base, 'admin.log') : '/var/log/maddy/admin.log',
+)

@@ -1,6 +1,7 @@
 import { appendFile } from 'fs/promises'
 import { getSession } from './auth'
 import { NextResponse } from 'next/server'
+import { ADMIN_LOG_FILE } from './data-paths'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
@@ -18,7 +19,7 @@ export function adminUnauthorized() {
 export async function logAdminAction(action: string, details: string): Promise<void> {
   const line = `[${new Date().toISOString()}] ${action}: ${details}\n`
   try {
-    await appendFile('/var/log/maddy/admin.log', line)
+    await appendFile(ADMIN_LOG_FILE, line)
   } catch {
     // fallback to stdout if log file not writable
     console.log('[admin]', line.trim())
